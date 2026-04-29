@@ -1,0 +1,52 @@
+# macOS
+.DS_Store
+
+# Xcode / Swift
+DerivedData/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+.build/
+
+# Python / local tooling
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+
+# App build artifacts
+*.app
+*.dmg
+*.pkg
+*.xcarchive
+
+# MLX Voice Notes local assets
+MLXVoiceNotesAssets/
+Models/
+ReferenceAudio/
+GeneratedAudio/
+Exports/
+Cache/
+Logs/
+backups/
+
+# Large generated media
+*.wav
+*.mp3
+*.m4a
+*.aac
+*.flac
+*.mp4
+*.mov
+
+# Model/checkpoint files
+*.safetensors
+*.gguf
+*.bin
+*.ckpt
+*.onnx
+*.mlmodel
+*.mlpackage
+
