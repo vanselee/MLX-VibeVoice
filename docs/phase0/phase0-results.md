@@ -24,8 +24,9 @@
 - After adding `mlx.metallib`, the TTS executable passed Metal initialization and reached model download.
 - Qwen3-TTS and default Marvis TTS validation are currently blocked by unstable Hugging Face downloads rather than local MLX startup.
 - Existing local model assets were discovered under MimikaStudio and QwenVoice application support directories.
-- A complete existing `mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16` snapshot was mapped into the `mlx-audio-swift` cache using absolute symlinks, avoiding a duplicate 2.3 GB copy.
-- The mapped bf16 Qwen3-TTS model successfully generated a Chinese WAV file.
+- A complete existing `mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16` snapshot was copied into the project-owned model directory because MimikaStudio may be removed.
+- The `mlx-audio-swift` cache entry was rebuilt as a real directory whose files are hard links to the project-owned model files, avoiding a duplicate 2.3 GB copy.
+- The project-owned bf16 Qwen3-TTS model successfully generated a Chinese WAV file.
 
 ## Findings
 
@@ -43,10 +44,15 @@
 - Default model download failed with `NSURLErrorDomain Code=-1005` (`The network connection was lost`) while fetching from Hugging Face.
 - Qwen3-TTS download reached only partial cache state in this run and did not generate output audio.
 - Directly symlinking a Hugging Face `snapshots/...` directory is not safe because snapshot contents are relative symlinks; moving the snapshot path breaks those internal links.
-- The working mapping approach is: create a real target model directory, then symlink each required file to its absolute resolved source path.
+- Using a directory symlink as the `mlx-audio-swift` cache entry is also unreliable because `ModelUtils` may judge the cache as incomplete and clear it.
+- The working project-owned approach is: store real model files under `MLXVoiceNotesAssets/Models`, create a real cache directory under Hugging Face cache, then hard-link each cache file to the project-owned file.
 - `mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16` generated `phase0-qwen3-bf16-mapped.wav` in about 10 seconds.
 - Generated audio properties: WAV, mono, 24 kHz, Float32, about 3.68 seconds, 349 KB.
 - Runtime memory for the mapped bf16 model: peak about 5.2 GB, active about 2.4 GB, cache about 256 MB.
+- The project-owned hard-link cache generated `phase0-qwen3-bf16-project-hardlink.wav` in about 4.9 seconds.
+- Hard-link verification: project file and cache file share the same inode with link count 2 for both root `model.safetensors` and `speech_tokenizer/model.safetensors`.
+- Hard-link generated audio properties: WAV, mono, 24 kHz, Float32, about 3.52 seconds, 334 KB.
+- Hard-link runtime memory: peak about 5.15 GB, active about 2.4 GB, cache about 256 MB.
 - The current 8bit Qwen3-TTS cache contains a partial root `model.safetensors`; it must not be treated as a valid completed model.
 
 ## Blockers
@@ -62,5 +68,6 @@
 - Treat full Xcode and Metal Toolchain setup as resolved for the current machine.
 - Treat `mlx.metallib` generation/packaging as a real engineering requirement for the future Xcode app target, not a one-off terminal detail.
 - Treat model distribution/download robustness as the next immediate Phase 0 risk.
-- Add local model reuse as a first-class product capability: users should be able to choose an existing model folder, and the app should store references or symlinks rather than duplicate large model files when possible.
+- Add local model reuse as a first-class product capability: users should be able to choose an existing model folder, and the app should support importing, referencing, symlinking, or hard-linking large model files depending on safety and lifecycle needs.
+- Prefer project-owned model files for models needed by this app long term. Use hard links for cache compatibility when the source and target are on the same filesystem.
 - Keep `0.6B-Base-bf16` as a validated local fallback for Phase 0 Swift-native Qwen3-TTS testing.
