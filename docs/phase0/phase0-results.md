@@ -54,6 +54,12 @@
 - Hard-link generated audio properties: WAV, mono, 24 kHz, Float32, about 3.52 seconds, 334 KB.
 - Hard-link runtime memory: peak about 5.15 GB, active about 2.4 GB, cache about 256 MB.
 - After MimikaStudio was removed, the project-owned hard-link cache still generated `phase0-after-mimika-removal.wav`; generated audio was WAV, mono, 24 kHz, Float32, about 4.88 seconds, 462 KB, with peak memory about 5.27 GB.
+- Qwen3-TTS reference-audio generation using `--ref_audio` and `--ref_text` succeeded with the project-owned bf16 model.
+- Reference-audio test output: `phase0-qwen3-ref-audio-test.wav`, WAV, mono, 24 kHz, Float32, about 5.36 seconds, 507 KB.
+- Reference-audio runtime: generated in about 17.1 seconds, peak memory about 6.05 GB, active memory about 2.5 GB, cache about 256 MB.
+- Medium-length preset voice test succeeded with about 260 Chinese characters.
+- Medium-length preset output: `phase0-qwen3-500char-preset.wav`, WAV, mono, 24 kHz, Float32, about 39.76 seconds, 3.6 MB.
+- Medium-length preset runtime: generated in about 54.5 seconds, peak memory about 7.88 GB, active memory about 2.4 GB, cache about 257 MB.
 - The current 8bit Qwen3-TTS cache contains a partial root `model.safetensors`; it must not be treated as a valid completed model.
 
 ## Blockers
@@ -62,6 +68,8 @@
 - Need a repeatable model download strategy before app development starts: retry/resume behavior, progress reporting, checksum/state validation, and user-facing failure recovery.
 - Need to decide whether Phase 0 should test with a pre-downloaded model cache, a smaller model, or an alternate mirror/proxy if Hugging Face remains unreliable.
 - `ModelUtils` currently treats any non-zero `.safetensors` file as enough to consider a model directory present; this is risky for interrupted downloads and should be hardened with expected file size/hash validation.
+- Reference-audio generation raises memory pressure compared with preset voice generation; this must be tested carefully on the M2 8 GB baseline with longer inputs.
+- Medium-length text generation with bf16 nearly reaches an 8 GB memory budget, so the app must enforce segment-based generation and avoid concurrent TTS jobs on low-memory machines.
 
 ## Decisions
 
