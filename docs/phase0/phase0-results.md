@@ -61,6 +61,7 @@
 - Real user reference-audio generation succeeded with `--ref_audio` and `--ref_text`.
 - Real user reference output: `phase0-vanselee-refclone-test.wav`, WAV, mono, 24 kHz, Float32, about 9.96 seconds, 938 KB.
 - Real user reference runtime: generated in about 24.5 seconds, peak memory about 8.01 GB, active memory about 2.5 GB, cache about 257 MB.
+- User listened to the real reference-audio output and judged the result acceptable.
 - Medium-length preset voice test succeeded with about 260 Chinese characters.
 - Medium-length preset output: `phase0-qwen3-500char-preset.wav`, WAV, mono, 24 kHz, Float32, about 39.76 seconds, 3.6 MB.
 - Medium-length preset runtime: generated in about 54.5 seconds, peak memory about 7.88 GB, active memory about 2.4 GB, cache about 257 MB.
@@ -90,3 +91,6 @@
 - Add local model reuse as a first-class product capability: users should be able to choose an existing model folder, and the app should support importing, referencing, symlinking, or hard-linking large model files depending on safety and lifecycle needs.
 - Prefer project-owned model files for models needed by this app long term. Use hard links for cache compatibility when the source and target are on the same filesystem.
 - Keep `0.6B-Base-bf16` as a validated local fallback for Phase 0 Swift-native Qwen3-TTS testing.
+- Do not spend more Phase 0 time searching for lower-memory models. Instead, provide model recommendation ranges by device memory and let users choose within or outside the recommended range with clear warnings.
+- Treat robust in-app model download as the ordinary-user path. Manual model directory import/reuse remains useful for advanced users but is not the MVP primary path.
+- Keep multi-role, multi-voice dubbing as the MVP product center; do not reduce the app to a single-narrator TTS tool.
