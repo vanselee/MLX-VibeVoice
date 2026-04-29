@@ -20,6 +20,8 @@ Phase 0 validates technical feasibility before low-fidelity UI prototyping or Ph
    - Confirm full Xcode installation.
    - Confirm macOS 14+ and Apple Silicon.
    - Confirm Swift toolchain.
+   - Confirm `xcode-select -p` points to full Xcode, not Command Line Tools.
+   - Confirm MLX Metal shader library can be built and loaded.
 
 2. Run `mlx-audio-swift` sample.
    - Record setup steps.
@@ -63,4 +65,3 @@ Phase 0 validates technical feasibility before low-fidelity UI prototyping or Ph
 - `docs/phase0/phase0-results.md`
 - Minimal spike code or notes
 - Decision: proceed to low-fidelity prototype, revise scope, or pause for missing dependencies
-

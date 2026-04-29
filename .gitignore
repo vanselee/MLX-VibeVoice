@@ -15,6 +15,7 @@ venv/
 __pycache__/
 *.pyc
 .env
+External/
 
 # App build artifacts
 *.app
@@ -49,4 +50,3 @@ backups/
 *.onnx
 *.mlmodel
 *.mlpackage
-
