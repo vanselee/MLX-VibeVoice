@@ -57,6 +57,10 @@
 - Qwen3-TTS reference-audio generation using `--ref_audio` and `--ref_text` succeeded with the project-owned bf16 model.
 - Reference-audio test output: `phase0-qwen3-ref-audio-test.wav`, WAV, mono, 24 kHz, Float32, about 5.36 seconds, 507 KB.
 - Reference-audio runtime: generated in about 17.1 seconds, peak memory about 6.05 GB, active memory about 2.5 GB, cache about 256 MB.
+- Real user reference audio was converted from MP3 to `phase0-vanselee-reference-20260422.wav`, WAV, mono, 24 kHz, Int16, about 12.30 seconds, 577 KB.
+- Real user reference-audio generation succeeded with `--ref_audio` and `--ref_text`.
+- Real user reference output: `phase0-vanselee-refclone-test.wav`, WAV, mono, 24 kHz, Float32, about 9.96 seconds, 938 KB.
+- Real user reference runtime: generated in about 24.5 seconds, peak memory about 8.01 GB, active memory about 2.5 GB, cache about 257 MB.
 - Medium-length preset voice test succeeded with about 260 Chinese characters.
 - Medium-length preset output: `phase0-qwen3-500char-preset.wav`, WAV, mono, 24 kHz, Float32, about 39.76 seconds, 3.6 MB.
 - Medium-length preset runtime: generated in about 54.5 seconds, peak memory about 7.88 GB, active memory about 2.4 GB, cache about 257 MB.
@@ -73,6 +77,7 @@
 - Need to decide whether Phase 0 should test with a pre-downloaded model cache, a smaller model, or an alternate mirror/proxy if Hugging Face remains unreliable.
 - `ModelUtils` currently treats any non-zero `.safetensors` file as enough to consider a model directory present; this is risky for interrupted downloads and should be hardened with expected file size/hash validation.
 - Reference-audio generation raises memory pressure compared with preset voice generation; this must be tested carefully on the M2 8 GB baseline with longer inputs.
+- Real user reference-audio generation reached about 8.01 GB peak memory, so this mode should be considered high-risk on 8 GB machines unless input length and concurrency are tightly controlled.
 - Medium-length text generation with bf16 nearly reaches an 8 GB memory budget, so the app must enforce segment-based generation and avoid concurrent TTS jobs on low-memory machines.
 - Segment generation should be queued serially by default on 8 GB machines. Parallel generation should require explicit higher-memory capability detection and user opt-in.
 
