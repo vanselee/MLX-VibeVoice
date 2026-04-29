@@ -53,6 +53,7 @@
 - Hard-link verification: project file and cache file share the same inode with link count 2 for both root `model.safetensors` and `speech_tokenizer/model.safetensors`.
 - Hard-link generated audio properties: WAV, mono, 24 kHz, Float32, about 3.52 seconds, 334 KB.
 - Hard-link runtime memory: peak about 5.15 GB, active about 2.4 GB, cache about 256 MB.
+- After MimikaStudio was removed, the project-owned hard-link cache still generated `phase0-after-mimika-removal.wav`; generated audio was WAV, mono, 24 kHz, Float32, about 4.88 seconds, 462 KB, with peak memory about 5.27 GB.
 - The current 8bit Qwen3-TTS cache contains a partial root `model.safetensors`; it must not be treated as a valid completed model.
 
 ## Blockers
