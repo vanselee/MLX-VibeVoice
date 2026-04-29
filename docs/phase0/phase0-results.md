@@ -60,6 +60,10 @@
 - Medium-length preset voice test succeeded with about 260 Chinese characters.
 - Medium-length preset output: `phase0-qwen3-500char-preset.wav`, WAV, mono, 24 kHz, Float32, about 39.76 seconds, 3.6 MB.
 - Medium-length preset runtime: generated in about 54.5 seconds, peak memory about 7.88 GB, active memory about 2.4 GB, cache about 257 MB.
+- Segment generation test succeeded by splitting the medium text into four shorter chunks: `phase0-segment-01.wav` through `phase0-segment-04.wav`.
+- Segment outputs were all WAV, mono, 24 kHz, Float32. Durations were about 16.96s, 17.12s, 11.44s, and 11.52s.
+- Segment runtimes were about 42.1s, 39.9s, 26.5s, and 28.5s. Per-process peak memory was about 7.19 GB, 7.24 GB, 6.34 GB, and 6.39 GB.
+- Starting multiple segment generation processes in parallel did not crash in this run, but it produced high memory pressure and should not be the default product behavior.
 - The current 8bit Qwen3-TTS cache contains a partial root `model.safetensors`; it must not be treated as a valid completed model.
 
 ## Blockers
@@ -70,6 +74,7 @@
 - `ModelUtils` currently treats any non-zero `.safetensors` file as enough to consider a model directory present; this is risky for interrupted downloads and should be hardened with expected file size/hash validation.
 - Reference-audio generation raises memory pressure compared with preset voice generation; this must be tested carefully on the M2 8 GB baseline with longer inputs.
 - Medium-length text generation with bf16 nearly reaches an 8 GB memory budget, so the app must enforce segment-based generation and avoid concurrent TTS jobs on low-memory machines.
+- Segment generation should be queued serially by default on 8 GB machines. Parallel generation should require explicit higher-memory capability detection and user opt-in.
 
 ## Decisions
 
