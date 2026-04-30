@@ -127,23 +127,23 @@ private enum AppPage: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .scriptLibrary: "文案库"
-        case .workbench: "配音工作台"
-        case .roleReview: "角色确认"
-        case .resources: "资源中心"
-        case .taskQueue: "任务队列"
-        case .exportSettings: "导出与设置"
+        case .scriptLibrary: return "文案库"
+        case .workbench: return "配音工作台（整理中）"
+        case .roleReview: return "角色确认"
+        case .resources: return "资源中心"
+        case .taskQueue: return "任务队列"
+        case .exportSettings: return "导出与设置"
         }
     }
 
     var systemImage: String {
         switch self {
-        case .scriptLibrary: "doc.text"
-        case .workbench: "waveform"
-        case .roleReview: "person.2"
-        case .resources: "externaldrive"
-        case .taskQueue: "list.bullet.rectangle"
-        case .exportSettings: "square.and.arrow.up"
+        case .scriptLibrary: return "doc.text"
+        case .workbench: return "waveform.badge.exclamationmark"
+        case .roleReview: return "person.2"
+        case .resources: return "externaldrive"
+        case .taskQueue: return "list.bullet.rectangle"
+        case .exportSettings: return "square.and.arrow.up"
         }
     }
 }
