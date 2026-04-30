@@ -1,0 +1,216 @@
+import Foundation
+import SwiftData
+
+enum ScriptStatus: String, Codable, CaseIterable {
+    case draft
+    case ready
+    case generating
+    case completed
+    case failed
+}
+
+enum SegmentStatus: String, Codable, CaseIterable {
+    case pending
+    case generating
+    case completed
+    case failed
+    case skipped
+}
+
+enum VoiceKind: String, Codable, CaseIterable {
+    case preset
+    case reference
+}
+
+enum ExportKind: String, Codable, CaseIterable {
+    case wav
+    case srt
+    case projectPackage
+}
+
+@Model
+final class Script {
+    var id: UUID
+    var title: String
+    var subtitle: String
+    var bodyText: String
+    var status: ScriptStatus
+    var createdAt: Date
+    var updatedAt: Date
+    var lastExportedAt: Date?
+
+    @Relationship(deleteRule: .cascade, inverse: \ScriptSegment.script)
+    var segments: [ScriptSegment]
+
+    @Relationship(deleteRule: .cascade, inverse: \VoiceRole.script)
+    var roles: [VoiceRole]
+
+    init(
+        id: UUID = UUID(),
+        title: String,
+        subtitle: String = "",
+        bodyText: String = "",
+        status: ScriptStatus = .draft,
+        createdAt: Date = .now,
+        updatedAt: Date = .now,
+        lastExportedAt: Date? = nil,
+        segments: [ScriptSegment] = [],
+        roles: [VoiceRole] = []
+    ) {
+        self.id = id
+        self.title = title
+        self.subtitle = subtitle
+        self.bodyText = bodyText
+        self.status = status
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.lastExportedAt = lastExportedAt
+        self.segments = segments
+        self.roles = roles
+    }
+}
+
+@Model
+final class ScriptSegment {
+    var id: UUID
+    var order: Int
+    var text: String
+    var roleName: String
+    var status: SegmentStatus
+    var selectedVersion: Int
+    var script: Script?
+
+    init(
+        id: UUID = UUID(),
+        order: Int,
+        text: String,
+        roleName: String = "旁白",
+        status: SegmentStatus = .pending,
+        selectedVersion: Int = 1,
+        script: Script? = nil
+    ) {
+        self.id = id
+        self.order = order
+        self.text = text
+        self.roleName = roleName
+        self.status = status
+        self.selectedVersion = selectedVersion
+        self.script = script
+    }
+}
+
+@Model
+final class VoiceRole {
+    var id: UUID
+    var name: String
+    var normalizedName: String
+    var defaultVoiceName: String
+    var speed: Double
+    var volumeDB: Double
+    var pitch: Double
+    var script: Script?
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        normalizedName: String,
+        defaultVoiceName: String = "默认旁白",
+        speed: Double = 1.0,
+        volumeDB: Double = 0,
+        pitch: Double = 0,
+        script: Script? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.normalizedName = normalizedName
+        self.defaultVoiceName = defaultVoiceName
+        self.speed = speed
+        self.volumeDB = volumeDB
+        self.pitch = pitch
+        self.script = script
+    }
+}
+
+@Model
+final class VoiceProfile {
+    var id: UUID
+    var name: String
+    var kind: VoiceKind
+    var localeIdentifier: String
+    var referenceAudioPath: String?
+    var referenceText: String?
+    var createdAt: Date
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        kind: VoiceKind,
+        localeIdentifier: String = "zh-Hans",
+        referenceAudioPath: String? = nil,
+        referenceText: String? = nil,
+        createdAt: Date = .now
+    ) {
+        self.id = id
+        self.name = name
+        self.kind = kind
+        self.localeIdentifier = localeIdentifier
+        self.referenceAudioPath = referenceAudioPath
+        self.referenceText = referenceText
+        self.createdAt = createdAt
+    }
+}
+
+@Model
+final class GenerationJob {
+    var id: UUID
+    var scriptTitle: String
+    var totalSegments: Int
+    var completedSegments: Int
+    var failedSegments: Int
+    var status: ScriptStatus
+    var createdAt: Date
+    var updatedAt: Date
+
+    init(
+        id: UUID = UUID(),
+        scriptTitle: String,
+        totalSegments: Int,
+        completedSegments: Int = 0,
+        failedSegments: Int = 0,
+        status: ScriptStatus = .ready,
+        createdAt: Date = .now,
+        updatedAt: Date = .now
+    ) {
+        self.id = id
+        self.scriptTitle = scriptTitle
+        self.totalSegments = totalSegments
+        self.completedSegments = completedSegments
+        self.failedSegments = failedSegments
+        self.status = status
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+}
+
+@Model
+final class ExportRecord {
+    var id: UUID
+    var scriptTitle: String
+    var kind: ExportKind
+    var filePath: String
+    var createdAt: Date
+
+    init(
+        id: UUID = UUID(),
+        scriptTitle: String,
+        kind: ExportKind,
+        filePath: String,
+        createdAt: Date = .now
+    ) {
+        self.id = id
+        self.scriptTitle = scriptTitle
+        self.kind = kind
+        self.filePath = filePath
+        self.createdAt = createdAt
+    }
+}
