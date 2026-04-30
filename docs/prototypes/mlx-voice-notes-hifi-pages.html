@@ -579,6 +579,14 @@
       font-size: 12px;
     }
 
+    .table-scroll {
+      overflow: auto;
+    }
+
+    .library-table {
+      min-width: 760px;
+    }
+
     .table th,
     .table td {
       border-bottom: 1px solid #edf1f5;
@@ -593,19 +601,47 @@
 
     .library-table th:nth-child(1),
     .library-table td:nth-child(1) {
-      width: 28%;
+      width: 30%;
+    }
+
+    .library-table th:nth-child(2),
+    .library-table td:nth-child(2) {
+      width: 86px;
+    }
+
+    .library-table th:nth-child(3),
+    .library-table td:nth-child(3) {
+      width: 86px;
+      white-space: nowrap;
+    }
+
+    .library-table th:nth-child(7),
+    .library-table td:nth-child(7) {
+      width: 132px;
+      text-align: right;
+    }
+
+    .library-table th:nth-child(4),
+    .library-table td:nth-child(4),
+    .library-table th:nth-child(5),
+    .library-table td:nth-child(5),
+    .library-table th:nth-child(6),
+    .library-table td:nth-child(6) {
+      white-space: nowrap;
     }
 
     .status-label {
       display: inline-flex;
       align-items: center;
-      min-height: 23px;
-      border-radius: 999px;
-      padding: 0 8px;
+      height: 26px;
+      border-radius: 7px;
+      padding: 0 9px;
       font-size: 12px;
+      font-weight: 800;
       border: 1px solid var(--line);
       background: #fff;
       color: var(--muted);
+      white-space: nowrap;
     }
 
     .status-label.done {
@@ -624,6 +660,27 @@
       border-color: #efc6c1;
       background: var(--red-soft);
       color: var(--red);
+    }
+
+    .row-actions {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .btn.small {
+      height: 28px;
+      padding: 0 9px;
+      border-radius: 7px;
+      font-size: 12px;
+    }
+
+    .more-btn {
+      width: 30px;
+      padding: 0;
+      font-weight: 900;
+      letter-spacing: 1px;
     }
 
     .filter-row {
@@ -827,14 +884,14 @@
             <span class="tab">已导出</span>
           </div>
           <div class="grid-2">
-            <div class="card">
+            <div class="card table-scroll">
               <table class="table library-table">
-                <thead><tr><th>标题</th><th>状态</th><th>角色/段落</th><th>创建时间</th><th>修改时间</th><th>最近导出</th><th>操作</th></tr></thead>
+                <thead><tr><th>标题</th><th>状态</th><th>角色 / 段落</th><th>创建时间</th><th>修改时间</th><th>最近导出</th><th>操作</th></tr></thead>
                 <tbody>
-                  <tr><td><strong>平台规则吐槽</strong><br><span class="muted">短视频口播</span></td><td><span class="status-label done">已生成</span></td><td>3 角色 / 12 段</td><td>2026-04-30 09:21</td><td>今天 10:48</td><td>今天 11:15</td><td>打开工作台 · 复制 · 删除</td></tr>
-                  <tr><td><strong>直播间脚本</strong><br><span class="muted">老板 · 客服 · 旁白</span></td><td><span class="status-label running">生成中</span></td><td>3 角色 / 18 段</td><td>2026-04-28 20:10</td><td>昨天 21:40</td><td>未导出</td><td>打开工作台 · 暂停 · 复制</td></tr>
-                  <tr><td><strong>短视频开头库</strong><br><span class="muted">开场白集合</span></td><td><span class="status-label">未生成</span></td><td>1 角色 / 32 段</td><td>2026-04-19 14:08</td><td>2026-04-29 16:22</td><td>未导出</td><td>打开工作台 · 复制 · 重命名</td></tr>
-                  <tr><td><strong>售后争议案例</strong><br><span class="muted">案例复盘</span></td><td><span class="status-label fail">有失败</span></td><td>4 角色 / 21 段</td><td>2026-04-12 18:35</td><td>2026-04-30 08:11</td><td>2026-04-29 22:08</td><td>打开工作台 · 重试 · 诊断</td></tr>
+                  <tr><td><strong>平台规则吐槽</strong><br><span class="muted">短视频口播</span></td><td><span class="status-label done">已生成</span></td><td>3 / 12</td><td>2026-04-30 09:21</td><td>今天 10:48</td><td>今天 11:15</td><td><span class="row-actions"><button class="btn small primary">打开</button><button class="btn small more-btn" title="复制、删除">···</button></span></td></tr>
+                  <tr><td><strong>直播间脚本</strong><br><span class="muted">老板 · 客服 · 旁白</span></td><td><span class="status-label running">生成中 62%</span></td><td>3 / 18</td><td>2026-04-28 20:10</td><td>昨天 21:40</td><td>未导出</td><td><span class="row-actions"><button class="btn small">进度</button><button class="btn small more-btn" title="暂停、复制">···</button></span></td></tr>
+                  <tr><td><strong>短视频开头库</strong><br><span class="muted">开场白集合</span></td><td><span class="status-label">未生成</span></td><td>1 / 32</td><td>2026-04-19 14:08</td><td>2026-04-29 16:22</td><td>未导出</td><td><span class="row-actions"><button class="btn small">生成</button><button class="btn small more-btn" title="打开工作台、复制、重命名">···</button></span></td></tr>
+                  <tr><td><strong>售后争议案例</strong><br><span class="muted">案例复盘</span></td><td><span class="status-label fail">有失败</span></td><td>4 / 21</td><td>2026-04-12 18:35</td><td>2026-04-30 08:11</td><td>2026-04-29 22:08</td><td><span class="row-actions"><button class="btn small">诊断</button><button class="btn small more-btn" title="重试、打开工作台、复制">···</button></span></td></tr>
                 </tbody>
               </table>
             </div>
