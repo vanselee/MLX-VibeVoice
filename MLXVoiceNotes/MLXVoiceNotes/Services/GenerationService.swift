@@ -38,7 +38,7 @@ enum GenerationService {
     }
 
     static func cancel(script: Script) {
-        for segment in script.segments where segment.status != .completed {
+        for segment in script.segments {
             segment.status = .pending
         }
         script.status = .ready

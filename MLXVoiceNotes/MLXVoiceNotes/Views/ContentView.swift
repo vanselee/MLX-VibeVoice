@@ -662,7 +662,7 @@ private struct TaskQueueView: View {
 
     private var queueSummary: String {
         guard let script = selectedScript else { return "暂无文案任务" }
-        return "\(script.title) · \(script.segments.count) 段 · 已完成 \(completedCount) 段 · 失败 \(failedCount) 段；最终只导出整篇完整音频。"
+        return "\(script.title) · \(script.status.displayName) · \(script.segments.count) 段 · 已完成 \(completedCount) 段 · 失败 \(failedCount) 段；最终只导出整篇完整音频。"
     }
 
     private var primaryActionTitle: String {
