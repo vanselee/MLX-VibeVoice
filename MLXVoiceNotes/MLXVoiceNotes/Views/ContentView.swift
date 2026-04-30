@@ -233,6 +233,7 @@ private struct WorkbenchView: View {
     @Environment(\.modelContext) private var modelContext
     let scripts: [Script]
     @Binding var selectedScriptID: UUID?
+    @State private var parseSummary = "等待解析"
 
     private var selectedScript: Script? {
         scripts.first { $0.id == selectedScriptID } ?? scripts.first
@@ -263,6 +264,9 @@ private struct WorkbenchView: View {
                             pasteClipboard(into: selectedScript)
                         }
                         Button("AI 文案整理提示词") {}
+                        Button("解析角色") {
+                            parseRolesAndSegments(for: selectedScript)
+                        }
                         Spacer()
                         Button("生成整篇") {}
                             .buttonStyle(.borderedProminent)
@@ -293,6 +297,7 @@ private struct WorkbenchView: View {
                     ("状态", selectedScript.status.displayName),
                     ("角色", "\(selectedScript.roles.count)"),
                     ("段落", "\(selectedScript.segments.count)"),
+                    ("解析", parseSummary),
                     ("修改时间", selectedScript.updatedAt.relativeLabel),
                     ("输出", "完整 WAV")
                 ])
@@ -345,6 +350,56 @@ private struct WorkbenchView: View {
         script.updatedAt = .now
         script.status = .draft
         #endif
+    }
+
+    private func parseRolesAndSegments(for script: Script) {
+        let parsedScript = ScriptParser.parse(script.bodyText)
+
+        let oldSegments = script.segments
+        let oldRoles = script.roles
+        script.segments.removeAll()
+        script.roles.removeAll()
+        oldSegments.forEach(modelContext.delete)
+        oldRoles.forEach(modelContext.delete)
+
+        for parsedRole in parsedScript.roles {
+            let role = VoiceRole(
+                name: parsedRole.name,
+                normalizedName: parsedRole.normalizedName,
+                defaultVoiceName: defaultVoiceName(for: parsedRole.normalizedName),
+                script: script
+            )
+            modelContext.insert(role)
+            script.roles.append(role)
+        }
+
+        for parsedSegment in parsedScript.segments {
+            let segment = ScriptSegment(
+                order: parsedSegment.order,
+                text: parsedSegment.text,
+                roleName: parsedSegment.roleName,
+                script: script
+            )
+            modelContext.insert(segment)
+            script.segments.append(segment)
+        }
+
+        script.status = .ready
+        script.updatedAt = .now
+        parseSummary = "\(parsedScript.roles.count) 角色 / \(parsedScript.segments.count) 段"
+        if parsedScript.unmarkedSegmentCount > 0 {
+            parseSummary += "，\(parsedScript.unmarkedSegmentCount) 段旁白兜底"
+        }
+    }
+
+    private func defaultVoiceName(for roleName: String) -> String {
+        if roleName == "旁白" {
+            return "默认清晰女声"
+        }
+        if roleName.contains("男") || roleName.contains("博主") || roleName.contains("老板") {
+            return "自然男声"
+        }
+        return "默认清晰女声"
     }
 }
 
