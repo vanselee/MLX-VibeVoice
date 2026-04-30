@@ -41,7 +41,7 @@ enum GenerationService {
         for segment in script.segments {
             segment.status = .pending
         }
-        script.status = .ready
+        script.status = .draft
         script.updatedAt = .now
     }
 

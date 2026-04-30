@@ -558,10 +558,10 @@ private struct TaskQueueView: View {
     @Binding var selectedScriptID: UUID?
 
     private var selectedScript: Script? {
-        if let selected = scripts.first(where: { $0.id == selectedScriptID }) {
-            return taskScripts.contains(where: { $0.id == selected.id }) ? selected : (taskScripts.first ?? selected)
+        if let selected = taskScripts.first(where: { $0.id == selectedScriptID }) {
+            return selected
         }
-        return taskScripts.first ?? scripts.first
+        return taskScripts.first
     }
 
     var body: some View {
