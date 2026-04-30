@@ -32,6 +32,9 @@ struct ContentView: View {
                 selectedScriptID = scriptIDs.first
             }
         }
+        .onReceive(Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()) { _ in
+            advanceBackgroundGenerationTick()
+        }
     }
 
     @ViewBuilder
@@ -108,6 +111,39 @@ struct ContentView: View {
 
         samples.forEach(modelContext.insert)
         selectedScriptID = samples.first?.id
+    }
+
+    private func advanceBackgroundGenerationTick() {
+        guard let script = scripts
+            .filter({ $0.status == .generating })
+            .sorted(by: { $0.updatedAt < $1.updatedAt })
+            .first
+        else {
+            return
+        }
+
+        let orderedSegments = script.segments.sorted { $0.order < $1.order }
+        guard !orderedSegments.isEmpty else {
+            script.status = .ready
+            script.updatedAt = .now
+            return
+        }
+
+        if let generatingSegment = orderedSegments.first(where: { $0.status == .generating }) {
+            generatingSegment.status = .completed
+        }
+
+        if let nextSegment = orderedSegments.first(where: { $0.status == .pending }) {
+            nextSegment.status = .generating
+            script.status = .generating
+        } else if orderedSegments.allSatisfy({ $0.status == .completed }) {
+            script.status = .completed
+        } else if orderedSegments.contains(where: { $0.status == .failed }) {
+            script.status = .failed
+        } else {
+            script.status = .ready
+        }
+        script.updatedAt = .now
     }
 }
 
@@ -576,10 +612,10 @@ private struct TaskQueueView: View {
                 ProgressView(value: queueProgress)
                 HStack {
                     Button(primaryActionTitle) {
-                        advanceSelectedTask()
+                        resumeSelectedTask()
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(selectedScript == nil || selectedScript?.segments.isEmpty == true)
+                    .disabled(primaryActionDisabled)
 
                     Button("暂停") {
                         pauseSelectedTask()
@@ -672,11 +708,15 @@ private struct TaskQueueView: View {
     private var primaryActionTitle: String {
         guard let script = selectedScript else { return "继续生成" }
         return switch script.status {
-        case .generating: "推进一段"
+        case .generating: "自动生成中"
         case .completed: "重新生成"
         case .failed: "重试失败"
         case .draft, .ready: "继续生成"
         }
+    }
+
+    private var primaryActionDisabled: Bool {
+        selectedScript == nil || selectedScript?.segments.isEmpty == true || selectedScript?.status == .generating
     }
 
     private var segmentRows: [SegmentRow] {
@@ -702,7 +742,7 @@ private struct TaskQueueView: View {
         script.segments.filter { $0.status == .failed }.count
     }
 
-    private func advanceSelectedTask() {
+    private func resumeSelectedTask() {
         guard let script = selectedScript else { return }
 
         if failedCount(for: script) > 0 {
@@ -713,10 +753,6 @@ private struct TaskQueueView: View {
         let orderedSegments = script.segments.sorted { $0.order < $1.order }
         if script.status == .completed {
             orderedSegments.forEach { $0.status = .pending }
-        }
-
-        if let generatingSegment = orderedSegments.first(where: { $0.status == .generating }) {
-            generatingSegment.status = .completed
         }
 
         if let nextSegment = orderedSegments.first(where: { $0.status == .pending }) {
@@ -754,13 +790,13 @@ private struct TaskQueueView: View {
             segment.status = .pending
         }
         script.status = .generating
-        advanceSelectedTask()
+        resumeSelectedTask()
     }
 
     private func retrySegment(_ segment: ScriptSegment) {
         segment.status = .pending
         selectedScript?.status = .generating
-        advanceSelectedTask()
+        resumeSelectedTask()
     }
 }
 
