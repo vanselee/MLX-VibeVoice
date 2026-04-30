@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MLX Voice Notes Hi-Fi Page Set</title>
+  <style>
+    :root {
+      --bg: #eef1f4;
+      --paper: #ffffff;
+      --soft: #f6f8fa;
+      --ink: #17191d;
+      --muted: #66707d;
+      --line: #d8dde5;
+      --blue: #2563d8;
+      --blue-soft: #eaf1ff;
+      --green: #18815f;
+      --green-soft: #e7f6ef;
+      --amber: #8a5f00;
+      --amber-soft: #fff5dc;
+      --red: #b42318;
+      --red-soft: #fff1ef;
+      --shadow: 0 14px 46px rgba(31, 39, 51, .13);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #f8f9fb 0%, var(--bg) 100%);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .page {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 28px 24px 56px;
+    }
+
+    .cover {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 18px;
+      margin-bottom: 22px;
+      align-items: stretch;
+    }
+
+    .intro,
+    .map {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    .intro p,
+    .map p {
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    .screen-nav {
+      display: grid;
+      gap: 8px;
+    }
+
+    .screen-nav a {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: #253044;
+      text-decoration: none;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: #fff;
+    }
+
+    .screen {
+      border: 1px solid rgba(90, 101, 117, .32);
+      border-radius: 14px;
+      background: #fbfcfd;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin: 0 0 28px;
+    }
+
+    .titlebar {
+      height: 46px;
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr) 260px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      background: rgba(250, 251, 252, .94);
+    }
+
+    .traffic {
+      display: flex;
+      gap: 7px;
+      padding-left: 17px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #c9ced6;
+      border: 1px solid rgba(0, 0, 0, .08);
+    }
+
+    .screen-title {
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .screen-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding-right: 14px;
+    }
+
+    .btn {
+      height: 32px;
+      border: 1px solid #c5ccd6;
+      border-radius: 7px;
+      background: #fff;
+      padding: 0 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: #27313f;
+      white-space: nowrap;
+    }
+
+    .btn.primary {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .btn.green {
+      border-color: var(--green);
+      background: var(--green);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .screen-body {
+      min-height: 660px;
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: #f5f7fa;
+      padding: 14px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 4px 6px 16px;
+    }
+
+    .mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #2563d8, #16a36d);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+    }
+
+    .brand strong {
+      display: block;
+    }
+
+    .brand span,
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .nav-title {
+      color: #8d96a3;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin: 10px 6px 8px;
+    }
+
+    .nav-item,
+    .note,
+    .card,
+    .row-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+    }
+
+    .nav-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 9px 10px;
+      margin-bottom: 7px;
+    }
+
+    .nav-item.active {
+      border-color: #9bbcf6;
+      background: var(--blue-soft);
+      color: #174ea6;
+      font-weight: 800;
+    }
+
+    .note {
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    .note.active {
+      border-color: #9bbcf6;
+      background: #f7fbff;
+    }
+
+    .content {
+      min-width: 0;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .content-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .content-head h2 {
+      margin-bottom: 4px;
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 12px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      padding: 13px;
+    }
+
+    .card h3 {
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+
+    .prompt {
+      border: 1px solid #f0d79b;
+      background: var(--amber-soft);
+      color: #624800;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+    }
+
+    .editor {
+      min-height: 420px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .line {
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1fr) 78px;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #edf1f5;
+    }
+
+    .line:last-child {
+      border-bottom: 0;
+    }
+
+    .speaker,
+    .tag,
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .speaker {
+      min-height: 26px;
+      padding: 3px 9px;
+      background: var(--blue-soft);
+      color: #174ea6;
+      font-weight: 800;
+    }
+
+    .speaker.narrator {
+      background: var(--green-soft);
+      color: #0d684b;
+    }
+
+    .speaker.warn {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .tag {
+      border: 1px solid #efd48e;
+      background: #fff7df;
+      color: #7b5600;
+      padding: 1px 7px;
+    }
+
+    .pill {
+      min-height: 23px;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+    }
+
+    .mini {
+      height: 26px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--muted);
+      padding: 0 8px;
+    }
+
+    .row-card {
+      display: grid;
+      grid-template-columns: 140px minmax(0, 1fr) 180px;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 9px;
+    }
+
+    .row-card.compact {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .metric {
+      min-height: 34px;
+      border-bottom: 1px solid #edf1f5;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .metric:last-child {
+      border-bottom: 0;
+    }
+
+    .metric span {
+      color: var(--muted);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    .tab {
+      height: 30px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      display: inline-flex;
+      align-items: center;
+      background: #fff;
+      color: var(--muted);
+    }
+
+    .tab.active {
+      border-color: #9bbcf6;
+      background: var(--blue-soft);
+      color: #174ea6;
+      font-weight: 800;
+    }
+
+    .progress {
+      height: 8px;
+      background: #e2e7ef;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--blue);
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .table th,
+    .table td {
+      border-bottom: 1px solid #edf1f5;
+      padding: 10px 8px;
+      text-align: left;
+    }
+
+    .table th {
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .version {
+      min-width: 30px;
+      height: 22px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      background: #fff;
+      margin-right: 3px;
+    }
+
+    .version.active {
+      border-color: #9bbcf6;
+      background: var(--blue-soft);
+      color: #174ea6;
+      font-weight: 800;
+    }
+
+    .statusbar {
+      border-top: 1px solid var(--line);
+      background: #fbfcfd;
+      min-height: 34px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      align-items: center;
+      padding: 0 16px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .statusbar strong {
+      color: #2c3440;
+    }
+
+    @media (max-width: 980px) {
+      .cover,
+      .screen-body,
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .titlebar,
+      .statusbar {
+        grid-template-columns: 1fr;
+        height: auto;
+        gap: 8px;
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="cover">
+      <div class="intro">
+        <h1>MLX Voice Notes 页面组原型</h1>
+        <p>这套页面用于回答“最终 App 不止一个页面”的问题。主工作台承载最高频创作动作，其它页面承载批量确认、资源管理、任务监控、导出和设置。所有页面保持 macOS 原生工具感。</p>
+      </div>
+      <nav class="map">
+        <h3>页面目录</h3>
+        <div class="screen-nav">
+          <a href="#workspace"><span>01 配音工作台</span><span>高频创作主界面</span></a>
+          <a href="#roles"><span>02 角色确认</span><span>批量处理候选角色</span></a>
+          <a href="#resources"><span>03 资源中心</span><span>模型、音色、缓存</span></a>
+          <a href="#queue"><span>04 生成队列</span><span>分段、版本、失败重试</span></a>
+          <a href="#export-settings"><span>05 导出与设置</span><span>交付、语言、维护</span></a>
+        </div>
+      </nav>
+    </section>
+
+    <section class="screen" id="workspace">
+      <header class="titlebar">
+        <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="screen-title">01 配音工作台</div>
+        <div class="screen-actions"><button class="btn">检查模型</button><button class="btn primary">导出</button></div>
+      </header>
+      <div class="screen-body">
+        <aside class="sidebar">
+          <div class="brand"><div class="mark">MV</div><div><strong>MLX Voice Notes</strong><span>本地多音色配音</span></div></div>
+          <div class="nav-title">工作区</div>
+          <div class="nav-item active"><span>配音工作台</span><span>4</span></div>
+          <div class="nav-item"><span>任务队列</span><span>2</span></div>
+          <div class="nav-item"><span>资源中心</span><span>1</span></div>
+          <div class="nav-item"><span>设置</span></div>
+          <div class="nav-title">最近笔记</div>
+          <div class="note active"><strong>平台规则吐槽</strong><br><span class="muted">3 个角色 · 12 段</span></div>
+          <div class="note"><strong>直播间脚本</strong><br><span class="muted">旁白 · 老板 · 客服</span></div>
+        </aside>
+        <div class="content">
+          <div class="content-head">
+            <div><h2>平台规则吐槽</h2><p class="muted">自动保存于 09:58 · 发现 1 段未标记音色 · 4 段待生成</p></div>
+            <div class="toolbar"><button class="btn">AI 文案整理提示词</button><button class="btn">解析角色</button><button class="btn green">生成整篇</button></div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <div class="prompt">
+                <div><strong>输入前辅助</strong><br>复制提示词到外部 AI，让它输出“角色名：台词”和语音标签格式。软件不上传文案。</div>
+                <div class="actions"><button class="btn primary">复制提示词</button><button class="btn">插入示例</button></div>
+              </div>
+              <div class="editor">
+                <div class="line"><span class="speaker narrator">旁白</span><div>你永远都搞不清楚这些平台它到底要什么，不要什么。</div><button class="mini">试听</button></div>
+                <div class="line"><span class="speaker">博主</span><div>有时候一条视频吧，花几个小时你把它做出来了，<span class="tag">[停顿500ms]</span> 发到了 A 平台呢，正常通过。</div><button class="mini">重生成</button></div>
+                <div class="line"><span class="speaker">博主</span><div>发到 B 平台呢，直接限流，有的还给你封号呢。<span class="tag">[强调]</span></div><button class="mini">试听</button></div>
+                <div class="line"><span class="speaker warn">未标记</span><div>所以做内容不能只看播放量，还要看平台规则和账号风险。</div><button class="mini">选音色</button></div>
+              </div>
+            </div>
+            <aside>
+              <div class="card"><h3>未标记音色</h3><p class="muted">发现 1 段未标记音色。现在选择音色，或忽略并使用旁白音色。</p><button class="btn primary">选择音色</button> <button class="btn">使用旁白</button></div>
+              <div class="card"><h3>当前角色</h3><div class="metric"><span>角色</span><strong>博主</strong></div><div class="metric"><span>音色</span><strong>vanselee 参考音色</strong></div><div class="metric"><span>语速</span><strong>1.05x</strong></div><div class="metric"><span>音调</span><strong>默认</strong></div></div>
+              <div class="card"><h3>生成策略</h3><div class="metric"><span>模型</span><strong>Qwen3 0.6B bf16</strong></div><div class="metric"><span>并发</span><strong>1 · 串行</strong></div><div class="metric"><span>输出</span><strong>24kHz WAV</strong></div></div>
+            </aside>
+          </div>
+        </div>
+      </div>
+      <footer class="statusbar"><span>模型：<strong>Qwen3 0.6B</strong></span><span>内存峰值：<strong>7-8GB</strong></span><span>保存：<strong>已自动保存</strong></span><span>语言：<strong>跟随系统 · 中文</strong></span></footer>
+    </section>
+
+    <section class="screen" id="roles">
+      <header class="titlebar">
+        <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="screen-title">02 角色确认</div>
+        <div class="screen-actions"><button class="btn">返回编辑器</button><button class="btn primary">应用并继续</button></div>
+      </header>
+      <div class="screen-body">
+        <aside class="sidebar">
+          <div class="brand"><div class="mark">MV</div><div><strong>角色确认</strong><span>非阻塞批量处理</span></div></div>
+          <div class="nav-title">识别结果</div>
+          <div class="nav-item active"><span>候选角色</span><span>4</span></div>
+          <div class="nav-item"><span>未标记内容</span><span>1</span></div>
+          <div class="nav-item"><span>相似名称</span><span>1</span></div>
+        </aside>
+        <div class="content">
+          <div class="content-head">
+            <div><h2>确认角色与未标记文本</h2><p class="muted">批量确认候选角色，不用逐个弹窗打断编辑。</p></div>
+            <div class="toolbar"><button class="btn">全部使用建议</button><button class="btn primary">保存绑定</button></div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <h3>候选角色</h3>
+              <div class="row-card"><strong>博主</strong><span>出现 8 次，格式稳定，建议确认为角色。</span><div class="actions"><button class="btn primary">确认</button><button class="btn">合并</button></div></div>
+              <div class="row-card"><strong>旁白</strong><span>系统内置角色，用于未标记正文和自然叙述。</span><div class="actions"><button class="btn primary">使用</button><button class="btn">更换音色</button></div></div>
+              <div class="row-card"><strong>时间</strong><span>疑似元信息：时间：2026 年 4 月 30 日。</span><div class="actions"><button class="btn">普通文本</button><button class="btn">角色</button></div></div>
+              <div class="row-card"><strong>小 明</strong><span>疑似与“小明”相同，建议合并。</span><div class="actions"><button class="btn primary">合并</button><button class="btn">保留</button></div></div>
+            </div>
+            <div>
+              <div class="card"><h3>未标记内容</h3><p>“所以做内容不能只看播放量，还要看平台规则和账号风险。”</p><div class="actions"><button class="btn primary">选择音色</button><button class="btn">归入旁白</button></div></div>
+              <div class="card"><h3>确认后动作</h3><div class="metric"><span>新角色</span><strong>加入角色列表</strong></div><div class="metric"><span>同名角色</span><strong>尝试匹配音色库</strong></div><div class="metric"><span>未标记文本</span><strong>忽略后归旁白</strong></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="statusbar"><span>候选角色：<strong>4</strong></span><span>未标记：<strong>1 段</strong></span><span>相似名：<strong>1 组</strong></span><span>状态：<strong>等待确认</strong></span></footer>
+    </section>
+
+    <section class="screen" id="resources">
+      <header class="titlebar">
+        <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="screen-title">03 资源中心</div>
+        <div class="screen-actions"><button class="btn">刷新列表</button><button class="btn primary">下载推荐模型</button></div>
+      </header>
+      <div class="screen-body">
+        <aside class="sidebar">
+          <div class="brand"><div class="mark">MV</div><div><strong>资源中心</strong><span>模型 · 音色 · 缓存</span></div></div>
+          <div class="nav-title">资源</div>
+          <div class="nav-item active"><span>模型</span><span>3</span></div>
+          <div class="nav-item"><span>音色</span><span>8</span></div>
+          <div class="nav-item"><span>缓存</span><span>20GB</span></div>
+        </aside>
+        <div class="content">
+          <div class="content-head"><div><h2>模型、音色与缓存</h2><p class="muted">普通用户主路径是 App 内下载，不依赖手动导入。</p></div></div>
+          <div class="tabs"><span class="tab active">模型</span><span class="tab">音色</span><span class="tab">缓存</span></div>
+          <div class="grid-3">
+            <div class="card"><h3>Qwen3-TTS 0.6B Base bf16</h3><p class="muted">中文 · 参考音色 · 推荐 8GB 以上统一内存</p><div class="progress"><span style="width:100%"></span></div><div class="metric"><span>状态</span><strong>已安装 · 校验通过</strong></div></div>
+            <div class="card"><h3>Qwen3-TTS 0.6B Base 8bit</h3><p class="muted">下载中 · 1.8 MB/s · 剩余 12 分钟</p><div class="progress"><span style="width:42%"></span></div><div class="actions"><button class="btn">暂停</button><button class="btn">取消</button></div></div>
+            <div class="card"><h3>Qwen3-TTS 1.7B Base</h3><p class="muted">更高质量 · 推荐 16GB 以上统一内存</p><div class="progress"><span style="width:0%"></span></div><button class="btn primary">下载</button></div>
+          </div>
+          <div class="grid-2" style="margin-top:12px;">
+            <div class="card"><h3>音色库</h3><div class="row-card compact"><span><strong>vanselee 参考音色</strong><br><span class="muted">参考音频 12.3s · 当前笔记覆盖</span></span><button class="btn">测试句</button></div><div class="row-card compact"><span><strong>默认清晰女声</strong><br><span class="muted">全局旁白音色</span></span><button class="btn">试听</button></div></div>
+            <div class="card"><h3>缓存占用</h3><div class="metric"><span>模型</span><strong>1.4GB</strong></div><div class="metric"><span>生成缓存</span><strong>620MB</strong></div><div class="metric"><span>项目资产</span><strong>180MB</strong></div><button class="btn">清理未锁定缓存</button></div>
+          </div>
+        </div>
+      </div>
+      <footer class="statusbar"><span>下载：<strong>42%</strong></span><span>模型占用：<strong>1.4GB</strong></span><span>缓存上限：<strong>20GB</strong></span><span>状态：<strong>校验中断点续传</strong></span></footer>
+    </section>
+
+    <section class="screen" id="queue">
+      <header class="titlebar">
+        <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="screen-title">04 生成队列</div>
+        <div class="screen-actions"><button class="btn">暂停全部</button><button class="btn primary">继续生成</button></div>
+      </header>
+      <div class="screen-body">
+        <aside class="sidebar">
+          <div class="brand"><div class="mark">MV</div><div><strong>生成队列</strong><span>串行 · 可续跑</span></div></div>
+          <div class="nav-title">任务</div>
+          <div class="note active"><strong>平台规则吐槽</strong><br><span class="muted">42% · 生成中</span></div>
+          <div class="note"><strong>直播间脚本</strong><br><span class="muted">等待模型下载</span></div>
+        </aside>
+        <div class="content">
+          <div class="content-head"><div><h2>当前任务：平台规则吐槽</h2><p class="muted">按句子分段生成，失败时只重试单段，当前选中版本参与整篇导出。</p></div><div class="toolbar"><button class="btn">只看失败</button><button class="btn">导出诊断</button></div></div>
+          <div class="grid-2">
+            <div class="card">
+              <table class="table">
+                <thead><tr><th>段落</th><th>角色</th><th>音色</th><th>版本</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                  <tr><td>01</td><td>旁白</td><td>默认女声</td><td><span class="version">V1</span><span class="version active">V2</span><span class="version">V3</span></td><td>完成</td><td>试听</td></tr>
+                  <tr><td>02</td><td>博主</td><td>vanselee</td><td><span class="version active">V1</span></td><td>生成中</td><td>暂停</td></tr>
+                  <tr><td>03</td><td>博主</td><td>vanselee</td><td>-</td><td>等待</td><td>跳过</td></tr>
+                  <tr><td>04</td><td>旁白</td><td>默认女声</td><td>-</td><td>等待</td><td>跳过</td></tr>
+                  <tr><td>05</td><td>质疑者</td><td>自然男声</td><td><span class="version">V1</span></td><td>失败</td><td>重试</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <div class="card"><h3>资源状态</h3><div class="progress"><span style="width:42%"></span></div><div class="metric"><span>总进度</span><strong>42%</strong></div><div class="metric"><span>峰值预估</span><strong>7.8GB</strong></div><div class="metric"><span>剩余时间</span><strong>约 2 分钟</strong></div><div class="metric"><span>失败策略</span><strong>单段重试</strong></div></div>
+              <div class="card"><h3>失败详情</h3><p class="muted">段落 05 生成超时。可降低质量、缩短分段或稍后重试。</p><button class="btn primary">重试段落</button> <button class="btn">跳过</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="statusbar"><span>并发：<strong>1 · 串行</strong></span><span>失败：<strong>1 段</strong></span><span>受保护版本：<strong>2 个</strong></span><span>内存：<strong>高压力</strong></span></footer>
+    </section>
+
+    <section class="screen" id="export-settings">
+      <header class="titlebar">
+        <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="screen-title">05 导出与设置</div>
+        <div class="screen-actions"><button class="btn">预览</button><button class="btn primary">导出</button></div>
+      </header>
+      <div class="screen-body">
+        <aside class="sidebar">
+          <div class="brand"><div class="mark">MV</div><div><strong>交付与维护</strong><span>导出 · 语言 · 诊断</span></div></div>
+          <div class="nav-title">面板</div>
+          <div class="nav-item active"><span>导出</span></div>
+          <div class="nav-item"><span>设置</span></div>
+          <div class="nav-item"><span>诊断</span></div>
+        </aside>
+        <div class="content">
+          <div class="content-head"><div><h2>导出成品与应用设置</h2><p class="muted">首次默认 Downloads，之后记住用户上次选择的位置。</p></div></div>
+          <div class="grid-2">
+            <div class="card">
+              <h3>导出预览</h3>
+              <div class="metric"><span>文件名</span><strong>平台规则吐槽_20260430_231500.wav</strong></div>
+              <div class="metric"><span>保存位置</span><strong>Downloads / MLX Voice Notes</strong></div>
+              <div class="grid-3" style="margin-top:12px;">
+                <div class="card"><h3>WAV</h3><p class="muted">24kHz · mono · 16-bit PCM</p></div>
+                <div class="card"><h3>SRT</h3><p class="muted">句子级字幕 · UTF-8</p></div>
+                <div class="card"><h3>项目包</h3><p class="muted">文案 · 角色 · 参数 · 音频</p></div>
+              </div>
+              <div class="actions" style="margin-top:12px;"><button class="btn primary">导出 WAV</button><button class="btn">打开文件夹</button><button class="btn">复制路径</button><button class="btn">再次导出</button></div>
+            </div>
+            <div>
+              <div class="card"><h3>导出选项</h3><div class="metric"><span>响度归一化</span><strong>短视频 -14 LUFS</strong></div><div class="metric"><span>段落淡入淡出</span><strong>20ms</strong></div><div class="metric"><span>首尾淡入淡出</span><strong>80ms</strong></div><div class="metric"><span>导出字幕</span><strong>开启</strong></div><div class="metric"><span>包含参考音频</span><strong>关闭</strong></div></div>
+              <div class="card"><h3>设置</h3><div class="metric"><span>界面语言</span><strong>跟随系统：中文</strong></div><div class="metric"><span>非中文系统</span><strong>默认 English</strong></div><div class="metric"><span>缓存上限</span><strong>20GB</strong></div><div class="actions" style="margin-top:12px;"><button class="btn">清理缓存</button><button class="btn">检查更新</button><button class="btn">导出诊断</button></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="statusbar"><span>WAV：<strong>24kHz mono</strong></span><span>SRT：<strong>开启</strong></span><span>语言：<strong>跟随系统</strong></span><span>诊断：<strong>不含完整文案</strong></span></footer>
+    </section>
+  </main>
+</body>
+</html>
