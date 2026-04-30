@@ -590,6 +590,48 @@
       font-weight: 800;
     }
 
+    .library-table th:nth-child(1),
+    .library-table td:nth-child(1) {
+      width: 28%;
+    }
+
+    .status-label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 23px;
+      border-radius: 999px;
+      padding: 0 8px;
+      font-size: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+    }
+
+    .status-label.done {
+      border-color: #a8d8c4;
+      background: var(--green-soft);
+      color: #0d684b;
+    }
+
+    .status-label.running {
+      border-color: #a9c3f6;
+      background: var(--blue-soft);
+      color: #174ea6;
+    }
+
+    .status-label.fail {
+      border-color: #efc6c1;
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
     .version {
       min-width: 30px;
       height: 22px;
@@ -681,11 +723,12 @@
         <h3>页面目录</h3>
         <div class="screen-nav">
           <a href="#workspace"><span>01 配音工作台</span><span>高频创作主界面</span></a>
-          <a href="#roles"><span>02 角色确认</span><span>批量处理候选角色</span></a>
-          <a href="#resources"><span>03 资源中心</span><span>模型、音色、缓存</span></a>
-          <a href="#queue"><span>04 生成队列</span><span>分段、版本、失败重试</span></a>
-          <a href="#export-settings"><span>05 导出与设置</span><span>交付、语言、维护</span></a>
-          <a href="#errors"><span>06 错误处理</span><span>失败、权限、诊断</span></a>
+          <a href="#library"><span>02 文案库</span><span>搜索、排序、管理文案</span></a>
+          <a href="#roles"><span>03 角色确认</span><span>批量处理候选角色</span></a>
+          <a href="#resources"><span>04 资源中心</span><span>模型、音色、缓存</span></a>
+          <a href="#queue"><span>05 生成队列</span><span>分段、版本、失败重试</span></a>
+          <a href="#export-settings"><span>06 导出与设置</span><span>交付、语言、维护</span></a>
+          <a href="#errors"><span>07 错误处理</span><span>失败、权限、诊断</span></a>
         </div>
       </nav>
     </section>
@@ -700,6 +743,7 @@
         <aside class="sidebar">
           <div class="brand"><img class="mark" src="assets/mlx-voice-notes-logo.png" alt="MLX Voice Notes logo"><div><strong>MLX Voice Notes</strong><span>本地多音色配音</span></div></div>
           <div class="nav-title">工作区</div>
+          <div class="nav-item"><span>文案库</span><span title="全部文案">18</span></div>
           <div class="nav-item active"><span>配音工作台</span><span title="待生成段落">4</span></div>
           <div class="nav-item"><span>任务队列</span><span title="待处理任务">2</span></div>
           <div class="nav-item"><span>资源中心</span><span title="资源告警">1</span></div>
@@ -744,10 +788,62 @@
       <footer class="statusbar"><span>模型：<strong>Qwen3 0.6B</strong></span><span>内存峰值：<strong>7-8GB</strong></span><span>保存：<strong>已自动保存</strong></span><span>语言：<strong>跟随系统 · 中文</strong></span></footer>
     </section>
 
+    <section class="screen" id="library">
+      <header class="titlebar">
+        <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="screen-title">02 文案库</div>
+        <div class="screen-actions"><button class="btn">从剪贴板粘贴</button><button class="btn primary">新建文案</button></div>
+      </header>
+      <div class="screen-body">
+        <aside class="sidebar">
+          <div class="brand"><img class="mark" src="assets/mlx-voice-notes-logo.png" alt="MLX Voice Notes logo"><div><strong>文案库</strong><span>配音文案管理</span></div></div>
+          <div class="nav-title">筛选</div>
+          <div class="nav-item active"><span>全部文案</span><span>18</span></div>
+          <div class="nav-item"><span>最近修改</span><span>6</span></div>
+          <div class="nav-item"><span>有失败</span><span>1</span></div>
+          <div class="nav-item"><span>已导出</span><span>9</span></div>
+          <div class="nav-title">快捷操作</div>
+          <button class="btn primary" style="width:100%; margin-bottom:6px;">新建配音文案</button>
+          <button class="btn" style="width:100%;">粘贴并新建</button>
+        </aside>
+        <div class="content">
+          <div class="content-head">
+            <div><h2>文案库</h2><p class="muted">管理所有配音文案、生成状态和导出记录。默认按最近修改排序。</p></div>
+            <div class="toolbar"><button class="btn">列表视图</button><button class="btn">批量操作</button></div>
+          </div>
+          <div class="filter-row">
+            <span class="input" style="min-width:260px;">搜索标题或正文</span>
+            <span class="tab active">最近修改</span>
+            <span class="tab">创建时间</span>
+            <span class="tab">全部状态</span>
+            <span class="tab">已导出</span>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <table class="table library-table">
+                <thead><tr><th>标题</th><th>状态</th><th>角色/段落</th><th>创建时间</th><th>修改时间</th><th>最近导出</th><th>操作</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>平台规则吐槽</strong><br><span class="muted">短视频口播</span></td><td><span class="status-label done">已生成</span></td><td>3 角色 / 12 段</td><td>2026-04-30 09:21</td><td>今天 10:48</td><td>今天 11:15</td><td>打开 · 复制 · 删除</td></tr>
+                  <tr><td><strong>直播间脚本</strong><br><span class="muted">老板 · 客服 · 旁白</span></td><td><span class="status-label running">生成中</span></td><td>3 角色 / 18 段</td><td>2026-04-28 20:10</td><td>昨天 21:40</td><td>未导出</td><td>打开 · 暂停 · 复制</td></tr>
+                  <tr><td><strong>短视频开头库</strong><br><span class="muted">开场白集合</span></td><td><span class="status-label">未生成</span></td><td>1 角色 / 32 段</td><td>2026-04-19 14:08</td><td>2026-04-29 16:22</td><td>未导出</td><td>打开 · 复制 · 重命名</td></tr>
+                  <tr><td><strong>售后争议案例</strong><br><span class="muted">案例复盘</span></td><td><span class="status-label fail">有失败</span></td><td>4 角色 / 21 段</td><td>2026-04-12 18:35</td><td>2026-04-30 08:11</td><td>2026-04-29 22:08</td><td>打开 · 重试 · 诊断</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <aside>
+              <div class="card"><h3>选中文案详情</h3><div class="metric"><span>标题</span><strong>平台规则吐槽</strong></div><div class="metric"><span>创建时间</span><strong>2026-04-30 09:21</strong></div><div class="metric"><span>修改时间</span><strong>今天 10:48</strong></div><div class="metric"><span>字数</span><strong>486 字</strong></div><div class="metric"><span>角色/段落</span><strong>3 / 12</strong></div><div class="metric"><span>最近导出</span><strong>今天 11:15</strong></div><div class="actions"><button class="btn primary">打开工作台</button><button class="btn">导出项目包</button></div></div>
+              <div class="card"><h3>管理规则</h3><p class="muted">修改时间用于排序；创建时间用于溯源；最近导出用于判断是否已经交付。删除文案前需要确认是否同时删除生成音频资产。</p></div>
+            </aside>
+          </div>
+        </div>
+      </div>
+      <footer class="statusbar"><span>文案：<strong>18</strong></span><span>默认排序：<strong>最近修改</strong></span><span>搜索：<strong>标题 + 正文</strong></span><span>状态：<strong>含生成/导出记录</strong></span></footer>
+    </section>
+
     <section class="screen" id="roles">
       <header class="titlebar">
         <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-        <div class="screen-title">02 角色确认</div>
+        <div class="screen-title">03 角色确认</div>
         <div class="screen-actions"><button class="btn">返回编辑器</button><button class="btn primary">应用并继续</button></div>
       </header>
       <div class="screen-body">
@@ -784,7 +880,7 @@
     <section class="screen" id="resources">
       <header class="titlebar">
         <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-        <div class="screen-title">03 资源中心</div>
+        <div class="screen-title">04 资源中心</div>
         <div class="screen-actions"><button class="btn">刷新列表</button><button class="btn primary">下载推荐模型</button></div>
       </header>
       <div class="screen-body">
@@ -860,7 +956,7 @@
     <section class="screen" id="queue">
       <header class="titlebar">
         <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-        <div class="screen-title">04 生成队列</div>
+        <div class="screen-title">05 生成队列</div>
         <div class="screen-actions"><button class="btn">暂停全部</button><button class="btn primary">继续生成</button></div>
       </header>
       <div class="screen-body">
@@ -898,7 +994,7 @@
     <section class="screen" id="export-settings">
       <header class="titlebar">
         <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-        <div class="screen-title">05 导出与设置</div>
+        <div class="screen-title">06 导出与设置</div>
         <div class="screen-actions"><button class="btn">预览</button><button class="btn primary">导出</button></div>
       </header>
       <div class="screen-body">
@@ -936,7 +1032,7 @@
     <section class="screen" id="errors">
       <header class="titlebar">
         <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-        <div class="screen-title">06 错误处理</div>
+        <div class="screen-title">07 错误处理</div>
         <div class="screen-actions"><button class="btn">导出诊断</button><button class="btn primary">返回工作台</button></div>
       </header>
       <div class="screen-body">
