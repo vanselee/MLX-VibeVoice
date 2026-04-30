@@ -153,7 +153,8 @@ private struct ScriptLibraryView: View {
     let scripts: [Script]
     @Binding var selectedScriptID: UUID?
     @Binding var selectedPage: AppPage
-    @State private var isEditorExpanded = true
+    @State private var expandedScriptID: UUID?
+    @State private var deleteCandidate: Script?
     @State private var parseSummary = "等待解析"
 
     private var selectedScript: Script? {
@@ -161,7 +162,7 @@ private struct ScriptLibraryView: View {
     }
 
     var body: some View {
-        AppPageScaffold(title: "文案工作区", subtitle: "编辑当前文案、解析角色、生成整篇，并在下方管理历史文案。") {
+        AppPageScaffold(title: "文案工作区", subtitle: "管理文案列表，点击文案即可展开编辑并生成音频。") {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     Text("默认按最近修改排序")
@@ -173,41 +174,23 @@ private struct ScriptLibraryView: View {
                     .buttonStyle(.borderedProminent)
                 }
 
-                if let selectedScript, isEditorExpanded {
-                    currentScriptEditor(for: selectedScript)
-                } else if let selectedScript {
-                    Button {
-                        isEditorExpanded = true
-                    } label: {
-                        HStack {
-                            Label("展开编辑", systemImage: "rectangle.expand.vertical")
-                            Text(selectedScript.title)
-                                .fontWeight(.semibold)
-                            Spacer()
-                            StatusBadge(status: selectedScript.status)
+                ScrollView {
+                    LazyVStack(spacing: 10) {
+                        ForEach(scripts) { script in
+                            scriptRow(for: script)
                         }
                     }
-                    .buttonStyle(.plain)
-                    .padding()
-                    .background(.background)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-
-                Divider()
-
-                Text("文案列表")
-                    .font(.headline)
-
-                List(selection: $selectedScriptID) {
-                    ForEach(scripts) { script in
-                        ScriptListRow(script: script)
-                            .tag(script.id)
-                    }
+                    .padding(.vertical, 2)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 8))
-                .onChange(of: selectedScriptID) {
-                    isEditorExpanded = true
+            }
+            .alert("删除文案？", isPresented: deleteAlertBinding) {
+                Button("取消", role: .cancel) {}
+                Button("删除", role: .destructive) {
+                    deleteSelectedCandidate()
                 }
+            } message: {
+                Text("删除后会移除这篇文案及其段落、角色绑定和生成状态。")
             }
         } sidebar: {
             if let selectedScript {
@@ -228,10 +211,64 @@ private struct ScriptLibraryView: View {
     }
 
     @ViewBuilder
+    private func scriptRow(for script: Script) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                Button {
+                    openEditor(for: script)
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(script.title)
+                            .fontWeight(.semibold)
+                        Text("修改 \(script.updatedAt.relativeLabel) · \(script.roles.count) 角色 / \(script.segments.count) 段")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+
+                StatusBadge(status: script.status)
+
+                if script.status == .generating {
+                    ProgressView(value: generationProgress(for: script))
+                        .frame(width: 120)
+                }
+
+                Button(expandedScriptID == script.id ? "保存" : "编辑") {
+                    if expandedScriptID == script.id {
+                        saveAndCollapse(script)
+                    } else {
+                        openEditor(for: script)
+                    }
+                }
+
+                Button("生成音频") {
+                    startPlaceholderGeneration(for: script)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(script.status == .generating)
+
+                Button("删除", role: .destructive) {
+                    deleteCandidate = script
+                }
+                .disabled(script.status == .generating)
+            }
+
+            if expandedScriptID == script.id {
+                currentScriptEditor(for: script)
+            }
+        }
+        .padding()
+        .background(script.id == selectedScriptID ? Color.accentColor.opacity(0.08) : Color(nsColor: .textBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    @ViewBuilder
     private func currentScriptEditor(for script: Script) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("当前文案")
+                Text("编辑文案")
                     .font(.headline)
                 StatusBadge(status: script.status)
                 if script.status == .generating {
@@ -239,15 +276,12 @@ private struct ScriptLibraryView: View {
                         .frame(width: 160)
                 }
                 Spacer()
-                Button("收起编辑") {
-                    isEditorExpanded = false
+                Button("保存") {
+                    saveAndCollapse(script)
                 }
             }
 
             TextField("标题", text: binding(for: script, keyPath: \.title))
-                .textFieldStyle(.roundedBorder)
-
-            TextField("副标题", text: binding(for: script, keyPath: \.subtitle))
                 .textFieldStyle(.roundedBorder)
 
             HStack {
@@ -267,10 +301,6 @@ private struct ScriptLibraryView: View {
                         selectedPage = .taskQueue
                     }
                 }
-                Button(script.status == .completed ? "重新生成" : "生成整篇") {
-                    startPlaceholderGeneration(for: script)
-                }
-                .buttonStyle(.borderedProminent)
             }
 
             if script.status == .generating || script.status == .completed {
@@ -303,15 +333,18 @@ private struct ScriptLibraryView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         }
-        .padding()
-        .background(.background)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private func createScript() {
+        if let reusableDraft = scripts.first(where: isReusableBlankDraft) {
+            openEditor(for: reusableDraft)
+            parseSummary = "继续编辑空白草稿"
+            return
+        }
+
         let script = Script(
             title: "未命名文案",
-            subtitle: "新建配音文案",
+            subtitle: "",
             bodyText: "[旁白] 在这里输入要配音的文案。",
             updatedAt: .now,
             segments: [
@@ -322,9 +355,48 @@ private struct ScriptLibraryView: View {
             ]
         )
         modelContext.insert(script)
-        selectedScriptID = script.id
-        isEditorExpanded = true
+        openEditor(for: script)
         parseSummary = "等待解析"
+    }
+
+    private func openEditor(for script: Script) {
+        selectedScriptID = script.id
+        expandedScriptID = script.id
+    }
+
+    private func saveAndCollapse(_ script: Script) {
+        script.updatedAt = .now
+        expandedScriptID = nil
+    }
+
+    private var deleteAlertBinding: Binding<Bool> {
+        Binding {
+            deleteCandidate != nil
+        } set: { isPresented in
+            if !isPresented {
+                deleteCandidate = nil
+            }
+        }
+    }
+
+    private func deleteSelectedCandidate() {
+        guard let script = deleteCandidate else { return }
+        if selectedScriptID == script.id {
+            selectedScriptID = scripts.first { $0.id != script.id }?.id
+        }
+        if expandedScriptID == script.id {
+            expandedScriptID = nil
+        }
+        modelContext.delete(script)
+        deleteCandidate = nil
+    }
+
+    private func isReusableBlankDraft(_ script: Script) -> Bool {
+        let trimmedBody = script.bodyText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return script.status == .draft &&
+            script.title == "未命名文案" &&
+            (trimmedBody.isEmpty || trimmedBody == "[旁白] 在这里输入要配音的文案。") &&
+            script.lastExportedAt == nil
     }
 
     private func binding(for script: Script, keyPath: ReferenceWritableKeyPath<Script, String>) -> Binding<String> {
@@ -442,7 +514,7 @@ private struct ScriptListRow: View {
             GridRow {
                 VStack(alignment: .leading) {
                     Text(script.title).fontWeight(.semibold)
-                    Text(script.subtitle.isEmpty ? "无副标题" : script.subtitle)
+                    Text("修改 \(script.updatedAt.relativeLabel)")
                         .foregroundStyle(.secondary)
                 }
                 StatusBadge(status: script.status)
