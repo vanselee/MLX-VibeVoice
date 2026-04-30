@@ -264,6 +264,8 @@ private struct ScriptLibraryView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
+    private let availableVoices = ["默认清晰女声", "自然男声", "vanselee 参考音色", "默认旁白"]
+
     @ViewBuilder
     private func currentScriptEditor(for script: Script) -> some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -292,9 +294,6 @@ private struct ScriptLibraryView: View {
                 Button("解析角色") {
                     parseRolesAndSegments(for: script)
                 }
-                Button("角色音色") {
-                    selectedPage = .roleReview
-                }
                 Spacer()
                 if script.status == .generating {
                     Button("查看任务队列") {
@@ -303,15 +302,72 @@ private struct ScriptLibraryView: View {
                 }
             }
 
-            if script.status == .generating || script.status == .completed {
+            if !script.roles.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("角色音色绑定")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    ForEach(script.roles.sorted { $0.normalizedName < $1.normalizedName }) { role in
+                        HStack(spacing: 10) {
+                            Text(role.name)
+                                .fontWeight(.medium)
+                                .frame(width: 90, alignment: .leading)
+                            Picker("音色", selection: Binding(
+                                get: { role.defaultVoiceName },
+                                set: { role.defaultVoiceName = $0; script.updatedAt = .now }
+                            )) {
+                                ForEach(availableVoices, id: \.self) { voice in
+                                    Text(voice).tag(voice)
+                                }
+                            }
+                            .labelsHidden()
+                            .frame(width: 180)
+                            HStack(spacing: 4) {
+                                Text("语速")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Slider(value: Binding(
+                                    get: { role.speed },
+                                    set: { role.speed = $0; script.updatedAt = .now }
+                                ), in: 0.75...1.5)
+                                Text("\(role.speed.formatted(.number.precision(.fractionLength(2))))x")
+                                    .font(.caption)
+                                    .frame(width: 36)
+                            }
+                            .frame(width: 140)
+                            Button("试听") {}
+                                .font(.caption)
+                                .buttonStyle(.bordered)
+                            Spacer()
+                        }
+                        .padding(8)
+                        .background(Color(nsColor: .textBackgroundColor))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                    }
+                }
+            }
+
+            if script.status == .completed {
                 HStack {
+                    Label("生成完成", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
                     Text(progressLabel(for: script))
                         .foregroundStyle(.secondary)
                     Spacer()
-                    if script.status == .completed {
-                        Button("去导出 WAV") {
-                            selectedPage = .exportSettings
-                        }
+                    Button("导出 WAV") {
+                        exportWAV(for: script)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            } else if script.status == .generating {
+                HStack {
+                    Label("生成中", systemImage: "waveform")
+                        .foregroundStyle(.blue)
+                    Text(progressLabel(for: script))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("查看任务队列") {
+                        selectedPage = .taskQueue
                     }
                 }
             }
@@ -490,6 +546,19 @@ private struct ScriptLibraryView: View {
             return "自然男声"
         }
         return "默认清晰女声"
+    }
+
+    private func exportWAV(for script: Script) {
+        let safeName = (script.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? "未命名文案" : script.title)
+        let fileName = "\(safeName)_\(Date().fileStamp)"
+        do {
+            _ = try AudioExportService.exportPlaceholderWAV(for: script, fileName: fileName)
+            script.lastExportedAt = .now
+            parseSummary = "已导出 WAV"
+        } catch {
+            parseSummary = "导出失败：\(error.localizedDescription)"
+        }
     }
 
     private func generationProgress(for script: Script) -> Double {
