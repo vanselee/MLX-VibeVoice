@@ -41,7 +41,7 @@ struct ContentView: View {
     private var detailView: some View {
         switch selectedPage {
         case .scriptLibrary:
-            ScriptLibraryView(scripts: scripts, selectedScriptID: $selectedScriptID)
+            ScriptLibraryView(scripts: scripts, selectedScriptID: $selectedScriptID, selectedPage: $selectedPage)
         case .workbench:
             WorkbenchView(scripts: scripts, selectedScriptID: $selectedScriptID, selectedPage: $selectedPage)
         case .roleReview:
@@ -152,14 +152,17 @@ private struct ScriptLibraryView: View {
     @Environment(\.modelContext) private var modelContext
     let scripts: [Script]
     @Binding var selectedScriptID: UUID?
+    @Binding var selectedPage: AppPage
+    @State private var isEditorExpanded = true
+    @State private var parseSummary = "等待解析"
 
     private var selectedScript: Script? {
         scripts.first { $0.id == selectedScriptID } ?? scripts.first
     }
 
     var body: some View {
-        AppPageScaffold(title: "文案库", subtitle: "管理所有配音文案、生成状态和导出记录。") {
-            VStack(alignment: .leading, spacing: 12) {
+        AppPageScaffold(title: "文案工作区", subtitle: "编辑当前文案、解析角色、生成整篇，并在下方管理历史文案。") {
+            VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     Text("默认按最近修改排序")
                         .foregroundStyle(.secondary)
@@ -170,6 +173,31 @@ private struct ScriptLibraryView: View {
                     .buttonStyle(.borderedProminent)
                 }
 
+                if let selectedScript, isEditorExpanded {
+                    currentScriptEditor(for: selectedScript)
+                } else if let selectedScript {
+                    Button {
+                        isEditorExpanded = true
+                    } label: {
+                        HStack {
+                            Label("展开编辑", systemImage: "rectangle.expand.vertical")
+                            Text(selectedScript.title)
+                                .fontWeight(.semibold)
+                            Spacer()
+                            StatusBadge(status: selectedScript.status)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .padding()
+                    .background(.background)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+
+                Divider()
+
+                Text("文案列表")
+                    .font(.headline)
+
                 List(selection: $selectedScriptID) {
                     ForEach(scripts) { script in
                         ScriptListRow(script: script)
@@ -177,21 +205,107 @@ private struct ScriptLibraryView: View {
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .onChange(of: selectedScriptID) {
+                    isEditorExpanded = true
+                }
             }
         } sidebar: {
             if let selectedScript {
                 ActionCard(title: "选中文案详情", rows: [
                     ("标题", selectedScript.title),
+                    ("状态", selectedScript.status.displayName),
                     ("创建时间", selectedScript.createdAt.relativeLabel),
                     ("修改时间", selectedScript.updatedAt.relativeLabel),
                     ("字数", "\(selectedScript.bodyText.count) 字"),
                     ("角色/段落", "\(selectedScript.roles.count) / \(selectedScript.segments.count)"),
-                    ("最近导出", selectedScript.lastExportedAt?.relativeLabel ?? "未导出")
+                    ("最近导出", selectedScript.lastExportedAt?.relativeLabel ?? "未导出"),
+                    ("生成进度", progressLabel(for: selectedScript))
                 ])
             } else {
                 ContentUnavailableView("暂无文案", systemImage: "doc.text")
             }
         }
+    }
+
+    @ViewBuilder
+    private func currentScriptEditor(for script: Script) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("当前文案")
+                    .font(.headline)
+                StatusBadge(status: script.status)
+                if script.status == .generating {
+                    ProgressView(value: generationProgress(for: script))
+                        .frame(width: 160)
+                }
+                Spacer()
+                Button("收起编辑") {
+                    isEditorExpanded = false
+                }
+            }
+
+            TextField("标题", text: binding(for: script, keyPath: \.title))
+                .textFieldStyle(.roundedBorder)
+
+            TextField("副标题", text: binding(for: script, keyPath: \.subtitle))
+                .textFieldStyle(.roundedBorder)
+
+            HStack {
+                Button("一键粘贴") {
+                    pasteClipboard(into: script)
+                }
+                Button("AI 文案整理提示词") {}
+                Button("解析角色") {
+                    parseRolesAndSegments(for: script)
+                }
+                Button("角色音色") {
+                    selectedPage = .roleReview
+                }
+                Spacer()
+                if script.status == .generating {
+                    Button("查看任务队列") {
+                        selectedPage = .taskQueue
+                    }
+                }
+                Button(script.status == .completed ? "重新生成" : "生成整篇") {
+                    startPlaceholderGeneration(for: script)
+                }
+                .buttonStyle(.borderedProminent)
+            }
+
+            if script.status == .generating || script.status == .completed {
+                HStack {
+                    Text(progressLabel(for: script))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    if script.status == .completed {
+                        Button("去导出 WAV") {
+                            selectedPage = .exportSettings
+                        }
+                    }
+                }
+            }
+
+            TextEditor(text: binding(for: script, keyPath: \.bodyText))
+                .font(.body.monospaced())
+                .scrollContentBackground(.hidden)
+                .padding(8)
+                .frame(minHeight: 220)
+                .background(.background)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            HStack(spacing: 12) {
+                Label(parseSummary, systemImage: "text.badge.checkmark")
+                Text("\(script.roles.count) 角色")
+                Text("\(script.segments.count) 段")
+                Spacer()
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        .padding()
+        .background(.background)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private func createScript() {
@@ -209,6 +323,114 @@ private struct ScriptLibraryView: View {
         )
         modelContext.insert(script)
         selectedScriptID = script.id
+        isEditorExpanded = true
+        parseSummary = "等待解析"
+    }
+
+    private func binding(for script: Script, keyPath: ReferenceWritableKeyPath<Script, String>) -> Binding<String> {
+        Binding {
+            script[keyPath: keyPath]
+        } set: { value in
+            script[keyPath: keyPath] = value
+            script.updatedAt = .now
+            script.status = .draft
+        }
+    }
+
+    private func pasteClipboard(into script: Script) {
+        #if os(macOS)
+        guard let clipboardText = NSPasteboard.general.string(forType: .string),
+              !clipboardText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else {
+            return
+        }
+        script.bodyText = clipboardText
+        script.updatedAt = .now
+        script.status = .draft
+        parseSummary = "已粘贴，等待解析"
+        #endif
+    }
+
+    private func parseRolesAndSegments(for script: Script) {
+        let parsedScript = ScriptParser.parse(script.bodyText)
+
+        let oldSegments = script.segments
+        let oldRoles = script.roles
+        script.segments.removeAll()
+        script.roles.removeAll()
+        oldSegments.forEach(modelContext.delete)
+        oldRoles.forEach(modelContext.delete)
+
+        for parsedRole in parsedScript.roles {
+            let role = VoiceRole(
+                name: parsedRole.name,
+                normalizedName: parsedRole.normalizedName,
+                defaultVoiceName: defaultVoiceName(for: parsedRole.normalizedName),
+                script: script
+            )
+            modelContext.insert(role)
+            script.roles.append(role)
+        }
+
+        for parsedSegment in parsedScript.segments {
+            let segment = ScriptSegment(
+                order: parsedSegment.order,
+                text: parsedSegment.text,
+                roleName: parsedSegment.roleName,
+                script: script
+            )
+            modelContext.insert(segment)
+            script.segments.append(segment)
+        }
+
+        script.status = .ready
+        script.updatedAt = .now
+        parseSummary = "\(parsedScript.roles.count) 角色 / \(parsedScript.segments.count) 段"
+        if parsedScript.unmarkedSegmentCount > 0 {
+            parseSummary += "，\(parsedScript.unmarkedSegmentCount) 段旁白兜底"
+        }
+    }
+
+    private func startPlaceholderGeneration(for script: Script) {
+        if script.segments.isEmpty || script.roles.isEmpty {
+            parseRolesAndSegments(for: script)
+        }
+
+        guard !script.segments.isEmpty else { return }
+
+        GenerationService.start(script: script)
+        parseSummary = "已开始生成"
+
+        let job = GenerationJob(
+            scriptTitle: script.title,
+            totalSegments: script.segments.count,
+            status: .generating
+        )
+        modelContext.insert(job)
+        selectedScriptID = script.id
+    }
+
+    private func defaultVoiceName(for roleName: String) -> String {
+        if roleName == "旁白" {
+            return "默认清晰女声"
+        }
+        if roleName.contains("男") || roleName.contains("博主") || roleName.contains("老板") {
+            return "自然男声"
+        }
+        return "默认清晰女声"
+    }
+
+    private func generationProgress(for script: Script) -> Double {
+        guard !script.segments.isEmpty else { return 0 }
+        return Double(completedCount(for: script)) / Double(script.segments.count)
+    }
+
+    private func progressLabel(for script: Script) -> String {
+        "\(completedCount(for: script)) / \(script.segments.count) 段"
+    }
+
+    private func completedCount(for script: Script) -> Int {
+        script.segments.filter { $0.status == .completed }.count
     }
 }
 
