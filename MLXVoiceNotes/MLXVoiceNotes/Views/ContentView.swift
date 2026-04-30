@@ -765,7 +765,10 @@ private struct TaskQueueView: View {
 }
 
 private struct ExportSettingsView: View {
+    @Environment(\.modelContext) private var modelContext
     let script: Script?
+    @State private var exportStatus = "等待导出"
+    @State private var lastExportPath: String?
 
     var body: some View {
         AppPageScaffold(title: "导出与设置", subtitle: "导出完整成品音频，首次默认 Downloads。") {
@@ -774,13 +777,23 @@ private struct ExportSettingsView: View {
                     ("文件名", "\(safeFileName).wav"),
                     ("规格", "完整 WAV · 24kHz · mono"),
                     ("字幕", "句子级 SRT · UTF-8"),
-                    ("音频文件", "仅完整成品")
+                    ("音频文件", "仅完整成品"),
+                    ("状态", exportStatus),
+                    ("最近路径", lastExportPath ?? "尚未导出")
                 ])
                 HStack {
-                    Button("导出 WAV") {}
+                    Button("导出 WAV") {
+                        exportPlaceholderWAV()
+                    }
                         .buttonStyle(.borderedProminent)
-                    Button("打开文件夹") {}
-                    Button("复制路径") {}
+                        .disabled(script == nil || script?.status != .completed)
+                    Button("打开文件夹") {
+                        openExportFolder()
+                    }
+                    Button("复制路径") {
+                        copyLastExportPath()
+                    }
+                    .disabled(lastExportPath == nil)
                     Spacer()
                 }
             }
@@ -796,6 +809,51 @@ private struct ExportSettingsView: View {
     private var safeFileName: String {
         let title = script?.title.trimmingCharacters(in: .whitespacesAndNewlines)
         return title?.isEmpty == false ? "\(title!)_\(Date.now.fileStamp)" : "未命名文案_\(Date.now.fileStamp)"
+    }
+
+    private var exportDirectory: URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Downloads", isDirectory: true)
+            .appendingPathComponent("MLX Voice Notes Exports", isDirectory: true)
+    }
+
+    private func exportPlaceholderWAV() {
+        guard let script else { return }
+        guard script.status == .completed else {
+            exportStatus = "请先完成整篇生成"
+            return
+        }
+
+        do {
+            try FileManager.default.createDirectory(at: exportDirectory, withIntermediateDirectories: true)
+            let fileURL = exportDirectory.appendingPathComponent("\(safeFileName).wav")
+            let duration = max(1.0, Double(script.segments.count) * 0.8)
+            let wavData = SilentWAVFactory.make(duration: duration)
+            try wavData.write(to: fileURL, options: .atomic)
+
+            script.lastExportedAt = .now
+            script.updatedAt = .now
+            modelContext.insert(ExportRecord(scriptTitle: script.title, kind: .wav, filePath: fileURL.path))
+            lastExportPath = fileURL.path
+            exportStatus = "已导出占位 WAV"
+        } catch {
+            exportStatus = "导出失败：\(error.localizedDescription)"
+        }
+    }
+
+    private func openExportFolder() {
+        #if os(macOS)
+        NSWorkspace.shared.open(exportDirectory)
+        #endif
+    }
+
+    private func copyLastExportPath() {
+        #if os(macOS)
+        guard let lastExportPath else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(lastExportPath, forType: .string)
+        exportStatus = "已复制路径"
+        #endif
     }
 }
 
@@ -967,6 +1025,52 @@ private struct SegmentQueueRow: View {
         case .failed: .red
         case .pending, .skipped: .secondary
         }
+    }
+}
+
+private enum SilentWAVFactory {
+    static func make(duration: Double, sampleRate: Int = 24_000) -> Data {
+        let channelCount = 1
+        let bitDepth = 16
+        let byteRate = sampleRate * channelCount * bitDepth / 8
+        let blockAlign = channelCount * bitDepth / 8
+        let sampleCount = max(1, Int(duration * Double(sampleRate)))
+        let dataSize = sampleCount * blockAlign
+
+        var data = Data()
+        data.appendASCII("RIFF")
+        data.appendUInt32LE(UInt32(36 + dataSize))
+        data.appendASCII("WAVE")
+        data.appendASCII("fmt ")
+        data.appendUInt32LE(16)
+        data.appendUInt16LE(1)
+        data.appendUInt16LE(UInt16(channelCount))
+        data.appendUInt32LE(UInt32(sampleRate))
+        data.appendUInt32LE(UInt32(byteRate))
+        data.appendUInt16LE(UInt16(blockAlign))
+        data.appendUInt16LE(UInt16(bitDepth))
+        data.appendASCII("data")
+        data.appendUInt32LE(UInt32(dataSize))
+        data.append(Data(repeating: 0, count: dataSize))
+        return data
+    }
+}
+
+private extension Data {
+    mutating func appendASCII(_ string: String) {
+        append(contentsOf: string.utf8)
+    }
+
+    mutating func appendUInt16LE(_ value: UInt16) {
+        append(UInt8(value & 0xff))
+        append(UInt8((value >> 8) & 0xff))
+    }
+
+    mutating func appendUInt32LE(_ value: UInt32) {
+        append(UInt8(value & 0xff))
+        append(UInt8((value >> 8) & 0xff))
+        append(UInt8((value >> 16) & 0xff))
+        append(UInt8((value >> 24) & 0xff))
     }
 }
 
