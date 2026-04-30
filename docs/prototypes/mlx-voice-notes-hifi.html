@@ -118,13 +118,13 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 4px 6px 16px;
+      padding: 4px 4px 16px;
     }
 
     .brand-mark {
-      width: 34px;
-      height: 34px;
-      border-radius: 9px;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
       object-fit: cover;
       box-shadow: 0 3px 10px rgba(31, 39, 51, .18);
     }
@@ -514,6 +514,16 @@
       gap: 12px;
     }
 
+    .drawer-label {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: -2px;
+    }
+
     .tabs {
       display: flex;
       gap: 6px;
@@ -758,6 +768,7 @@
           </section>
 
           <section class="resource-center">
+            <div class="drawer-label"><strong>资源与队列概览</strong><span>可收起 · 也可进入资源中心或任务队列查看完整页面</span></div>
             <div>
               <div class="tabs">
                 <span class="tab active">模型</span>

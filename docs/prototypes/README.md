@@ -45,3 +45,10 @@
 Logo 文件：`assets/mlx-voice-notes-logo.png`
 
 该文件来自当前项目选定的应用 Logo，用于高保真原型中的品牌位。正式 App 开发时需要再转换为 macOS AppIcon 所需的多尺寸资源。
+
+已准备的 App 图标开发资源：
+
+- `assets/AppIcon.iconset/`：macOS iconset 多尺寸 PNG。
+- `assets/AppIcon.appiconset/`：可迁移到 Xcode `Assets.xcassets` 的 AppIcon 资源。
+
+主工作台中的资源与队列区域应视为可收起底部抽屉；完整管理流程应进入独立的资源中心和任务队列页面，避免主编辑界面过载。
