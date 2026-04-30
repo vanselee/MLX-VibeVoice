@@ -40,13 +40,13 @@ struct ContentView: View {
         case .scriptLibrary:
             ScriptLibraryView(scripts: scripts, selectedScriptID: $selectedScriptID)
         case .workbench:
-            WorkbenchView(scripts: scripts, selectedScriptID: $selectedScriptID)
+            WorkbenchView(scripts: scripts, selectedScriptID: $selectedScriptID, selectedPage: $selectedPage)
         case .roleReview:
             RoleReviewView(script: selectedScript)
         case .resources:
             ResourceCenterView()
         case .taskQueue:
-            TaskQueueView(script: selectedScript)
+            TaskQueueView(scripts: scripts, selectedScriptID: $selectedScriptID)
         case .exportSettings:
             ExportSettingsView(script: selectedScript)
         }
@@ -233,6 +233,7 @@ private struct WorkbenchView: View {
     @Environment(\.modelContext) private var modelContext
     let scripts: [Script]
     @Binding var selectedScriptID: UUID?
+    @Binding var selectedPage: AppPage
     @State private var parseSummary = "等待解析"
 
     private var selectedScript: Script? {
@@ -268,7 +269,9 @@ private struct WorkbenchView: View {
                             parseRolesAndSegments(for: selectedScript)
                         }
                         Spacer()
-                        Button("生成整篇") {}
+                        Button("生成整篇") {
+                            startPlaceholderGeneration(for: selectedScript)
+                        }
                             .buttonStyle(.borderedProminent)
                     }
 
@@ -401,6 +404,34 @@ private struct WorkbenchView: View {
         }
         return "默认清晰女声"
     }
+
+    private func startPlaceholderGeneration(for script: Script) {
+        if script.segments.isEmpty || script.roles.isEmpty {
+            parseRolesAndSegments(for: script)
+        }
+
+        guard !script.segments.isEmpty else { return }
+
+        for segment in script.segments {
+            segment.status = .pending
+        }
+
+        let firstSegment = script.segments.sorted { $0.order < $1.order }.first
+        firstSegment?.status = .generating
+
+        script.status = .generating
+        script.updatedAt = .now
+        parseSummary = "已创建生成任务"
+
+        let job = GenerationJob(
+            scriptTitle: script.title,
+            totalSegments: script.segments.count,
+            status: .generating
+        )
+        modelContext.insert(job)
+        selectedScriptID = script.id
+        selectedPage = .taskQueue
+    }
 }
 
 private struct RoleReviewView: View {
@@ -527,64 +558,209 @@ private struct ResourceCenterView: View {
 }
 
 private struct TaskQueueView: View {
-    let script: Script?
+    let scripts: [Script]
+    @Binding var selectedScriptID: UUID?
+
+    private var selectedScript: Script? {
+        if let selected = scripts.first(where: { $0.id == selectedScriptID }) {
+            return taskScripts.contains(where: { $0.id == selected.id }) ? selected : (taskScripts.first ?? selected)
+        }
+        return taskScripts.first ?? scripts.first
+    }
 
     var body: some View {
         AppPageScaffold(title: "任务队列", subtitle: "主队列以文案为单位；详情区展示当前文案的段落队列。") {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 14) {
                 Text(queueSummary)
                     .font(.headline)
                 ProgressView(value: queueProgress)
-                Table(segmentRows) {
-                    TableColumn("段落", value: \.index)
-                    TableColumn("角色", value: \.role)
-                    TableColumn("音色", value: \.voice)
-                    TableColumn("状态", value: \.status)
-                    TableColumn("操作", value: \.action)
+                HStack {
+                    Button(primaryActionTitle) {
+                        advanceSelectedTask()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(selectedScript == nil || selectedScript?.segments.isEmpty == true)
+
+                    Button("暂停") {
+                        pauseSelectedTask()
+                    }
+                    .disabled(selectedScript?.status != .generating)
+
+                    Button("取消任务") {
+                        cancelSelectedTask()
+                    }
+                    .disabled(selectedScript == nil)
+
+                    Button("重试失败") {
+                        retryFailedSegments()
+                    }
+                    .disabled(failedCount == 0)
+
+                    Spacer()
                 }
-                .frame(minHeight: 320)
+
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("段落").frame(width: 56, alignment: .leading)
+                        Text("角色").frame(width: 80, alignment: .leading)
+                        Text("音色").frame(width: 160, alignment: .leading)
+                        Text("状态").frame(width: 80, alignment: .leading)
+                        Text("文本").frame(maxWidth: .infinity, alignment: .leading)
+                        Text("操作").frame(width: 88, alignment: .trailing)
+                    }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                    if segmentRows.isEmpty {
+                        ContentUnavailableView("暂无段落任务", systemImage: "list.bullet.rectangle")
+                    } else {
+                        ForEach(segmentRows) { row in
+                            SegmentQueueRow(row: row) {
+                                retrySegment(row.segment)
+                            }
+                        }
+                    }
+                }
             }
         } sidebar: {
             VStack(alignment: .leading, spacing: 10) {
                 Text("文案任务").font(.headline)
-                if let script {
-                    QueueCard(title: script.title, detail: "\(script.segments.count) 段 · 完成 \(completedCount) · 失败 \(failedCount)", active: true)
-                } else {
+                if taskScripts.isEmpty {
                     Text("暂无任务").foregroundStyle(.secondary)
+                } else {
+                    ForEach(taskScripts) { script in
+                        Button {
+                            selectedScriptID = script.id
+                        } label: {
+                            QueueCard(
+                                title: script.title,
+                                detail: "\(script.status.displayName) · \(script.segments.count) 段 · 完成 \(completedCount(for: script)) · 失败 \(failedCount(for: script))",
+                                active: script.id == selectedScript?.id
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
         }
     }
 
+    private var taskScripts: [Script] {
+        scripts.filter { script in
+            [.ready, .generating, .completed, .failed].contains(script.status)
+        }
+    }
+
     private var completedCount: Int {
-        script?.segments.filter { $0.status == .completed }.count ?? 0
+        selectedScript.map(completedCount(for:)) ?? 0
     }
 
     private var failedCount: Int {
-        script?.segments.filter { $0.status == .failed }.count ?? 0
+        selectedScript.map(failedCount(for:)) ?? 0
     }
 
     private var queueProgress: Double {
-        guard let script, !script.segments.isEmpty else { return 0 }
+        guard let script = selectedScript, !script.segments.isEmpty else { return 0 }
         return Double(completedCount) / Double(script.segments.count)
     }
 
     private var queueSummary: String {
-        guard let script else { return "暂无文案任务" }
+        guard let script = selectedScript else { return "暂无文案任务" }
         return "\(script.title) · \(script.segments.count) 段 · 已完成 \(completedCount) 段 · 失败 \(failedCount) 段；最终只导出整篇完整音频。"
     }
 
+    private var primaryActionTitle: String {
+        guard let script = selectedScript else { return "继续生成" }
+        return switch script.status {
+        case .generating: "推进一段"
+        case .completed: "重新生成"
+        case .failed: "重试失败"
+        case .draft, .ready: "继续生成"
+        }
+    }
+
     private var segmentRows: [SegmentRow] {
-        guard let script else { return [] }
+        guard let script = selectedScript else { return [] }
         return script.segments.sorted { $0.order < $1.order }.map { segment in
             SegmentRow(
+                segment: segment,
                 index: String(format: "%02d", segment.order),
                 role: segment.roleName,
                 voice: script.roles.first { $0.normalizedName == segment.roleName }?.defaultVoiceName ?? "默认旁白",
                 status: segment.status.displayName,
+                text: segment.text,
                 action: segment.status == .failed ? "重试" : "试听"
             )
         }
+    }
+
+    private func completedCount(for script: Script) -> Int {
+        script.segments.filter { $0.status == .completed }.count
+    }
+
+    private func failedCount(for script: Script) -> Int {
+        script.segments.filter { $0.status == .failed }.count
+    }
+
+    private func advanceSelectedTask() {
+        guard let script = selectedScript else { return }
+
+        if failedCount(for: script) > 0 {
+            retryFailedSegments()
+            return
+        }
+
+        let orderedSegments = script.segments.sorted { $0.order < $1.order }
+        if script.status == .completed {
+            orderedSegments.forEach { $0.status = .pending }
+        }
+
+        if let generatingSegment = orderedSegments.first(where: { $0.status == .generating }) {
+            generatingSegment.status = .completed
+        }
+
+        if let nextSegment = orderedSegments.first(where: { $0.status == .pending }) {
+            nextSegment.status = .generating
+            script.status = .generating
+        } else if orderedSegments.allSatisfy({ $0.status == .completed }) {
+            script.status = .completed
+        } else {
+            script.status = .ready
+        }
+        script.updatedAt = .now
+    }
+
+    private func pauseSelectedTask() {
+        guard let script = selectedScript else { return }
+        for segment in script.segments where segment.status == .generating {
+            segment.status = .pending
+        }
+        script.status = .ready
+        script.updatedAt = .now
+    }
+
+    private func cancelSelectedTask() {
+        guard let script = selectedScript else { return }
+        for segment in script.segments where segment.status != .completed {
+            segment.status = .pending
+        }
+        script.status = .ready
+        script.updatedAt = .now
+    }
+
+    private func retryFailedSegments() {
+        guard let script = selectedScript else { return }
+        for segment in script.segments where segment.status == .failed {
+            segment.status = .pending
+        }
+        script.status = .generating
+        advanceSelectedTask()
+    }
+
+    private func retrySegment(_ segment: ScriptSegment) {
+        segment.status = .pending
+        selectedScript?.status = .generating
+        advanceSelectedTask()
     }
 }
 
@@ -743,11 +919,55 @@ private struct QueueCard: View {
 
 private struct SegmentRow: Identifiable {
     let id = UUID()
+    let segment: ScriptSegment
     let index: String
     let role: String
     let voice: String
     let status: String
+    let text: String
     let action: String
+}
+
+private struct SegmentQueueRow: View {
+    let row: SegmentRow
+    let onRetry: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(row.index)
+                .frame(width: 56, alignment: .leading)
+            Text(row.role)
+                .fontWeight(.semibold)
+                .frame(width: 80, alignment: .leading)
+            Text(row.voice)
+                .frame(width: 160, alignment: .leading)
+            Text(row.status)
+                .frame(width: 80, alignment: .leading)
+                .foregroundStyle(statusColor)
+            Text(row.text)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button(row.action) {
+                if row.segment.status == .failed {
+                    onRetry()
+                }
+            }
+            .frame(width: 88, alignment: .trailing)
+            .disabled(row.segment.status != .failed)
+        }
+        .padding(10)
+        .background(.background)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var statusColor: Color {
+        switch row.segment.status {
+        case .completed: .green
+        case .generating: .blue
+        case .failed: .red
+        case .pending, .skipped: .secondary
+        }
+    }
 }
 
 private extension ScriptStatus {
