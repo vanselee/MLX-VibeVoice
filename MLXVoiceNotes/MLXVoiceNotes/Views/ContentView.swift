@@ -33,7 +33,7 @@ struct ContentView: View {
             }
         }
         .onReceive(Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()) { _ in
-            advanceBackgroundGenerationTick()
+            GenerationService.advanceOneTick(in: scripts)
         }
     }
 
@@ -113,38 +113,6 @@ struct ContentView: View {
         selectedScriptID = samples.first?.id
     }
 
-    private func advanceBackgroundGenerationTick() {
-        guard let script = scripts
-            .filter({ $0.status == .generating })
-            .sorted(by: { $0.updatedAt < $1.updatedAt })
-            .first
-        else {
-            return
-        }
-
-        let orderedSegments = script.segments.sorted { $0.order < $1.order }
-        guard !orderedSegments.isEmpty else {
-            script.status = .ready
-            script.updatedAt = .now
-            return
-        }
-
-        if let generatingSegment = orderedSegments.first(where: { $0.status == .generating }) {
-            generatingSegment.status = .completed
-        }
-
-        if let nextSegment = orderedSegments.first(where: { $0.status == .pending }) {
-            nextSegment.status = .generating
-            script.status = .generating
-        } else if orderedSegments.allSatisfy({ $0.status == .completed }) {
-            script.status = .completed
-        } else if orderedSegments.contains(where: { $0.status == .failed }) {
-            script.status = .failed
-        } else {
-            script.status = .ready
-        }
-        script.updatedAt = .now
-    }
 }
 
 private enum AppPage: String, CaseIterable, Identifiable {
@@ -448,15 +416,7 @@ private struct WorkbenchView: View {
 
         guard !script.segments.isEmpty else { return }
 
-        for segment in script.segments {
-            segment.status = .pending
-        }
-
-        let firstSegment = script.segments.sorted { $0.order < $1.order }.first
-        firstSegment?.status = .generating
-
-        script.status = .generating
-        script.updatedAt = .now
+        GenerationService.start(script: script)
         parseSummary = "已创建生成任务"
 
         let job = GenerationJob(
@@ -750,53 +710,27 @@ private struct TaskQueueView: View {
             return
         }
 
-        let orderedSegments = script.segments.sorted { $0.order < $1.order }
-        if script.status == .completed {
-            orderedSegments.forEach { $0.status = .pending }
-        }
-
-        if let nextSegment = orderedSegments.first(where: { $0.status == .pending }) {
-            nextSegment.status = .generating
-            script.status = .generating
-        } else if orderedSegments.allSatisfy({ $0.status == .completed }) {
-            script.status = .completed
-        } else {
-            script.status = .ready
-        }
-        script.updatedAt = .now
+        GenerationService.resume(script: script)
     }
 
     private func pauseSelectedTask() {
         guard let script = selectedScript else { return }
-        for segment in script.segments where segment.status == .generating {
-            segment.status = .pending
-        }
-        script.status = .ready
-        script.updatedAt = .now
+        GenerationService.pause(script: script)
     }
 
     private func cancelSelectedTask() {
         guard let script = selectedScript else { return }
-        for segment in script.segments where segment.status != .completed {
-            segment.status = .pending
-        }
-        script.status = .ready
-        script.updatedAt = .now
+        GenerationService.cancel(script: script)
     }
 
     private func retryFailedSegments() {
         guard let script = selectedScript else { return }
-        for segment in script.segments where segment.status == .failed {
-            segment.status = .pending
-        }
-        script.status = .generating
-        resumeSelectedTask()
+        GenerationService.retryFailedSegments(script: script)
     }
 
     private func retrySegment(_ segment: ScriptSegment) {
-        segment.status = .pending
-        selectedScript?.status = .generating
-        resumeSelectedTask()
+        guard let script = selectedScript else { return }
+        GenerationService.retry(segment: segment, in: script)
     }
 }
 
@@ -847,12 +781,6 @@ private struct ExportSettingsView: View {
         return title?.isEmpty == false ? "\(title!)_\(Date.now.fileStamp)" : "未命名文案_\(Date.now.fileStamp)"
     }
 
-    private var exportDirectory: URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Downloads", isDirectory: true)
-            .appendingPathComponent("MLX Voice Notes Exports", isDirectory: true)
-    }
-
     private func exportPlaceholderWAV() {
         guard let script else { return }
         guard script.status == .completed else {
@@ -861,16 +789,12 @@ private struct ExportSettingsView: View {
         }
 
         do {
-            try FileManager.default.createDirectory(at: exportDirectory, withIntermediateDirectories: true)
-            let fileURL = exportDirectory.appendingPathComponent("\(safeFileName).wav")
-            let duration = max(1.0, Double(script.segments.count) * 0.8)
-            let wavData = SilentWAVFactory.make(duration: duration)
-            try wavData.write(to: fileURL, options: .atomic)
+            let result = try AudioExportService.exportPlaceholderWAV(for: script, fileName: safeFileName)
 
             script.lastExportedAt = .now
             script.updatedAt = .now
-            modelContext.insert(ExportRecord(scriptTitle: script.title, kind: .wav, filePath: fileURL.path))
-            lastExportPath = fileURL.path
+            modelContext.insert(ExportRecord(scriptTitle: script.title, kind: .wav, filePath: result.fileURL.path))
+            lastExportPath = result.fileURL.path
             exportStatus = "已导出占位 WAV"
         } catch {
             exportStatus = "导出失败：\(error.localizedDescription)"
@@ -879,7 +803,7 @@ private struct ExportSettingsView: View {
 
     private func openExportFolder() {
         #if os(macOS)
-        NSWorkspace.shared.open(exportDirectory)
+        NSWorkspace.shared.open(AudioExportService.exportDirectory)
         #endif
     }
 
@@ -1061,52 +985,6 @@ private struct SegmentQueueRow: View {
         case .failed: .red
         case .pending, .skipped: .secondary
         }
-    }
-}
-
-private enum SilentWAVFactory {
-    static func make(duration: Double, sampleRate: Int = 24_000) -> Data {
-        let channelCount = 1
-        let bitDepth = 16
-        let byteRate = sampleRate * channelCount * bitDepth / 8
-        let blockAlign = channelCount * bitDepth / 8
-        let sampleCount = max(1, Int(duration * Double(sampleRate)))
-        let dataSize = sampleCount * blockAlign
-
-        var data = Data()
-        data.appendASCII("RIFF")
-        data.appendUInt32LE(UInt32(36 + dataSize))
-        data.appendASCII("WAVE")
-        data.appendASCII("fmt ")
-        data.appendUInt32LE(16)
-        data.appendUInt16LE(1)
-        data.appendUInt16LE(UInt16(channelCount))
-        data.appendUInt32LE(UInt32(sampleRate))
-        data.appendUInt32LE(UInt32(byteRate))
-        data.appendUInt16LE(UInt16(blockAlign))
-        data.appendUInt16LE(UInt16(bitDepth))
-        data.appendASCII("data")
-        data.appendUInt32LE(UInt32(dataSize))
-        data.append(Data(repeating: 0, count: dataSize))
-        return data
-    }
-}
-
-private extension Data {
-    mutating func appendASCII(_ string: String) {
-        append(contentsOf: string.utf8)
-    }
-
-    mutating func appendUInt16LE(_ value: UInt16) {
-        append(UInt8(value & 0xff))
-        append(UInt8((value >> 8) & 0xff))
-    }
-
-    mutating func appendUInt32LE(_ value: UInt32) {
-        append(UInt8(value & 0xff))
-        append(UInt8((value >> 8) & 0xff))
-        append(UInt8((value >> 16) & 0xff))
-        append(UInt8((value >> 24) & 0xff))
     }
 }
 
