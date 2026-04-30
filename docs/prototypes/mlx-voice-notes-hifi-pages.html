@@ -330,6 +330,23 @@
       gap: 12px;
     }
 
+    .paste-dropzone {
+      border: 1px dashed #b7c4d6;
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 13px;
+      margin-bottom: 12px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .paste-dropzone strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
     .editor {
       min-height: 420px;
       border: 1px solid var(--line);
@@ -687,6 +704,8 @@
           <div class="nav-item"><span>任务队列</span><span title="待处理任务">2</span></div>
           <div class="nav-item"><span>资源中心</span><span title="资源告警">1</span></div>
           <div class="nav-item"><span>设置</span></div>
+          <button class="btn primary" style="width:100%; margin:10px 0 4px;">新建配音文案</button>
+          <button class="btn" style="width:100%;">从剪贴板粘贴</button>
           <div class="nav-title">最近笔记</div>
           <div class="note active"><strong>平台规则吐槽</strong><br><span class="muted">3 个角色 · 12 段</span></div>
           <div class="note"><strong>直播间脚本</strong><br><span class="muted">旁白 · 老板 · 客服</span></div>
@@ -694,10 +713,14 @@
         <div class="content">
           <div class="content-head">
             <div><h2><span class="input" style="display:inline-flex; min-width:220px;">平台规则吐槽</span></h2><p class="muted">标题可编辑 · 自动保存于 09:58 · 发现 1 段未标记音色 · 4 段待生成</p></div>
-            <div class="toolbar"><button class="btn">AI 文案整理提示词</button><button class="btn">解析角色</button><button class="btn green">生成整篇</button></div>
+            <div class="toolbar"><button class="btn primary">新建</button><button class="btn">一键粘贴</button><button class="btn">AI 文案整理提示词</button><button class="btn">解析角色</button><button class="btn green">生成整篇</button></div>
           </div>
           <div class="grid-2">
             <div>
+              <div class="paste-dropzone">
+                <div><strong>新建配音文案</strong><span class="muted">从空白文案开始，或一键读取剪贴板内容并自动创建新笔记。</span></div>
+                <div class="actions"><button class="btn primary">粘贴并新建</button><button class="btn">空白新建</button></div>
+              </div>
               <div class="prompt">
                 <div><strong>输入前辅助</strong><br>复制提示词到外部 AI，让它输出“角色名：台词”和语音标签格式。软件不上传文案。</div>
                 <div class="actions"><button class="btn primary">复制提示词</button><button class="btn">插入示例</button></div>
