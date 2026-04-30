@@ -784,7 +784,7 @@
           <a href="#library"><span>02 文案库</span><span>搜索、排序、管理文案</span></a>
           <a href="#roles"><span>03 角色确认</span><span>批量处理候选角色</span></a>
           <a href="#resources"><span>04 资源中心</span><span>模型、音色、缓存</span></a>
-          <a href="#queue"><span>05 生成队列</span><span>分段、版本、失败重试</span></a>
+          <a href="#queue"><span>05 任务队列</span><span>篇级总览、段落明细</span></a>
           <a href="#export-settings"><span>06 导出与设置</span><span>交付、语言、维护</span></a>
           <a href="#errors"><span>07 错误处理</span><span>失败、权限、诊断</span></a>
         </div>
@@ -1033,24 +1033,24 @@
     <section class="screen" id="queue">
       <header class="titlebar">
         <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-        <div class="screen-title">05 生成队列</div>
+        <div class="screen-title">05 任务队列</div>
         <div class="screen-actions"><button class="btn">暂停全部</button><button class="btn primary">继续生成</button></div>
       </header>
       <div class="screen-body">
         <aside class="sidebar">
-          <div class="brand"><img class="mark" src="assets/mlx-voice-notes-logo.png" alt="MLX Voice Notes logo"><div><strong>生成队列</strong><span>串行 · 可续跑</span></div></div>
+          <div class="brand"><img class="mark" src="assets/mlx-voice-notes-logo.png" alt="MLX Voice Notes logo"><div><strong>任务队列</strong><span>文案任务 · 可续跑</span></div></div>
           <div class="nav-title">导航</div>
           <div class="nav-item"><span>文案库</span><span title="全部文案">18</span></div>
           <div class="nav-item"><span>配音工作台</span><span title="待生成段落">4</span></div>
           <div class="nav-item active"><span>任务队列</span><span title="待处理任务">2</span></div>
           <div class="nav-item"><span>资源中心</span><span title="资源告警">1</span></div>
           <div class="nav-item"><span>设置</span></div>
-          <div class="nav-title">任务</div>
+          <div class="nav-title">文案任务</div>
           <div class="note active"><strong>平台规则吐槽</strong><br><span class="muted">42% · 生成中</span></div>
           <div class="note"><strong>直播间脚本</strong><br><span class="muted">等待模型下载</span></div>
         </aside>
         <div class="content">
-          <div class="content-head"><div><h2>当前任务：平台规则吐槽</h2><p class="muted">按句子分段生成，失败时只重试单段，当前选中版本参与整篇导出。</p></div><div class="toolbar"><button class="btn">只看失败</button><button class="btn">导出诊断</button></div></div>
+          <div class="content-head"><div><h2>当前文案的段落队列</h2><p class="muted">平台规则吐槽 · 12 段 · 按句子分段生成，失败时只重试单段；最终只导出整篇完整音频。</p></div><div class="toolbar"><button class="btn">只看失败</button><button class="btn">导出诊断</button></div></div>
           <div class="grid-2">
             <div class="card">
               <table class="table">
@@ -1102,14 +1102,14 @@
               <div class="metric"><span>文件名</span><strong>平台规则吐槽_20260430_231500.wav</strong></div>
               <div class="metric"><span>保存位置</span><strong>Downloads / MLX Voice Notes</strong></div>
               <div class="grid-3" style="margin-top:12px;">
-                <div class="card"><h3>WAV</h3><p class="muted">24kHz · mono · 16-bit PCM</p></div>
+                <div class="card"><h3>完整 WAV</h3><p class="muted">整篇合成 · 24kHz · mono</p></div>
                 <div class="card"><h3>SRT</h3><p class="muted">句子级字幕 · UTF-8</p></div>
-                <div class="card"><h3>项目包</h3><p class="muted">文案 · 角色 · 参数 · 音频</p></div>
+                <div class="card"><h3>项目包</h3><p class="muted">文案 · 角色 · 参数 · 完整音频</p></div>
               </div>
               <div class="actions" style="margin-top:12px;"><button class="btn primary">导出 WAV</button><button class="btn">打开文件夹</button><button class="btn">复制路径</button><button class="btn">再次导出</button></div>
             </div>
             <div>
-              <div class="card"><h3>导出选项</h3><div class="metric"><span>响度归一化</span><strong>短视频 -14 LUFS</strong></div><div class="metric"><span>段落淡入淡出</span><strong>20ms</strong></div><div class="metric"><span>首尾淡入淡出</span><strong>80ms</strong></div><div class="metric"><span>导出字幕</span><strong>开启</strong></div><div class="metric"><span>包含参考音频</span><strong>关闭</strong></div></div>
+              <div class="card"><h3>导出选项</h3><div class="metric"><span>响度归一化</span><strong>短视频 -14 LUFS</strong></div><div class="metric"><span>段落淡入淡出</span><strong>20ms</strong></div><div class="metric"><span>首尾淡入淡出</span><strong>80ms</strong></div><div class="metric"><span>音频文件</span><strong>仅完整成品</strong></div><div class="metric"><span>导出字幕</span><strong>开启</strong></div><div class="metric"><span>包含参考音频</span><strong>关闭</strong></div></div>
               <div class="card"><h3>设置</h3><div class="metric"><span>界面语言</span><strong>跟随系统：中文</strong></div><div class="metric"><span>非中文系统</span><strong>默认 English</strong></div><div class="metric"><span>缓存上限</span><strong>20GB</strong></div><div class="actions" style="margin-top:12px;"><button class="btn">清理缓存</button><button class="btn">检查更新</button><button class="btn">导出诊断</button></div></div>
             </div>
           </div>
