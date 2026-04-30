@@ -164,6 +164,15 @@
       font-weight: 800;
     }
 
+    .input {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      padding: 4px 9px;
+      align-items: center;
+    }
+
     .btn.green {
       border-color: var(--green);
       background: var(--green);
@@ -419,6 +428,33 @@
       color: var(--muted);
     }
 
+    .control {
+      margin-bottom: 10px;
+    }
+
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .slider {
+      height: 7px;
+      border-radius: 999px;
+      background: #dfe5ed;
+      overflow: hidden;
+    }
+
+    .slider span {
+      display: block;
+      height: 100%;
+      width: 56%;
+      border-radius: inherit;
+      background: var(--blue);
+    }
+
     .tabs {
       display: flex;
       gap: 7px;
@@ -496,6 +532,28 @@
       font-weight: 800;
     }
 
+    .version-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .version-note {
+      color: var(--muted);
+      font-size: 11px;
+      margin-left: 4px;
+    }
+
+    .error-card {
+      border-color: #efc6c1;
+      background: var(--red-soft);
+    }
+
+    .warning-card {
+      border-color: #f0d79b;
+      background: var(--amber-soft);
+    }
+
     .statusbar {
       border-top: 1px solid var(--line);
       background: #fbfcfd;
@@ -549,6 +607,7 @@
           <a href="#resources"><span>03 资源中心</span><span>模型、音色、缓存</span></a>
           <a href="#queue"><span>04 生成队列</span><span>分段、版本、失败重试</span></a>
           <a href="#export-settings"><span>05 导出与设置</span><span>交付、语言、维护</span></a>
+          <a href="#errors"><span>06 错误处理</span><span>失败、权限、诊断</span></a>
         </div>
       </nav>
     </section>
@@ -557,15 +616,15 @@
       <header class="titlebar">
         <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
         <div class="screen-title">01 配音工作台</div>
-        <div class="screen-actions"><button class="btn">检查模型</button><button class="btn primary">导出</button></div>
+        <div class="screen-actions"><button class="btn">打开资源中心</button><button class="btn primary">导出</button></div>
       </header>
       <div class="screen-body">
         <aside class="sidebar">
           <div class="brand"><img class="mark" src="assets/mlx-voice-notes-logo.png" alt="MLX Voice Notes logo"><div><strong>MLX Voice Notes</strong><span>本地多音色配音</span></div></div>
           <div class="nav-title">工作区</div>
-          <div class="nav-item active"><span>配音工作台</span><span>4</span></div>
-          <div class="nav-item"><span>任务队列</span><span>2</span></div>
-          <div class="nav-item"><span>资源中心</span><span>1</span></div>
+          <div class="nav-item active"><span>配音工作台</span><span title="待生成段落">4</span></div>
+          <div class="nav-item"><span>任务队列</span><span title="待处理任务">2</span></div>
+          <div class="nav-item"><span>资源中心</span><span title="资源告警">1</span></div>
           <div class="nav-item"><span>设置</span></div>
           <div class="nav-title">最近笔记</div>
           <div class="note active"><strong>平台规则吐槽</strong><br><span class="muted">3 个角色 · 12 段</span></div>
@@ -573,7 +632,7 @@
         </aside>
         <div class="content">
           <div class="content-head">
-            <div><h2>平台规则吐槽</h2><p class="muted">自动保存于 09:58 · 发现 1 段未标记音色 · 4 段待生成</p></div>
+            <div><h2><span class="input" style="display:inline-flex; min-width:220px;">平台规则吐槽</span></h2><p class="muted">标题可编辑 · 自动保存于 09:58 · 发现 1 段未标记音色 · 4 段待生成</p></div>
             <div class="toolbar"><button class="btn">AI 文案整理提示词</button><button class="btn">解析角色</button><button class="btn green">生成整篇</button></div>
           </div>
           <div class="grid-2">
@@ -591,7 +650,8 @@
             </div>
             <aside>
               <div class="card"><h3>未标记音色</h3><p class="muted">发现 1 段未标记音色。现在选择音色，或忽略并使用旁白音色。</p><button class="btn primary">选择音色</button> <button class="btn">使用旁白</button></div>
-              <div class="card"><h3>当前角色</h3><div class="metric"><span>角色</span><strong>博主</strong></div><div class="metric"><span>音色</span><strong>vanselee 参考音色</strong></div><div class="metric"><span>语速</span><strong>1.05x</strong></div><div class="metric"><span>音调</span><strong>默认</strong></div></div>
+              <div class="card"><h3>选择音色面板</h3><div class="tabs"><span class="tab active">预设音色</span><span class="tab">参考音色</span><span class="tab">新建</span></div><div class="row-card compact"><span><strong>默认清晰女声</strong><br><span class="muted">适合旁白</span></span><button class="btn primary">选择</button></div><div class="row-card compact"><span><strong>vanselee 参考音色</strong><br><span class="muted">本地参考音色</span></span><button class="btn">试听</button></div></div>
+              <div class="card"><h3>当前角色</h3><div class="metric"><span>角色</span><strong>博主</strong></div><div class="metric"><span>音色</span><strong>vanselee 参考音色</strong></div><div class="control"><label><span>语速</span><strong>1.05x</strong></label><div class="slider"><span style="width:58%"></span></div></div><div class="control"><label><span>音量</span><strong>0 dB</strong></label><div class="slider"><span style="width:50%"></span></div></div><div class="control"><label><span>音调</span><strong>默认</strong></label><div class="slider"><span style="width:50%"></span></div></div></div>
               <div class="card"><h3>生成策略</h3><div class="metric"><span>模型</span><strong>Qwen3 0.6B bf16</strong></div><div class="metric"><span>并发</span><strong>1 · 串行</strong></div><div class="metric"><span>输出</span><strong>24kHz WAV</strong></div></div>
             </aside>
           </div>
@@ -657,10 +717,14 @@
           <div class="grid-3">
             <div class="card"><h3>Qwen3-TTS 0.6B Base bf16</h3><p class="muted">中文 · 参考音色 · 推荐 8GB 以上统一内存</p><div class="progress"><span style="width:100%"></span></div><div class="metric"><span>状态</span><strong>已安装 · 校验通过</strong></div></div>
             <div class="card"><h3>Qwen3-TTS 0.6B Base 8bit</h3><p class="muted">下载中 · 1.8 MB/s · 剩余 12 分钟</p><div class="progress"><span style="width:42%"></span></div><div class="actions"><button class="btn">暂停</button><button class="btn">取消</button></div></div>
-            <div class="card"><h3>Qwen3-TTS 1.7B Base</h3><p class="muted">更高质量 · 推荐 16GB 以上统一内存</p><div class="progress"><span style="width:0%"></span></div><button class="btn primary">下载</button></div>
+            <div class="card error-card"><h3>Qwen3-TTS 1.7B Base</h3><p class="muted">下载失败 · 网络中断 · 已保留 18% 临时文件</p><div class="progress"><span style="width:18%"></span></div><div class="actions"><button class="btn primary">重试</button><button class="btn">清除临时文件</button></div></div>
           </div>
           <div class="grid-2" style="margin-top:12px;">
+            <div class="card"><h3>创建参考音色</h3><div class="row-card compact"><span><strong>1. 导入音频</strong><br><span class="muted">WAV/MP3 · 建议 10-20 秒清晰人声</span></span><button class="btn">选择文件</button></div><div class="row-card compact"><span><strong>2. 校对参考文本</strong><br><span class="muted">确认音频内容与文本一致</span></span><button class="btn">编辑文本</button></div><div class="row-card compact"><span><strong>3. 生成测试句</strong><br><span class="muted">短句验证音色可用性</span></span><button class="btn primary">生成测试</button></div><div class="row-card compact"><span><strong>4. 绑定角色</strong><br><span class="muted">绑定到博主或保存为全局音色</span></span><button class="btn">绑定</button></div></div>
             <div class="card"><h3>音色库</h3><div class="row-card compact"><span><strong>vanselee 参考音色</strong><br><span class="muted">参考音频 12.3s · 当前笔记覆盖</span></span><button class="btn">测试句</button></div><div class="row-card compact"><span><strong>默认清晰女声</strong><br><span class="muted">全局旁白音色</span></span><button class="btn">试听</button></div></div>
+          </div>
+          <div class="grid-2" style="margin-top:12px;">
+            <div class="card warning-card"><h3>校验失败状态</h3><p class="muted">模型文件校验未通过。App 不会把半截模型当作可用模型。</p><div class="actions"><button class="btn primary">重新下载</button><button class="btn">查看详情</button></div></div>
             <div class="card"><h3>缓存占用</h3><div class="metric"><span>模型</span><strong>1.4GB</strong></div><div class="metric"><span>生成缓存</span><strong>620MB</strong></div><div class="metric"><span>项目资产</span><strong>180MB</strong></div><button class="btn">清理未锁定缓存</button></div>
           </div>
         </div>
@@ -688,11 +752,11 @@
               <table class="table">
                 <thead><tr><th>段落</th><th>角色</th><th>音色</th><th>版本</th><th>状态</th><th>操作</th></tr></thead>
                 <tbody>
-                  <tr><td>01</td><td>旁白</td><td>默认女声</td><td><span class="version">V1</span><span class="version active">V2</span><span class="version">V3</span></td><td>完成</td><td>试听</td></tr>
-                  <tr><td>02</td><td>博主</td><td>vanselee</td><td><span class="version active">V1</span></td><td>生成中</td><td>暂停</td></tr>
+                  <tr><td>01</td><td>旁白</td><td>默认女声</td><td><span class="version-row"><span class="version" title="切换到 V1 版本">V1</span><span class="version active" title="当前用于导出的版本">V2</span><span class="version" title="切换到 V3 版本">V3</span><span class="version-note">当前导出</span></span></td><td>完成</td><td>试听</td></tr>
+                  <tr><td>02</td><td>博主</td><td>vanselee</td><td><span class="version-row"><span class="version active" title="当前用于导出的版本">V1</span><span class="version-note">当前导出</span></span></td><td>生成中</td><td>暂停</td></tr>
                   <tr><td>03</td><td>博主</td><td>vanselee</td><td>-</td><td>等待</td><td>跳过</td></tr>
                   <tr><td>04</td><td>旁白</td><td>默认女声</td><td>-</td><td>等待</td><td>跳过</td></tr>
-                  <tr><td>05</td><td>质疑者</td><td>自然男声</td><td><span class="version">V1</span></td><td>失败</td><td>重试</td></tr>
+                  <tr><td>05</td><td>质疑者</td><td>自然男声</td><td><span class="version" title="失败版本，可重试覆盖">V1</span></td><td>失败</td><td>重试</td></tr>
                 </tbody>
               </table>
             </div>
@@ -742,6 +806,39 @@
         </div>
       </div>
       <footer class="statusbar"><span>WAV：<strong>24kHz mono</strong></span><span>SRT：<strong>开启</strong></span><span>语言：<strong>跟随系统</strong></span><span>诊断：<strong>不含完整文案</strong></span></footer>
+    </section>
+
+    <section class="screen" id="errors">
+      <header class="titlebar">
+        <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="screen-title">06 错误处理</div>
+        <div class="screen-actions"><button class="btn">导出诊断</button><button class="btn primary">返回工作台</button></div>
+      </header>
+      <div class="screen-body">
+        <aside class="sidebar">
+          <div class="brand"><img class="mark" src="assets/mlx-voice-notes-logo.png" alt="MLX Voice Notes logo"><div><strong>错误处理</strong><span>本地诊断 · 可恢复</span></div></div>
+          <div class="nav-title">错误类型</div>
+          <div class="nav-item active"><span>模型下载失败</span><span>1</span></div>
+          <div class="nav-item"><span>生成失败</span><span>1</span></div>
+          <div class="nav-item"><span>权限问题</span><span>1</span></div>
+          <div class="nav-item"><span>磁盘空间</span></div>
+        </aside>
+        <div class="content">
+          <div class="content-head"><div><h2>错误恢复中心</h2><p class="muted">错误需要说明原因、影响范围和下一步动作，不要求用户读技术日志。</p></div></div>
+          <div class="grid-2">
+            <div>
+              <div class="card error-card"><h3>模型下载失败</h3><p class="muted">Qwen3-TTS 1.7B Base 下载中断。已保留 18% 临时文件，可继续或清除后重试。</p><div class="metric"><span>错误类型</span><strong>网络下载失败</strong></div><div class="metric"><span>影响</span><strong>该模型不可用</strong></div><div class="actions" style="margin-top:12px;"><button class="btn primary">继续下载</button><button class="btn">清除临时文件</button></div></div>
+              <div class="card error-card"><h3>段落生成失败</h3><p class="muted">段落 05 生成超时。已完成段落不受影响，可只重试失败段落。</p><div class="metric"><span>建议</span><strong>缩短分段或降低质量</strong></div><div class="actions" style="margin-top:12px;"><button class="btn primary">重试段落</button><button class="btn">跳过本段</button></div></div>
+            </div>
+            <div>
+              <div class="card warning-card"><h3>麦克风权限未开启</h3><p class="muted">录制参考音色需要麦克风权限。导入本地音频不受影响。</p><div class="actions"><button class="btn primary">打开系统设置</button><button class="btn">稍后处理</button></div></div>
+              <div class="card warning-card"><h3>磁盘空间不足</h3><p class="muted">剩余空间低于 5GB，模型下载和长文本生成可能失败。</p><div class="metric"><span>可清理</span><strong>生成缓存 620MB</strong></div><div class="actions" style="margin-top:12px;"><button class="btn primary">清理缓存</button><button class="btn">更改缓存上限</button></div></div>
+              <div class="card"><h3>诊断包边界</h3><div class="metric"><span>包含</span><strong>日志、模型清单、任务状态</strong></div><div class="metric"><span>不包含</span><strong>完整文案、原始音频</strong></div><button class="btn">导出诊断包</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="statusbar"><span>错误：<strong>可恢复</strong></span><span>隐私：<strong>不上传文案</strong></span><span>诊断：<strong>本地生成</strong></span><span>状态：<strong>等待用户选择</strong></span></footer>
     </section>
   </main>
 </body>
