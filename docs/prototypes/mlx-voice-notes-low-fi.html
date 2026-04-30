@@ -374,6 +374,24 @@
       margin-right: 6px;
     }
 
+    .inline-alert {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid #f1d38a;
+      background: #fff8e6;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      color: #5f4400;
+      font-size: 12px;
+    }
+
+    .inline-alert strong {
+      color: #342300;
+    }
+
     .statusbar {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -491,6 +509,14 @@
       gap: 6px;
     }
 
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
     .pill {
       display: inline-flex;
       align-items: center;
@@ -519,6 +545,58 @@
     .meter {
       display: grid;
       gap: 5px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    .tab {
+      height: 28px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 10px;
+      display: inline-flex;
+      align-items: center;
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .tab.active {
+      border-color: #9bbcf6;
+      background: #f1f6ff;
+      color: #174ea6;
+      font-weight: 700;
+    }
+
+    .version-switcher {
+      display: inline-flex;
+      gap: 4px;
+    }
+
+    .version-chip {
+      min-width: 34px;
+      height: 24px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      background: #fff;
+      font-size: 11px;
+    }
+
+    .version-chip.active {
+      border-color: #9bbcf6;
+      background: #f1f6ff;
+      color: #174ea6;
+      font-weight: 700;
     }
 
     .flow {
@@ -660,6 +738,7 @@
       <a href="#models">4. 模型下载中心</a>
       <a href="#queue">5. 生成队列</a>
       <a href="#export">6. 导出面板</a>
+      <a href="#settings">7. 设置</a>
     </aside>
 
     <main class="main">
@@ -751,6 +830,10 @@
                   <span class="pill">发现 1 个新角色</span>
                   <span class="pill">4 段待生成</span>
                 </div>
+                <div class="inline-alert">
+                  <span><strong>发现 1 段未标记音色。</strong>现在选择音色，或忽略并使用旁白音色。</span>
+                  <div class="actions"><button class="button primary">选择音色</button><button class="button">使用旁白</button></div>
+                </div>
                 <div class="editor">
                   <div class="line"><span class="speaker">旁白</span>你永远都搞不清楚这些平台它到底要什么，不要什么。</div>
                   <div class="line"><span class="speaker">博主</span>有时候一条视频吧，花几个小时你把它做出来了，<span class="tag">[停顿500ms]</span>发到了 A 平台呢，正常通过。</div>
@@ -796,7 +879,7 @@
         <div class="board-body">
           <div class="panel">
             <h3>待确认角色</h3>
-            <p>系统发现 4 个候选项。确认后会进入音色绑定，未标记文本可归入旁白或指定音色。</p>
+            <p>系统发现 4 个候选项。确认后会进入音色绑定，未标记文本优先提示用户选择音色；忽略后归入旁白。</p>
             <div class="candidate">
               <strong>博主</strong>
               <span>出现 8 次，格式稳定，建议确认为角色。</span>
@@ -861,6 +944,11 @@
           <button class="button">刷新列表</button>
         </div>
         <div class="board-body">
+          <div class="tabs">
+            <span class="tab active">模型</span>
+            <span class="tab">音色</span>
+            <span class="tab">缓存</span>
+          </div>
           <div class="model-grid">
             <div class="model-row recommended">
               <strong>Qwen3-TTS 0.6B Base bf16</strong><br>
@@ -873,6 +961,15 @@
               <span>更高质量 · 推荐 16GB 以上统一内存</span>
               <div style="height:10px;"></div>
               <div class="meter"><span>未下载 · 约 3GB+</span><div class="progress"><span style="width:0%"></span></div></div>
+            </div>
+            <div class="model-row">
+              <strong>Qwen3-TTS 0.6B Base 8bit</strong><br>
+              <span>下载中 · 1.8 MB/s · 剩余 12 分钟</span>
+              <div style="height:10px;"></div>
+              <div class="meter"><span>42% · 可暂停/继续 · 下载后自动校验</span><div class="progress"><span style="width:42%"></span></div></div>
+              <div style="height:10px;"></div>
+              <button class="button">暂停</button>
+              <button class="button">取消</button>
             </div>
             <div class="model-row">
               <strong>Marvis TTS 250M</strong><br>
@@ -902,12 +999,12 @@
           <div class="panel">
             <h3>当前任务：平台规则吐槽</h3>
             <table class="small-table">
-              <thead><tr><th>段落</th><th>角色</th><th>音色</th><th>状态</th><th>操作</th></tr></thead>
+              <thead><tr><th>段落</th><th>角色</th><th>音色</th><th>版本</th><th>状态</th><th>操作</th></tr></thead>
               <tbody>
-                <tr><td>01</td><td>旁白</td><td>默认女声</td><td>完成</td><td>试听</td></tr>
-                <tr><td>02</td><td>博主</td><td>vanselee</td><td>生成中</td><td>暂停</td></tr>
-                <tr><td>03</td><td>博主</td><td>vanselee</td><td>等待</td><td>跳过</td></tr>
-                <tr><td>04</td><td>旁白</td><td>默认女声</td><td>等待</td><td>跳过</td></tr>
+                <tr><td>01</td><td>旁白</td><td>默认女声</td><td><span class="version-switcher"><span class="version-chip">V1</span><span class="version-chip active">V2</span><span class="version-chip">V3</span></span></td><td>完成</td><td>试听</td></tr>
+                <tr><td>02</td><td>博主</td><td>vanselee</td><td><span class="version-switcher"><span class="version-chip active">V1</span></span></td><td>生成中</td><td>暂停</td></tr>
+                <tr><td>03</td><td>博主</td><td>vanselee</td><td>-</td><td>等待</td><td>跳过</td></tr>
+                <tr><td>04</td><td>旁白</td><td>默认女声</td><td>-</td><td>等待</td><td>跳过</td></tr>
               </tbody>
             </table>
           </div>
@@ -948,6 +1045,41 @@
             <div class="check-row"><span>首尾淡入淡出</span><strong>80ms</strong></div>
             <div class="check-row"><span>导出字幕</span><strong>开启</strong></div>
             <div class="check-row"><span>包含参考音频</span><strong>关闭</strong></div>
+            <div class="three-col" style="margin-top:12px;">
+              <button class="button">打开文件夹</button>
+              <button class="button">复制路径</button>
+              <button class="button">再次导出</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="board" id="settings">
+        <div class="board-head">
+          <div class="board-title">
+            <h2>7. 设置</h2>
+            <span>语言、缓存、更新和诊断入口集中放在这里</span>
+          </div>
+          <button class="button primary">保存设置</button>
+        </div>
+        <div class="board-body two-col">
+          <div class="panel">
+            <h3>语言与界面</h3>
+            <div class="field"><label>界面语言</label><div class="select">跟随系统：中文 <span>⌄</span></div></div>
+            <div class="check-row"><span>中文系统</span><strong>默认中文</strong></div>
+            <div class="check-row"><span>非中文系统</span><strong>默认 English</strong></div>
+            <div class="check-row"><span>用户手动选择</span><strong>重启后记忆</strong></div>
+          </div>
+          <div class="panel">
+            <h3>存储与维护</h3>
+            <div class="check-row"><span>生成缓存上限</span><strong>20GB</strong></div>
+            <div class="check-row"><span>模型占用</span><strong>1.4GB</strong></div>
+            <div class="check-row"><span>生成缓存</span><strong>620MB</strong></div>
+            <div class="three-col" style="margin-top:12px;">
+              <button class="button">清理缓存</button>
+              <button class="button">检查更新</button>
+              <button class="button">导出诊断</button>
+            </div>
           </div>
         </div>
       </section>
