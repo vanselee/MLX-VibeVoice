@@ -353,10 +353,6 @@ private struct ScriptLibraryView: View {
                     Text(progressLabel(for: script))
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button("导出 WAV") {
-                        exportWAV(for: script)
-                    }
-                    .buttonStyle(.borderedProminent)
                 }
             } else if script.status == .generating {
                 HStack {
@@ -589,22 +585,8 @@ private struct ScriptLibraryView: View {
         let pending = total - completed - failed
 
         return VStack(alignment: .leading, spacing: 0) {
-            // 基础信息卡片
-            ActionCard(title: "选中文案详情", rows: [
-                ("标题", script.title),
-                ("状态", script.status.displayName),
-                ("创建时间", script.createdAt.relativeLabel),
-                ("修改时间", script.updatedAt.relativeLabel),
-                ("字数", "\(script.bodyText.count) 字"),
-                ("角色/段落", "\(script.roles.count) / \(total)"),
-                ("最近导出", script.lastExportedAt?.relativeLabel ?? "未导出")
-            ])
-
             // 生成状态区域
             VStack(alignment: .leading, spacing: 10) {
-                Divider()
-                    .padding(.top, 4)
-
                 Text("生成状态").font(.headline)
 
                 if script.status == .generating {
@@ -669,7 +651,6 @@ private struct ScriptLibraryView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.small)
             }
-            .padding(.top, 12)
 
             // 导出操作区域
             VStack(alignment: .leading, spacing: 10) {
@@ -688,7 +669,7 @@ private struct ScriptLibraryView: View {
 
                 HStack(spacing: 4) {
                     Image(systemName: "folder")
-                    Text(script.lastExportedAt != nil ? "Downloads / MLX Voice Notes Exports" : "Downloads / MLX Voice Notes Exports")
+                    Text("Downloads / MLX Voice Notes Exports")
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -719,6 +700,54 @@ private struct ScriptLibraryView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+            }
+            .padding(.top, 12)
+
+            // 文案详情
+            VStack(alignment: .leading, spacing: 10) {
+                Divider()
+                    .padding(.top, 4)
+
+                Text("文案详情").font(.headline)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("标题").foregroundStyle(.secondary)
+                        Spacer()
+                        Text(script.title).lineLimit(1)
+                    }
+                    HStack {
+                        Text("状态").foregroundStyle(.secondary)
+                        Spacer()
+                        Text(script.status.displayName)
+                    }
+                    HStack {
+                        Text("创建时间").foregroundStyle(.secondary)
+                        Spacer()
+                        Text(script.createdAt.relativeLabel)
+                    }
+                    HStack {
+                        Text("修改时间").foregroundStyle(.secondary)
+                        Spacer()
+                        Text(script.updatedAt.relativeLabel)
+                    }
+                    HStack {
+                        Text("字数").foregroundStyle(.secondary)
+                        Spacer()
+                        Text("\(script.bodyText.count) 字")
+                    }
+                    HStack {
+                        Text("角色 / 段落").foregroundStyle(.secondary)
+                        Spacer()
+                        Text("\(script.roles.count) / \(total)")
+                    }
+                    HStack {
+                        Text("最近导出").foregroundStyle(.secondary)
+                        Spacer()
+                        Text(script.lastExportedAt?.relativeLabel ?? "未导出")
+                    }
+                }
+                .font(.caption)
             }
             .padding(.top, 12)
 
