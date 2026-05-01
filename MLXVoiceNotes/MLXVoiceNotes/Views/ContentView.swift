@@ -1411,7 +1411,7 @@ private struct ExportSettingsView: View {
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
-                                .frame(width: Self.trailingColumnWidth, alignment: .trailing)
+                                .frame(width: Self.controlWidth, alignment: .trailing)
                             HStack(spacing: 8) {
                                 Button("恢复默认位置") {
                                     defaultExportDirectory = ""
@@ -1438,7 +1438,7 @@ private struct ExportSettingsView: View {
                             Text(cacheUsage)
                                 .font(.body)
                                 .foregroundStyle(.secondary)
-                                .frame(width: Self.controlWidth, alignment: .trailing)
+                                .frame(width: Self.controlWidth, height: Self.controlHeight, alignment: .trailing)
                         }
 
                         Divider().padding(.horizontal, 16)
