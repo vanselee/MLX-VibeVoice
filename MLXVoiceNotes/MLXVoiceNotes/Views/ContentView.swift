@@ -971,10 +971,88 @@ private struct ResourceCenterView: View {
 
     @ViewBuilder
     private var voiceContent: some View {
-        VStack(spacing: 10) {
-            Text("音色库（Phase 2 占位）")
+        VoiceLibraryView()
+    }
+}
+
+private struct VoiceLibraryView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \VoiceProfile.createdAt, order: .reverse) private var profiles: [VoiceProfile]
+
+    var body: some View {
+        if profiles.isEmpty {
+            emptyState
+        } else {
+            ScrollView {
+                LazyVStack(spacing: 8) {
+                    ForEach(profiles, id: \.id) { profile in
+                        VoiceRow(profile: profile)
+                    }
+                }
+                .padding(.top, 8)
+            }
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "person.wave.2")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+            Text("暂无音色")
+                .font(.headline)
+            Text("点击上方「克隆音色」创建专属音色")
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private struct VoiceRow: View {
+    let profile: VoiceProfile
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: profile.kind == .preset ? "person.fill" : "person.badge.clock")
+                .font(.title2)
+                .foregroundStyle(.secondary)
+                .frame(width: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(profile.name)
+                    .font(.body)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            statusBadge
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var subtitle: String {
+        if profile.kind == .preset {
+            return "内置 · \(profile.localeIdentifier)"
+        } else {
+            let dur = profile.referenceAudioPath != nil ? "音频已导入" : "—"
+            return "\(profile.kind == .cloned ? "克隆" : "参考") · \(profile.localeIdentifier) · \(dur)"
+        }
+    }
+
+    private var statusBadge: some View {
+        let (text, color): (String, Color) = profile.status == .builtIn || profile.status == .available
+            ? ("就绪", .green) : ("训练中", .orange)
+        return Text(text)
+            .font(.caption)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(color.opacity(0.15))
+            .foregroundStyle(color)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 }
 
