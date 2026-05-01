@@ -633,23 +633,39 @@ private struct ScriptLibraryView: View {
                 HStack(spacing: 8) {
                     if script.status == .generating {
                         Button("暂停") { GenerationService.pause(script: script) }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                         Button("取消") { GenerationService.cancel(script: script) }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                     } else if completed == total && total > 0 {
                         Button("重新生成") { startPlaceholderGeneration(for: script) }
+                            .buttonStyle(.bordered)
+                            .controlSize(.regular)
                     } else if failed > 0 {
                         Button("重试失败") { GenerationService.retryFailedSegments(script: script) }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                         Button("取消") { GenerationService.cancel(script: script) }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                     } else if pending > 0 && completed == 0 && failed == 0 {
                         Button("生成音频") { startPlaceholderGeneration(for: script) }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.regular)
                     } else if completed > 0 {
                         Button("继续生成") { GenerationService.resume(script: script) }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                         Button("取消") { GenerationService.cancel(script: script) }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                     } else {
                         Button("生成音频") { startPlaceholderGeneration(for: script) }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.regular)
                     }
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
             }
 
             // 导出操作区域
