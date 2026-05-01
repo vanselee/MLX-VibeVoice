@@ -127,7 +127,7 @@ private enum AppPage: String, CaseIterable, Identifiable {
         case .scriptLibrary: return "文案库"
         case .roleReview: return "角色确认"
         case .resources: return "资源中心"
-        case .taskQueue: return "任务队列"
+        case .taskQueue: return "后台任务总览"
         case .exportSettings: return "导出与设置"
         }
     }
@@ -848,7 +848,7 @@ private struct TaskQueueView: View {
     }
 
     var body: some View {
-        AppPageScaffold(title: "任务队列", subtitle: "主队列以文案为单位；详情区展示当前文案的段落队列。") {
+        AppPageScaffold(title: "后台任务总览", subtitle: "查看所有文案生成任务，并展开排查单篇文案的段落状态。") {
             VStack(alignment: .leading, spacing: 14) {
                 Text(queueSummary)
                     .font(.headline)
