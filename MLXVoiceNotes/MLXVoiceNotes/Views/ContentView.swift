@@ -1397,14 +1397,18 @@ private struct ExportSettingsView: View {
                 // 语言
                 settingsCard("") {
                     preferenceRow("语言") {
-                        Picker("", selection: $appLanguage) {
-                            ForEach(AppLanguage.allCases) { lang in
-                                Text(lang.displayName).tag(lang)
+                        HStack {
+                            Spacer()
+                            Picker("", selection: $appLanguage) {
+                                ForEach(AppLanguage.allCases) { lang in
+                                    Text(lang.displayName).tag(lang)
+                                }
                             }
+                            .labelsHidden()
+                            .controlSize(.regular)
+                            .frame(width: Self.controlWidth, height: Self.controlHeight)
                         }
-                        .labelsHidden()
-                        .controlSize(.regular)
-                        .frame(width: Self.controlWidth, height: Self.controlHeight)
+                        .frame(width: Self.trailingColumnWidth)
                     }
                 }
 
@@ -1441,35 +1445,46 @@ private struct ExportSettingsView: View {
                 settingsCard("") {
                     VStack(spacing: 0) {
                         preferenceRow("当前占用缓存") {
-                            Text(cacheUsage)
-                                .font(.body)
-                                .foregroundStyle(.secondary)
-                                .frame(width: Self.controlWidth, height: Self.controlHeight, alignment: .trailing)
+                            HStack {
+                                Spacer()
+                                Text(cacheUsage)
+                                    .font(.body)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(width: Self.trailingColumnWidth)
                         }
 
                         Divider().padding(.horizontal, 16)
 
                         preferenceRow("缓存上限", subtitle: "达到上限后提醒用户清理缓存。") {
-                            Picker("", selection: $cacheLimit) {
-                                ForEach(CacheLimit.allCases) { limit in
-                                    Text(limit.displayName).tag(limit)
+                            HStack {
+                                Spacer()
+                                Picker("", selection: $cacheLimit) {
+                                    ForEach(CacheLimit.allCases) { limit in
+                                        Text(limit.displayName).tag(limit)
+                                    }
                                 }
+                                .labelsHidden()
+                                .controlSize(.regular)
+                                .frame(width: Self.controlWidth, height: Self.controlHeight)
                             }
-                            .labelsHidden()
-                            .controlSize(.regular)
-                            .frame(width: Self.controlWidth, height: Self.controlHeight)
+                            .frame(width: Self.trailingColumnWidth)
                         }
 
                         Divider().padding(.horizontal, 16)
 
                         preferenceRow("清理缓存", subtitle: "清除可再生成的临时文件，不删除用户文案和导出音频。") {
-                            Button("清理缓存") {
-                                // TODO: implement cache cleanup
+                            HStack {
+                                Spacer()
+                                Button("清理缓存") {
+                                    // TODO: implement cache cleanup
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.regular)
+                                .frame(width: Self.controlWidth, height: Self.controlHeight)
+                                .disabled(true)
                             }
-                            .buttonStyle(.bordered)
-                            .controlSize(.regular)
-                            .frame(width: Self.controlWidth, height: Self.controlHeight)
-                            .disabled(true)
+                            .frame(width: Self.trailingColumnWidth)
                         }
                     }
                 }
