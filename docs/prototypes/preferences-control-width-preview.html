@@ -190,7 +190,8 @@
       border-top: 1px solid #edf1f5;
     }
 
-    .setting-row.export-row {
+    .setting-row.export-row,
+    .setting-row.hint-row {
       align-items: start;
     }
 
@@ -212,11 +213,13 @@
       white-space: nowrap;
     }
 
-    .setting-label.export-hint {
+    .setting-label.export-hint,
+    .setting-label.inline-hint {
       padding-top: 2px;
     }
 
-    .setting-label.export-hint span {
+    .setting-label.export-hint span,
+    .setting-label.inline-hint span {
       margin-top: 0;
     }
 
@@ -371,9 +374,8 @@
             <div class="settings-stack">
               <section class="setting-card">
                 <h3>语言</h3>
-                <div class="setting-row">
-                  <div class="setting-label">
-                    <strong>界面语言</strong>
+                <div class="setting-row hint-row">
+                  <div class="setting-label inline-hint">
                     <span>跟随系统会在中文系统中显示中文，在非中文系统中显示 English。</span>
                   </div>
                   <div class="setting-control">
