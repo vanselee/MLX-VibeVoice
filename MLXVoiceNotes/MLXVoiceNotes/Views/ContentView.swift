@@ -653,7 +653,6 @@ private struct ScriptLibraryView: View {
                         Button("暂停") { GenerationService.pause(script: script) }
                         Button("取消") { GenerationService.cancel(script: script) }
                     } else if completed == total && total > 0 {
-                        Button("导出 WAV") { exportWAV(for: script) }
                         Button("重新生成") { startPlaceholderGeneration(for: script) }
                     } else if failed > 0 {
                         Button("重试失败") { GenerationService.retryFailedSegments(script: script) }
@@ -687,6 +686,13 @@ private struct ScriptLibraryView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
+                HStack(spacing: 4) {
+                    Image(systemName: "folder")
+                    Text(script.lastExportedAt != nil ? "Downloads / MLX Voice Notes Exports" : "Downloads / MLX Voice Notes Exports")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
                 if script.lastExportedAt != nil {
                     Text("最近导出：\(script.lastExportedAt!.relativeLabel)")
                         .font(.caption)
@@ -694,12 +700,19 @@ private struct ScriptLibraryView: View {
                 }
 
                 let isCompleted = completed == total && total > 0
-                Button("导出 WAV") {
-                    exportWAV(for: script)
-                    parseSummary = "已导出到 Downloads"
+                HStack(spacing: 8) {
+                    Button("导出 WAV") {
+                        exportWAV(for: script)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!isCompleted)
+
+                    Button("打开文件夹") {
+                        #if os(macOS)
+                        NSWorkspace.shared.open(AudioExportService.exportDirectory)
+                        #endif
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(!isCompleted)
 
                 if !isCompleted {
                     Text("生成完成后可导出")
