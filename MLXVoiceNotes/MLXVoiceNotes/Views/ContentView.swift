@@ -990,14 +990,27 @@ private struct VoiceLibraryView: View {
         if profiles.isEmpty {
             emptyState
         } else {
-            ScrollView {
-                LazyVStack(spacing: 8) {
-                    ForEach(profiles, id: \.id) { profile in
-                        VoiceRow(profile: profile)
+            VStack(spacing: 0) {
+                voiceListHeader
+                Divider()
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(profiles, id: \.id) { profile in
+                            VoiceRow(profile: profile)
+                            if profile.id != profiles.last?.id {
+                                Divider().padding(.leading, 12)
+                            }
+                        }
                     }
                 }
-                .padding(.top, 8)
             }
+            .background(Color(nsColor: .controlBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+            )
+            .padding(.horizontal, 4)
         }
     }
 
@@ -1014,52 +1027,130 @@ private struct VoiceLibraryView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+
+    private var voiceListHeader: some View {
+        HStack(spacing: 0) {
+            Text("音色名称").frame(maxWidth: .infinity, alignment: .leading)
+            Text("类型").frame(width: 80, alignment: .center)
+            Text("来源").frame(width: 80, alignment: .center)
+            Text("时长").frame(width: 56, alignment: .trailing)
+            Text("状态").frame(width: 72, alignment: .center)
+            Text("最近使用").frame(width: 88, alignment: .center)
+            Text("操作").frame(width: 100, alignment: .center)
+        }
+        .font(.caption2)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(Color(nsColor: .textBackgroundColor).opacity(0.6))
+    }
 }
 
 private struct VoiceRow: View {
     let profile: VoiceProfile
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: profile.kind == .preset ? "person.fill" : "person.badge.clock")
-                .font(.title2)
-                .foregroundStyle(.secondary)
-                .frame(width: 28)
-            VStack(alignment: .leading, spacing: 2) {
+        HStack(spacing: 0) {
+            // 音色名称
+            HStack(spacing: 8) {
+                Text(String(profile.name.prefix(1)))
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                    .frame(width: 24, height: 24)
+                    .background(Color.accentColor.opacity(0.7))
+                    .clipShape(Circle())
                 Text(profile.name)
                     .font(.body)
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
-            Spacer()
-            statusBadge
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // 类型
+            Text(profile.kindLabel)
+                .font(.caption)
+                .frame(width: 80, alignment: .center)
+
+            // 来源
+            Text(profile.sourceLabel)
+                .font(.caption)
+                .frame(width: 80, alignment: .center)
+
+            // 时长
+            Text(profile.durationLabel)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(width: 56, alignment: .trailing)
+
+            // 状态
+            voiceStatusBadge
+                .frame(width: 72, alignment: .center)
+
+            // 最近使用
+            Text(profile.lastUsedAt?.relativeLabel ?? "未使用")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .frame(width: 88, alignment: .center)
+
+            // 操作
+            voiceActions
+                .frame(width: 100, alignment: .center)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 
-    private var subtitle: String {
-        if profile.kind == .preset {
-            return "内置 · \(profile.localeIdentifier)"
-        } else {
-            let dur = profile.referenceAudioPath != nil ? "音频已导入" : "—"
-            return "\(profile.kind == .cloned ? "克隆" : "参考") · \(profile.localeIdentifier) · \(dur)"
-        }
-    }
-
-    private var statusBadge: some View {
-        let (text, color): (String, Color) = profile.status == .builtIn || profile.status == .available
-            ? ("就绪", .green) : ("训练中", .orange)
-        return Text(text)
-            .font(.caption)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
+    private var voiceStatusBadge: some View {
+        let color: Color = {
+            switch profile.status {
+            case .builtIn:       return .secondary
+            case .available:     return .green
+            case .pendingReview: return .orange
+            case .failed:        return .red
+            }
+        }()
+        return Text(profile.statusLabel)
+            .font(.caption2)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
             .background(color.opacity(0.15))
             .foregroundStyle(color)
             .clipShape(RoundedRectangle(cornerRadius: 4))
+    }
+
+    private var voiceActions: some View {
+        HStack(spacing: 6) {
+            Button {
+                // TODO: 试听
+            } label: {
+                Image(systemName: "play.circle")
+                    .font(.body)
+            }
+            .buttonStyle(.plain)
+            .help("试听")
+
+            if profile.kind != .preset {
+                Button {
+                    // TODO: 重命名
+                } label: {
+                    Image(systemName: "pencil")
+                        .font(.body)
+                }
+                .buttonStyle(.plain)
+                .help("重命名")
+
+                Button {
+                    // TODO: 删除
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.body)
+                        .foregroundStyle(.red.opacity(0.7))
+                }
+                .buttonStyle(.plain)
+                .help("删除")
+            }
+        }
     }
 }
 
