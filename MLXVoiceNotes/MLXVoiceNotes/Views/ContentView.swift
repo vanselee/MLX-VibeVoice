@@ -918,12 +918,38 @@ private struct RoleVoiceBindingRow: View {
 }
 
 private struct ResourceCenterView: View {
+    @State private var selectedTab: ResourceTab = .model
+
+    enum ResourceTab: String, CaseIterable {
+        case model = "模型"
+        case voice = "音色"
+    }
+
     var body: some View {
-        AppPageScaffold(title: "资源中心", subtitle: "模型下载、音色库和缓存管理。") {
-            VStack(spacing: 10) {
-                ResourceRow(name: "Qwen3-TTS 0.6B Base bf16", status: "已安装 · 推荐 8GB 以上统一内存")
-                ResourceRow(name: "Qwen3-TTS 0.6B Base 8bit", status: "下载中 · 42%")
-                ResourceRow(name: "Qwen3-TTS 1.7B Base", status: "下载失败 · 可重试")
+        AppPageScaffold(title: "资源中心", subtitle: "管理模型与音色资源。") {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 8) {
+                    ForEach(ResourceTab.allCases, id: \.self) { tab in
+                        Button {
+                            selectedTab = tab
+                        } label: {
+                            Text(tab.rawValue)
+                                .font(.subheadline.weight(.medium))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(selectedTab == tab ? .accentColor : .secondary)
+                    }
+                    Spacer()
+                }
+
+                switch selectedTab {
+                case .model:
+                    modelContent
+                case .voice:
+                    voiceContent
+                }
             }
         } sidebar: {
             ActionCard(title: "缓存", rows: [
@@ -931,6 +957,23 @@ private struct ResourceCenterView: View {
                 ("缓存上限", "20GB"),
                 ("下载状态", "支持断点续传")
             ])
+        }
+    }
+
+    @ViewBuilder
+    private var modelContent: some View {
+        VStack(spacing: 10) {
+            ResourceRow(name: "Qwen3-TTS 0.6B Base bf16", status: "已安装 · 推荐 8GB 以上统一内存")
+            ResourceRow(name: "Qwen3-TTS 0.6B Base 8bit", status: "下载中 · 42%")
+            ResourceRow(name: "Qwen3-TTS 1.7B Base", status: "下载失败 · 可重试")
+        }
+    }
+
+    @ViewBuilder
+    private var voiceContent: some View {
+        VStack(spacing: 10) {
+            Text("音色库（Phase 2 占位）")
+                .foregroundStyle(.secondary)
         }
     }
 }
