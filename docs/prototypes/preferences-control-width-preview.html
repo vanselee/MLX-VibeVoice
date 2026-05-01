@@ -190,6 +190,10 @@
       border-top: 1px solid #edf1f5;
     }
 
+    .setting-row.export-row {
+      align-items: start;
+    }
+
     .setting-row:first-of-type {
       border-top: 0;
     }
@@ -206,6 +210,14 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .setting-label.export-hint {
+      padding-top: 2px;
+    }
+
+    .setting-label.export-hint span {
+      margin-top: 0;
     }
 
     .setting-control {
@@ -372,8 +384,8 @@
 
               <section class="setting-card">
                 <h3>导出位置</h3>
-                <div class="setting-row">
-                  <div class="setting-label">
+                <div class="setting-row export-row">
+                  <div class="setting-label export-hint">
                     <span>导出的音频文件会保存到此目录。</span>
                   </div>
                   <div class="export-control">
