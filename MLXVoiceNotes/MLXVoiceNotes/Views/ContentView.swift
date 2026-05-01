@@ -1063,62 +1063,75 @@ private struct ExportSettingsView: View {
     @State private var cacheUsage: String = "待统计"
 
     var body: some View {
-        AppPageScaffold(title: "偏好设置", subtitle: "管理语言、缓存上限和本地存储。") {
-            VStack(spacing: 12) {
-                // 语言设置
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("语言").font(.headline)
+        VStack(alignment: .leading, spacing: 20) {
+            Text("偏好设置")
+                .font(.largeTitle.bold())
+
+            Text("管理语言、缓存上限和本地存储。")
+                .foregroundStyle(.secondary)
+
+            // 语言
+            VStack(alignment: .leading, spacing: 16) {
+                Text("语言")
+                    .font(.headline)
+
+                HStack {
+                    Text("界面语言")
+                    Spacer()
                     Picker("界面语言", selection: $appLanguage) {
                         ForEach(AppLanguage.allCases) { lang in
                             Text(lang.displayName).tag(lang)
                         }
                     }
-                    .pickerStyle(.radioGroup)
-
-                    if appLanguage == .system {
-                        Text("系统语言为中文时显示中文，否则显示 English")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                    .labelsHidden()
+                    .frame(width: 180)
                 }
-                .padding(12)
-                .background(Color(nsColor: .textBackgroundColor))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                // 缓存设置
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("缓存").font(.headline)
-
-                    HStack {
-                        Text("当前占用")
-                        Spacer()
-                        Text(cacheUsage)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    HStack {
-                        Text("缓存上限")
-                        Spacer()
-                        Picker("缓存上限", selection: $cacheLimit) {
-                            ForEach(CacheLimit.allCases) { limit in
-                                Text(limit.displayName).tag(limit)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                    }
-
-                    Button("清理缓存") {
-                        // TODO: implement cache cleanup
-                    }
-                    .disabled(true)
-                }
-                .padding(12)
-                .background(Color(nsColor: .textBackgroundColor))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                Text("跟随系统会在中文系统中显示中文，在非中文系统中显示 English。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-        } sidebar: {
-            EmptyView()
+            .padding()
+            .background(Color(nsColor: .controlBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            // 缓存
+            VStack(alignment: .leading, spacing: 16) {
+                Text("缓存")
+                    .font(.headline)
+
+                HStack {
+                    Text("当前占用")
+                    Spacer()
+                    Text(cacheUsage)
+                        .foregroundStyle(.secondary)
+                }
+
+                HStack {
+                    Text("缓存上限")
+                    Spacer()
+                    Picker("缓存上限", selection: $cacheLimit) {
+                        ForEach(CacheLimit.allCases) { limit in
+                            Text(limit.displayName).tag(limit)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 140)
+                }
+
+                Button("清理缓存") {
+                    // TODO: implement cache cleanup
+                }
+                .disabled(true)
+            }
+            .padding()
+            .background(Color(nsColor: .controlBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
+        .frame(maxWidth: 760, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 24)
     }
 }
 
