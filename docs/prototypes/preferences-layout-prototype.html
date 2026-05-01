@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MLX Voice Notes - 偏好设置原型</title>
+  <style>
+    :root {
+      --bg: #eef1f4;
+      --paper: #ffffff;
+      --panel: #e9eef2;
+      --soft: #f6f8fa;
+      --ink: #17191d;
+      --muted: #66707d;
+      --line: #d8dde5;
+      --blue: #2563d8;
+      --blue-soft: #eaf1ff;
+      --shadow: 0 14px 46px rgba(31, 39, 51, .13);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #f8f9fb 0%, var(--bg) 100%);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    button { font: inherit; }
+
+    .page {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 28px 24px 56px;
+    }
+
+    .intro {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 22px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 8px; font-size: 28px; }
+    h2 { margin-bottom: 4px; font-size: 22px; }
+    h3 { margin-bottom: 10px; font-size: 15px; }
+    p, .muted { color: var(--muted); }
+
+    .screen {
+      border: 1px solid rgba(90, 101, 117, .32);
+      border-radius: 14px;
+      background: #fbfcfd;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .titlebar {
+      height: 46px;
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr) 260px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      background: rgba(250, 251, 252, .94);
+    }
+
+    .traffic {
+      display: flex;
+      gap: 7px;
+      padding-left: 17px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #c9ced6;
+      border: 1px solid rgba(0, 0, 0, .08);
+    }
+
+    .screen-title {
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .screen-body {
+      min-height: 700px;
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: #f5f7fa;
+      padding: 14px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 4px 4px 16px;
+    }
+
+    .mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      object-fit: cover;
+      box-shadow: 0 3px 10px rgba(31, 39, 51, .18);
+    }
+
+    .brand strong { display: block; }
+    .brand span { color: var(--muted); font-size: 12px; }
+
+    .nav-title {
+      color: #8d96a3;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin: 10px 6px 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      justify-content: space-between;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 9px 10px;
+      margin-bottom: 7px;
+    }
+
+    .nav-item.active {
+      border-color: #9bbcf6;
+      background: var(--blue-soft);
+      color: #174ea6;
+      font-weight: 800;
+    }
+
+    .content {
+      min-width: 0;
+      padding: 18px;
+      background: #fff;
+    }
+
+    .content-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .settings-panel {
+      max-width: 860px;
+      min-height: 510px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      padding: 20px;
+    }
+
+    .settings-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .setting-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--paper);
+      overflow: hidden;
+    }
+
+    .setting-card h3 {
+      padding: 14px 16px 2px;
+      margin-bottom: 0;
+    }
+
+    .setting-row {
+      min-height: 64px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 24px;
+      align-items: center;
+      padding: 12px 16px;
+      border-top: 1px solid #edf1f5;
+    }
+
+    .setting-row:first-of-type {
+      border-top: 0;
+    }
+
+    .setting-label strong,
+    .setting-label span {
+      display: block;
+    }
+
+    .setting-label span {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .setting-control {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .btn,
+    .select {
+      height: 34px;
+      border: 1px solid #c5ccd6;
+      border-radius: 7px;
+      background: #fff;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #27313f;
+      white-space: nowrap;
+    }
+
+    .btn {
+      width: 128px;
+    }
+
+    .btn.primary {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .btn.disabled {
+      color: #9aa3af;
+      background: #eef1f5;
+      border-color: #e0e5ec;
+    }
+
+    .select {
+      width: 176px;
+      justify-content: space-between;
+      background: #f3f4f6;
+    }
+
+    .path {
+      max-width: 320px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #3b4450;
+      text-align: right;
+    }
+
+    .control-column {
+      display: grid;
+      justify-items: end;
+      gap: 8px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    @media (max-width: 980px) {
+      .screen-body { grid-template-columns: 72px minmax(0, 1fr); }
+      .brand strong, .brand span, .nav-title, .nav-item span:last-child { display: none; }
+      .nav-item { justify-content: center; }
+      .titlebar { grid-template-columns: 140px minmax(0, 1fr) 160px; }
+      .settings-panel { max-width: none; }
+      .setting-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .setting-control {
+        justify-content: flex-start;
+      }
+      .path, .hint {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="intro">
+      <h1>偏好设置页面布局原型</h1>
+      <p>目标是把导出位置、语言、缓存三个模块做成统一浅灰页面容器内的设置表单；右侧按钮和下拉菜单从右往左对齐，尺寸统一。</p>
+    </section>
+
+    <section class="screen">
+      <div class="titlebar">
+        <div class="traffic"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="screen-title">偏好设置</div>
+        <div></div>
+      </div>
+      <div class="screen-body">
+        <aside class="sidebar">
+          <div class="brand">
+            <img class="mark" src="assets/mlx-voice-notes-logo.png" alt="">
+            <div><strong>MLX Voice Notes</strong><span>本地配音工作流</span></div>
+          </div>
+          <div class="nav-title">工作区</div>
+          <div class="nav-item"><span>文案列表</span></div>
+          <div class="nav-item"><span>角色确认</span></div>
+          <div class="nav-item"><span>资源中心</span></div>
+          <div class="nav-item"><span>任务总览</span></div>
+          <div class="nav-item active"><span>偏好设置</span></div>
+        </aside>
+
+        <section class="content">
+          <div class="content-head">
+            <div>
+              <h2>偏好设置</h2>
+              <p class="muted">管理语言、导出位置和本地缓存。</p>
+            </div>
+          </div>
+
+          <div class="settings-panel">
+            <div class="settings-stack">
+              <section class="setting-card">
+                <h3>语言</h3>
+                <div class="setting-row">
+                  <div class="setting-label">
+                    <strong>界面语言</strong>
+                    <span>跟随系统会在中文系统中显示中文，在非中文系统中显示 English。</span>
+                  </div>
+                  <div class="setting-control">
+                    <div class="select">跟随系统 <span>⌄</span></div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="setting-card">
+                <h3>导出位置</h3>
+                <div class="setting-row">
+                  <div class="setting-label">
+                    <strong>默认位置</strong>
+                    <span>导出的 WAV 文件会保存到此目录。</span>
+                  </div>
+                  <div class="control-column">
+                    <div class="path">Downloads / MLX Voice Notes Exports</div>
+                    <div class="setting-control">
+                      <button class="btn">恢复默认位置</button>
+                      <button class="btn">更改位置</button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="setting-card">
+                <h3>缓存</h3>
+                <div class="setting-row">
+                  <div class="setting-label">
+                    <strong>当前占用</strong>
+                    <span>模型缓存、生成缓存和临时文件。</span>
+                  </div>
+                  <div class="setting-control">
+                    <div class="path">待统计</div>
+                  </div>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-label">
+                    <strong>缓存上限</strong>
+                    <span>达到上限后提醒用户清理缓存。</span>
+                  </div>
+                  <div class="setting-control">
+                    <div class="select">10GB <span>⌄</span></div>
+                  </div>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-label">
+                    <strong>清理缓存</strong>
+                    <span>清除可再生成的临时文件，不删除用户文案和导出音频。</span>
+                  </div>
+                  <div class="control-column">
+                    <button class="btn disabled">清理缓存</button>
+                    <div class="hint">没有可清理缓存时按钮禁用，但仍保持可读。</div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
