@@ -189,16 +189,7 @@ private struct ScriptLibraryView: View {
             }
         } sidebar: {
             if let selectedScript {
-                ActionCard(title: "选中文案详情", rows: [
-                    ("标题", selectedScript.title),
-                    ("状态", selectedScript.status.displayName),
-                    ("创建时间", selectedScript.createdAt.relativeLabel),
-                    ("修改时间", selectedScript.updatedAt.relativeLabel),
-                    ("字数", "\(selectedScript.bodyText.count) 字"),
-                    ("角色/段落", "\(selectedScript.roles.count) / \(selectedScript.segments.count)"),
-                    ("最近导出", selectedScript.lastExportedAt?.relativeLabel ?? "未导出"),
-                    ("生成进度", progressLabel(for: selectedScript))
-                ])
+                scriptDetailPanel(for: selectedScript)
             } else {
                 ContentUnavailableView("暂无文案", systemImage: "doc.text")
             }
@@ -595,6 +586,81 @@ private struct ScriptLibraryView: View {
 
     private func completedCount(for script: Script) -> Int {
         script.segments.filter { $0.status == .completed }.count
+    }
+
+    private func failedCount(for script: Script) -> Int {
+        script.segments.filter { $0.status == .failed }.count
+    }
+
+    private func scriptDetailPanel(for script: Script) -> some View {
+        let total = script.segments.count
+        let completed = completedCount(for: script)
+        let failed = failedCount(for: script)
+        let pending = total - completed - failed
+
+        return VStack(alignment: .leading, spacing: 0) {
+            // 基础信息卡片
+            ActionCard(title: "选中文案详情", rows: [
+                ("标题", script.title),
+                ("状态", script.status.displayName),
+                ("创建时间", script.createdAt.relativeLabel),
+                ("修改时间", script.updatedAt.relativeLabel),
+                ("字数", "\(script.bodyText.count) 字"),
+                ("角色/段落", "\(script.roles.count) / \(total)"),
+                ("最近导出", script.lastExportedAt?.relativeLabel ?? "未导出")
+            ])
+
+            // 生成状态区域
+            VStack(alignment: .leading, spacing: 10) {
+                Divider()
+                    .padding(.top, 4)
+
+                Text("生成状态").font(.headline)
+
+                if script.status == .generating {
+                    HStack(spacing: 8) {
+                        ProgressView(value: total > 0 ? Double(completed) / Double(total) : 0)
+                            .frame(height: 6)
+                        Text("\(completed)/\(total)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Text("生成中 · \(pending) 段待生成")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if completed == total && total > 0 {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                        Text("已完成 · \(total) 段").foregroundStyle(.secondary)
+                    }
+                    .font(.caption)
+                } else if failed > 0 {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                        Text("\(failed) 段失败").foregroundStyle(.orange)
+                    }
+                    .font(.caption)
+                    Text("\(completed)/\(total) · \(pending) 段待生成")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if completed > 0 {
+                    HStack(spacing: 6) {
+                        Image(systemName: "circle.lefthalf.filled").foregroundStyle(.blue)
+                        Text("部分完成 · \(completed)/\(total) 段").foregroundStyle(.secondary)
+                    }
+                    .font(.caption)
+                } else {
+                    HStack(spacing: 6) {
+                        Image(systemName: "circle").foregroundStyle(.secondary)
+                        Text("未生成 · \(total) 段待处理").foregroundStyle(.secondary)
+                    }
+                    .font(.caption)
+                }
+            }
+            .padding(.top, 12)
+
+            Spacer()
+        }
     }
 }
 
