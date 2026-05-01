@@ -18,8 +18,22 @@ enum SegmentStatus: String, Codable, CaseIterable {
 }
 
 enum VoiceKind: String, Codable, CaseIterable {
-    case preset
-    case reference
+    case preset   // 内置 / 系统音色
+    case reference // 参考音色
+    case cloned   // 克隆音色
+}
+
+enum VoiceProfileStatus: String, Codable, CaseIterable {
+    case builtIn        // 内置，不可删除
+    case available      // 可用
+    case pendingReview  // 待验证
+    case failed         // 失败
+}
+
+enum VoiceSource: String, Codable, CaseIterable {
+    case system         // 系统内置
+    case localAudio     // 本地音频导入
+    case localGenerated // 本地生成（克隆）
 }
 
 enum ExportKind: String, Codable, CaseIterable {
@@ -163,27 +177,113 @@ final class VoiceProfile {
     var id: UUID
     var name: String
     var kind: VoiceKind
+    var source: VoiceSource
+    var status: VoiceProfileStatus
     var localeIdentifier: String
     var referenceAudioPath: String?
     var referenceText: String?
+    var durationSeconds: Double?
+    var isDefaultNarrator: Bool
     var createdAt: Date
+    var modifiedAt: Date
+    var lastUsedAt: Date?
 
     init(
         id: UUID = UUID(),
         name: String,
         kind: VoiceKind,
+        source: VoiceSource,
+        status: VoiceProfileStatus,
         localeIdentifier: String = "zh-Hans",
         referenceAudioPath: String? = nil,
         referenceText: String? = nil,
-        createdAt: Date = .now
+        durationSeconds: Double? = nil,
+        isDefaultNarrator: Bool = false,
+        createdAt: Date = .now,
+        modifiedAt: Date = .now,
+        lastUsedAt: Date? = nil
     ) {
         self.id = id
         self.name = name
         self.kind = kind
+        self.source = source
+        self.status = status
         self.localeIdentifier = localeIdentifier
         self.referenceAudioPath = referenceAudioPath
         self.referenceText = referenceText
+        self.durationSeconds = durationSeconds
+        self.isDefaultNarrator = isDefaultNarrator
         self.createdAt = createdAt
+        self.modifiedAt = modifiedAt
+        self.lastUsedAt = lastUsedAt
+    }
+
+    var kindLabel: String {
+        switch kind {
+        case .preset:    return "内置"
+        case .reference: return "参考音色"
+        case .cloned:    return "克隆音色"
+        }
+    }
+
+    var sourceLabel: String {
+        switch source {
+        case .system:         return "系统"
+        case .localAudio:    return "本地音频"
+        case .localGenerated: return "本地生成"
+        }
+    }
+
+    var statusLabel: String {
+        switch status {
+        case .builtIn:       return "内置"
+        case .available:     return "可用"
+        case .pendingReview: return "待验证"
+        case .failed:        return "失败"
+        }
+    }
+
+    var durationLabel: String {
+        guard let s = durationSeconds else { return "-" }
+        return String(format: "%.0f 秒", s)
+    }
+}
+
+// MARK: - Sample Data for Preview / Development
+
+extension VoiceProfile {
+    static var samples: [VoiceProfile] {
+        [
+            VoiceProfile(
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+                name: "默认清晰女声",
+                kind: .preset,
+                source: .system,
+                status: .builtIn,
+                localeIdentifier: "zh-Hans",
+                lastUsedAt: Date()
+            ),
+            VoiceProfile(
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+                name: "自然男声",
+                kind: .preset,
+                source: .system,
+                status: .builtIn,
+                localeIdentifier: "zh-Hans",
+                lastUsedAt: Date().addingTimeInterval(-86400)
+            ),
+            VoiceProfile(
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
+                name: "vanselee 参考音色",
+                kind: .reference,
+                source: .localAudio,
+                status: .available,
+                referenceAudioPath: "~/Downloads/4月22日声音母带.mp3",
+                referenceText: "你永远都搞不清楚这些平台它到底要什么，不要什么。",
+                durationSeconds: 28,
+                lastUsedAt: Date().addingTimeInterval(-3600)
+            )
+        ]
     }
 }
 
