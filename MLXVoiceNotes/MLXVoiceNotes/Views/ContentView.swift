@@ -1388,13 +1388,9 @@ private struct ExportSettingsView: View {
     var body: some View {
         AppPageScaffold(title: "偏好设置", subtitle: "管理语言、导出位置和本地缓存。") {
             VStack(alignment: .leading, spacing: 14) {
-                // 语言模块 — 标题与控件合并到同一行
+                // 语言模块 — 标准设置行
                 settingsCard("") {
-                    HStack(spacing: 0) {
-                        Text("语言")
-                            .font(.body)
-                            .frame(width: 80, alignment: .leading)
-                        Spacer()
+                    settingsRowLabel("语言", subtitle: nil) {
                         Picker("", selection: $appLanguage) {
                             ForEach(AppLanguage.allCases) { lang in
                                 Text(lang.displayName).tag(lang)
@@ -1405,45 +1401,11 @@ private struct ExportSettingsView: View {
                         .controlSize(.regular)
                         .frame(width: Self.controlWidth, height: Self.controlHeight)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
                 }
 
-                // 导出位置模块 — 标签+路径一行，按钮一行
+                // 导出位置模块 — 专用行
                 settingsCard("") {
-                    VStack(spacing: 12) {
-                        // 第一排：导出位置左，路径右
-                        HStack {
-                            Text("导出位置")
-                                .font(.body)
-                                .frame(width: 80, alignment: .leading)
-                            Spacer()
-                            Text(currentExportDisplayPath)
-                                .font(.body)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                                .frame(width: Self.controlWidth, alignment: .trailing)
-                        }
-                        // 第二排：按钮靠近，右对齐
-                        HStack {
-                            Spacer()
-                            Button("恢复默认位置") {
-                                defaultExportDirectory = ""
-                            }
-                            .font(.body)
-                            .buttonStyle(.bordered)
-                            .controlSize(.regular)
-                            Button("更改位置") {
-                                changeExportDirectory()
-                            }
-                            .font(.body)
-                            .buttonStyle(.bordered)
-                            .controlSize(.regular)
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    exportLocationRow
                 }
 
                 // 缓存模块
@@ -1453,7 +1415,7 @@ private struct ExportSettingsView: View {
                             Text(cacheUsage)
                                 .font(.body)
                                 .foregroundStyle(.secondary)
-                                .frame(width: Self.controlWidth, alignment: .trailing)
+                                .frame(width: Self.controlWidth, height: Self.controlHeight, alignment: .trailing)
                         }
 
                         Divider().padding(.horizontal, 16)
@@ -1467,7 +1429,7 @@ private struct ExportSettingsView: View {
                             .labelsHidden()
                             .font(.body)
                             .controlSize(.regular)
-                            .frame(width: Self.controlWidth)
+                            .frame(width: Self.controlWidth, height: Self.controlHeight)
                         }
 
                         Divider().padding(.horizontal, 16)
@@ -1479,7 +1441,7 @@ private struct ExportSettingsView: View {
                             .font(.body)
                             .buttonStyle(.bordered)
                             .controlSize(.regular)
-                            .frame(width: Self.controlWidth)
+                            .frame(width: Self.controlWidth, height: Self.controlHeight)
                             .disabled(true)
                         }
                     }
@@ -1535,12 +1497,55 @@ private struct ExportSettingsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             control()
+                .frame(width: Self.trailingColumnWidth, alignment: .trailing)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
     }
 
 
+
+    // MARK: - Export Location Row
+
+    private var exportLocationRow: some View {
+        HStack(alignment: .top, spacing: 16) {
+            Text("导出的音频文件会保存到此目录。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.top, 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            VStack(alignment: .trailing, spacing: 8) {
+                Text(currentExportDisplayPath)
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .frame(width: Self.trailingColumnWidth, alignment: .trailing)
+
+                HStack(spacing: 8) {
+                    Button("恢复默认位置") {
+                        defaultExportDirectory = ""
+                    }
+                    .font(.body)
+                    .buttonStyle(.bordered)
+                    .controlSize(.regular)
+                    .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
+
+                    Button("更改位置") {
+                        changeExportDirectory()
+                    }
+                    .font(.body)
+                    .buttonStyle(.bordered)
+                    .controlSize(.regular)
+                    .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
+                }
+                .frame(width: Self.trailingColumnWidth, alignment: .trailing)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
 
     // MARK: - Actions
 
