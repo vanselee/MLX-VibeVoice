@@ -1051,37 +1051,44 @@ private struct ExportSettingsView: View {
     @State private var lastExportPath: String?
 
     var body: some View {
-        AppPageScaffold(title: "导出与设置", subtitle: "导出完整成品音频，首次默认 Downloads。") {
+        AppPageScaffold(title: "导出与设置", subtitle: "管理默认导出规则、保存位置和缓存清理。") {
             VStack(spacing: 12) {
-                ActionCard(title: "导出预览", rows: [
-                    ("文件名", "\(safeFileName).wav"),
-                    ("规格", "完整 WAV · 24kHz · mono"),
+                ActionCard(title: "默认导出规则", rows: [
+                    ("默认格式", "WAV"),
+                    ("默认采样率", "24kHz"),
+                    ("默认声道", "Mono"),
+                    ("默认保存位置", "Downloads"),
+                    ("文件命名规则", "{标题}_{时间戳}.wav"),
+                    ("导出后打开文件夹", "未启用"),
                     ("字幕", "句子级 SRT · UTF-8"),
-                    ("音频文件", "仅完整成品"),
-                    ("状态", exportStatus),
-                    ("最近路径", lastExportPath ?? "尚未导出")
+                    ("音频文件", "仅完整成品")
                 ])
+
+                ActionCard(title: "缓存管理", rows: [
+                    ("缓存上限", "20GB"),
+                    ("界面语言", "跟随系统"),
+                    ("自动更新", "MVP 不启用")
+                ])
+
                 HStack {
-                    Button("导出 WAV") {
-                        exportPlaceholderWAV()
-                    }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(script == nil || script?.status != .completed)
-                    Button("打开文件夹") {
+                    Button("打开导出文件夹") {
                         openExportFolder()
                     }
-                    Button("复制路径") {
+                    Button("复制最近路径") {
                         copyLastExportPath()
                     }
                     .disabled(lastExportPath == nil)
                     Spacer()
                 }
+
+                Text("单篇文案请在文案库右侧详情面板导出")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         } sidebar: {
-            ActionCard(title: "应用设置", rows: [
-                ("界面语言", "跟随系统"),
-                ("缓存上限", "20GB"),
-                ("自动更新", "MVP 不启用")
+            ActionCard(title: "最近导出", rows: [
+                ("最近路径", lastExportPath ?? "尚未导出"),
+                ("状态", exportStatus)
             ])
         }
     }
