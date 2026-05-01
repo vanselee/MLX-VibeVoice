@@ -1390,9 +1390,12 @@ private struct ExportSettingsView: View {
             VStack(alignment: .leading, spacing: 14) {
                 // 浅灰主容器
                 VStack(spacing: 14) {
-                    // 语言模块
-                    settingsCard("语言") {
+                        // 语言模块 — 标题与控件合并到同一行
+                    settingsCard("") {
                         HStack(spacing: 0) {
+                            Text("语言")
+                                .font(.body)
+                                .frame(width: 80, alignment: .leading)
                             Spacer()
                             Picker("", selection: $appLanguage) {
                                 ForEach(AppLanguage.allCases) { lang in
@@ -1408,50 +1411,44 @@ private struct ExportSettingsView: View {
                         .padding(.vertical, 12)
                     }
 
-                    // 导出位置模块
-                    settingsCard("导出位置") {
-                        HStack(alignment: .top, spacing: 16) {
-                            Text("导出的音频文件会保存到此目录。")
-                                .font(.caption)
+                    // 导出位置模块 — 标题+路径+按钮合并到同一行
+                    settingsCard("") {
+                        HStack(spacing: 0) {
+                            Text("导出位置")
+                                .font(.body)
+                                .frame(width: 80, alignment: .leading)
+                            Spacer()
+                            Text(currentExportDisplayPath)
+                                .font(.body)
                                 .foregroundStyle(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-
-                            VStack(alignment: .trailing, spacing: 8) {
-                                Text(currentExportDisplayPath)
-                                    .font(.body)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                                    .truncationMode(.middle)
-                                    .frame(width: Self.trailingColumnWidth, alignment: .trailing)
-
-                                HStack(spacing: 8) {
-                                    Button("恢复默认位置") {
-                                        defaultExportDirectory = ""
-                                    }
-                                    .font(.body)
-                                    .buttonStyle(.bordered)
-                                    .controlSize(.regular)
-                                    .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
-
-                                    Button("更改位置") {
-                                        changeExportDirectory()
-                                    }
-                                    .font(.body)
-                                    .buttonStyle(.bordered)
-                                    .controlSize(.regular)
-                                    .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                                .frame(width: 200, alignment: .trailing)
+                            HStack(spacing: 8) {
+                                Button("恢复默认位置") {
+                                    defaultExportDirectory = ""
                                 }
-                                .frame(width: Self.trailingColumnWidth, alignment: .trailing)
+                                .font(.body)
+                                .buttonStyle(.bordered)
+                                .controlSize(.regular)
+                                .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
+                                Button("更改位置") {
+                                    changeExportDirectory()
+                                }
+                                .font(.body)
+                                .buttonStyle(.bordered)
+                                .controlSize(.regular)
+                                .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
                             }
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
                     }
 
-                    // 缓存模块
-                    settingsCard("缓存") {
+                    // 缓存模块 — 无顶部标题，首行标签改为"当前占用缓存"
+                    settingsCard("") {
                         VStack(spacing: 0) {
-                            settingsRowLabel("当前占用", subtitle: nil) {
+                            settingsRowLabel("当前占用缓存", subtitle: nil) {
                                 Text(cacheUsage)
                                     .font(.body)
                                     .foregroundStyle(.secondary)
