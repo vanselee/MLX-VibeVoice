@@ -1137,7 +1137,7 @@ private struct ExportSettingsView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 24) {
             Text("偏好设置")
                 .font(.largeTitle.bold())
 
@@ -1145,64 +1145,50 @@ private struct ExportSettingsView: View {
                 .foregroundStyle(.secondary)
 
             // 语言
-            preferenceCard(title: "语言") {
-                HStack {
-                    Text("界面语言")
-                    Spacer()
+            preferenceSection("语言") {
+                preferenceRow(title: "界面语言", subtitle: "跟随系统会在中文系统中显示中文，在非中文系统中显示 English。") {
                     Picker("界面语言", selection: $appLanguage) {
                         ForEach(AppLanguage.allCases) { lang in
                             Text(lang.displayName).tag(lang)
                         }
                     }
                     .labelsHidden()
-                    .frame(width: 180)
+                    .frame(width: 160)
                 }
-
-                Text("跟随系统会在中文系统中显示中文，在非中文系统中显示 English。")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
             // 导出位置
-            preferenceCard(title: "导出位置") {
-                HStack {
-                    Text("默认位置")
-                    Spacer()
-                    Text(currentExportDisplayPath)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                }
-
-                HStack(spacing: 8) {
+            preferenceSection("导出位置") {
+                preferenceRow(title: "默认位置", subtitle: currentExportDisplayPath) {
                     Button("更改位置") {
                         changeExportDirectory()
                     }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+
+                Divider().padding(.leading, 16)
+
+                preferenceRow(title: "恢复默认", subtitle: "Downloads / MLX Voice Notes Exports") {
                     Button("恢复默认") {
                         defaultExportDirectory = ""
                     }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                     .disabled(defaultExportDirectory.isEmpty)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-
-                Text("导出的 WAV 文件将保存到此目录。")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
             // 缓存
-            preferenceCard(title: "缓存") {
-                HStack {
-                    Text("当前占用")
-                    Spacer()
+            preferenceSection("缓存") {
+                preferenceRow(title: "当前占用") {
                     Text(cacheUsage)
                         .foregroundStyle(.secondary)
                 }
 
-                HStack {
-                    Text("缓存上限")
-                    Spacer()
+                Divider().padding(.leading, 16)
+
+                preferenceRow(title: "缓存上限") {
                     Picker("缓存上限", selection: $cacheLimit) {
                         ForEach(CacheLimit.allCases) { limit in
                             Text(limit.displayName).tag(limit)
@@ -1212,32 +1198,66 @@ private struct ExportSettingsView: View {
                     .frame(width: 140)
                 }
 
-                Button("清理缓存") {
-                    // TODO: implement cache cleanup
+                Divider().padding(.leading, 16)
+
+                preferenceRow(title: "清理缓存") {
+                    Button("清理") {
+                        // TODO: implement cache cleanup
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .disabled(true)
                 }
-                .disabled(true)
             }
         }
-        .frame(maxWidth: 760, alignment: .leading)
+        .frame(maxWidth: 820, alignment: .leading)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(.horizontal, 24)
         .padding(.vertical, 24)
     }
 
-    private func preferenceCard<Content: View>(
-        title: String,
+    // MARK: - Layout Helpers
+
+    private func preferenceSection<Content: View>(
+        _ title: String,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.headline)
 
-            content()
+            VStack(spacing: 0) {
+                content()
+            }
+            .background(Color(nsColor: .controlBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func preferenceRow<Content: View>(
+        title: String,
+        subtitle: String? = nil,
+        @ViewBuilder trailing: () -> Content
+    ) -> some View {
+        HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.body)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+            }
+
+            Spacer(minLength: 24)
+
+            trailing()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 
     private func changeExportDirectory() {
