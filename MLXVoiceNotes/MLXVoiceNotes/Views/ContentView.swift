@@ -165,7 +165,7 @@ private struct ScriptLibraryView: View {
         AppPageScaffold(title: "文案工作区", subtitle: "管理文案列表，点击文案即可展开编辑并生成音频。") {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
-                    Text("默认按最近修改排序")
+                    Text("按创建时间排序")
                         .foregroundStyle(.secondary)
                     Spacer()
                     Button("新建文案") {
@@ -271,8 +271,12 @@ private struct ScriptLibraryView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(script.id == selectedScriptID ? Color.accentColor.opacity(0.08) : Color(nsColor: .textBackgroundColor))
+        .background(script.id == selectedScriptID ? Color.accentColor.opacity(0.12) : Color(nsColor: .textBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+        .contentShape(Rectangle())
+        .onTapGesture {
+            selectedScriptID = script.id
+        }
     }
 
     private let availableVoices = ["默认清晰女声", "自然男声", "vanselee 参考音色", "默认旁白"]
