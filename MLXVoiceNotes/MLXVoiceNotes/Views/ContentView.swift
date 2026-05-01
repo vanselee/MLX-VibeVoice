@@ -1827,6 +1827,7 @@ private extension Date {
 struct CreateVoiceProfileView: View {
     let onDismiss: () -> Void
 
+    @Environment(\.modelContext) private var modelContext
     @State private var voiceName = ""
     @State private var referenceAudioPath = ""
     @State private var referenceText = ""
@@ -1834,6 +1835,7 @@ struct CreateVoiceProfileView: View {
     @State private var showHelp = false
     @State private var showFileImporter = false
     @State private var hasTestAudio = false
+    @State private var nameError = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1845,7 +1847,7 @@ struct CreateVoiceProfileView: View {
                 Button("取消") { onDismiss() }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                Button("保存音色") { onDismiss() }
+                Button("保存音色") { saveVoice() }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
             }
@@ -1902,6 +1904,13 @@ struct CreateVoiceProfileView: View {
                                 Text("音色名称").font(.subheadline.bold())
                                 TextField("输入音色名称", text: $voiceName)
                                     .textFieldStyle(.roundedBorder)
+                                    .border(nameError ? Color.red : Color.clear)
+                                    .onChange(of: voiceName) { nameError = false }
+                                if nameError {
+                                    Text("请输入音色名称")
+                                        .font(.caption)
+                                        .foregroundStyle(.red)
+                                }
                             }
 
                             // Reference audio
@@ -2049,6 +2058,28 @@ struct CreateVoiceProfileView: View {
                 break
             }
         }
+    }
+
+    // MARK: - Save Logic
+
+    private func saveVoice() {
+        let trimmed = voiceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            nameError = true
+            return
+        }
+        nameError = false
+
+        let profile = VoiceProfile(
+            name: trimmed,
+            kind: .reference,
+            source: .localAudio,
+            status: .pendingReview,
+            referenceAudioPath: referenceAudioPath.isEmpty ? nil : referenceAudioPath,
+            referenceText: referenceText.isEmpty ? nil : referenceText
+        )
+        modelContext.insert(profile)
+        onDismiss()
     }
 
     private func formCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
