@@ -167,6 +167,38 @@ MLX Voice Notes 需求规格说明书 (PRD v2)
 - MVP 不做 BGM 背景音轨。
 - BGM 写入 roadmap，未来再评估混音、ducking 和分轨导出。
 
+#### 2.3.5 声音克隆模块 — Phase 1 实现范围
+
+本节记录声音克隆模块在 Phase 1 的实际实现状态，与 §2.3.1 的完整需求规格和 §5 路线图中的 Phase 3 增强计划对齐。
+
+**入口位置**
+- 声音克隆入口位于：资源中心 → 音色 Tab。
+- 声音克隆**不是**侧边栏一级导航项。
+
+**Phase 1 已实现**
+- 资源中心双 Tab 布局："模型" Tab（原有下载功能）+ "音色" Tab（音色库）。
+- 音色库表格列表：展示音色名称、类型、来源、时长、状态、最近使用、操作按钮。
+- VoiceProfile 数据模型：支持 `preset`（内置）、`reference`（参考音色）、`cloned`（克隆音色，预留）三种 kind；支持 `builtIn`/`available`/`pendingReview`/`failed` 四种状态。
+- 内置音色种子数据：默认清晰女声、自然男声、vanselee 参考音色。
+- "创建音色" 入口按钮：仅音色 Tab 可见，点击弹出创建 Sheet。
+- 创建音色占位 Sheet（CreateVoiceProfileView）：
+  - 表单字段：音色名称（必填）、参考音频路径（fileImporter 选择）、参考文本（TextEditor）。
+  - 测试区：测试句、生成测试音频按钮（占位，提示"真实克隆能力将在 Phase 3 接入"）、试听按钮（占位禁用）。
+  - 保存逻辑：校验名称非空后创建 VoiceProfile（kind=`.reference`, source=`.localAudio`, status=`.pendingReview`）并写入 SwiftData。
+- 角色-音色绑定 Picker 数据源：从 VoiceProfile 动态读取（builtIn + available + pendingReview），不再使用硬编码字符串数组。
+- 内置音色（preset）不显示重命名和删除按钮；参考音色和克隆音色显示操作按钮。
+
+**Phase 1 明确不做**
+- 真实声音克隆推理能力（属于 Phase 3）。
+- 创建 Sheet 中的"自动转写"功能（占位禁用）。
+- 生成测试音频的真实推理（占位，点击后仅显示提示文本）。
+- 文案列表中的"创建音色"快捷按钮。
+- 侧边栏一级导航的"声音克隆"入口。
+
+**未来计划**
+- 角色音色下拉框中可加入 `+ 创建新音色...` 快捷入口，无需切换到资源中心即可创建。
+- Phase 3：接入真实克隆推理、多条测试句、音色质量标记、参考音频版本管理。
+
 ### 2.4 模型仓库 (Model Manager)
 
 #### 2.4.1 可视化管理
