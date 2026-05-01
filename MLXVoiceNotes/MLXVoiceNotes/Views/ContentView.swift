@@ -1355,12 +1355,6 @@ private struct ExportSettingsView: View {
                 .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
-        } sidebar: {
-            ActionCard(title: "说明", rows: [
-                ("语言", "重启后生效"),
-                ("导出", "WAV 格式"),
-                ("缓存", "可手动清理")
-            ])
         }
     }
 
@@ -1445,6 +1439,7 @@ private struct AppPageScaffold<Content: View, Sidebar: View>: View {
     let subtitle: String
     @ViewBuilder var content: Content
     @ViewBuilder var sidebar: Sidebar
+    var hideSidebar: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -1462,17 +1457,29 @@ private struct AppPageScaffold<Content: View, Sidebar: View>: View {
                 .background(.regularMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
 
-                ScrollView {
-                    sidebar
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                if !hideSidebar {
+                    ScrollView {
+                        sidebar
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
+                    }
+                    .frame(minWidth: 220, idealWidth: 280, maxWidth: 300, alignment: .topLeading)
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
-                .frame(minWidth: 220, idealWidth: 280, maxWidth: 300, alignment: .topLeading)
-                .background(.regularMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
             }
         }
         .padding(20)
+    }
+}
+
+extension AppPageScaffold where Sidebar == EmptyView {
+    init(title: String, subtitle: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.subtitle = subtitle
+        self.content = content()
+        self.sidebar = EmptyView()
+        self.hideSidebar = true
     }
 }
 
