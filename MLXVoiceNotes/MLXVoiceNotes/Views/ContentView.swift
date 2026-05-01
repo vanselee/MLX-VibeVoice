@@ -1368,7 +1368,7 @@ private struct ExportSettingsView: View {
     // 统一尺寸常量
     private static let trailingColumnWidth: CGFloat = 300
     private static let controlWidth: CGFloat = 176
-    private static let pairButtonWidth: CGFloat = 136
+    private static let pairButtonWidth: CGFloat = 124
     private static let controlHeight: CGFloat = 32
 
     private var currentExportDisplayPath: String {
@@ -1392,8 +1392,9 @@ private struct ExportSettingsView: View {
                 VStack(spacing: 14) {
                     // 语言模块
                     settingsCard("语言") {
-                        settingsRowLabel("界面语言", subtitle: "跟随系统会在中文系统中显示中文，在非中文系统中显示 English。") {
-                            Picker("界面语言", selection: $appLanguage) {
+                        HStack(spacing: 0) {
+                            Spacer()
+                            Picker("", selection: $appLanguage) {
                                 ForEach(AppLanguage.allCases) { lang in
                                     Text(lang.displayName).tag(lang)
                                 }
@@ -1403,11 +1404,18 @@ private struct ExportSettingsView: View {
                             .controlSize(.regular)
                             .frame(width: Self.controlWidth, height: Self.controlHeight)
                         }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
                     }
 
                     // 导出位置模块
                     settingsCard("导出位置") {
-                        settingsRowLabel("默认位置", subtitle: "导出的 WAV 文件会保存到此目录。") {
+                        HStack(alignment: .top, spacing: 16) {
+                            Text("导出的音频文件会保存到此目录。")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
                             VStack(alignment: .trailing, spacing: 8) {
                                 Text(currentExportDisplayPath)
                                     .font(.body)
@@ -1436,6 +1444,8 @@ private struct ExportSettingsView: View {
                                 .frame(width: Self.trailingColumnWidth, alignment: .trailing)
                             }
                         }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
                     }
 
                     // 缓存模块
