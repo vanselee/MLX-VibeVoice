@@ -932,6 +932,8 @@ private struct ResourceCenterView: View {
         case voice = "音色"
     }
 
+    @State private var showCreateVoice = false
+
     var body: some View {
         AppPageScaffold(title: "资源中心", subtitle: "管理模型与音色资源。") {
             VStack(alignment: .leading, spacing: 14) {
@@ -949,6 +951,16 @@ private struct ResourceCenterView: View {
                         .tint(selectedTab == tab ? .accentColor : .secondary)
                     }
                     Spacer()
+                    if selectedTab == .voice {
+                        Button {
+                            showCreateVoice = true
+                        } label: {
+                            Label("创建音色", systemImage: "plus")
+                                .font(.subheadline.weight(.medium))
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                    }
                 }
 
                 switch selectedTab {
@@ -964,6 +976,18 @@ private struct ResourceCenterView: View {
                 ("缓存上限", "20GB"),
                 ("下载状态", "支持断点续传")
             ])
+        }
+        .sheet(isPresented: $showCreateVoice) {
+            VStack(spacing: 16) {
+                Text("创建音色")
+                    .font(.headline)
+                Text("音色创建流程（占位）")
+                    .foregroundStyle(.secondary)
+                Button("关闭") { showCreateVoice = false }
+                    .buttonStyle(.bordered)
+            }
+            .padding(24)
+            .frame(width: 360, height: 200)
         }
     }
 
@@ -1021,7 +1045,7 @@ private struct VoiceLibraryView: View {
                 .foregroundStyle(.secondary)
             Text("暂无音色")
                 .font(.headline)
-            Text("点击上方「克隆音色」创建专属音色")
+            Text("点击上方「创建音色」创建可复用音色")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
