@@ -985,12 +985,6 @@ private struct ResourceCenterView: View {
                     voiceContent
                 }
             }
-        } sidebar: {
-            ActionCard(title: "缓存", rows: [
-                ("模型占用", "1.4GB"),
-                ("缓存上限", "20GB"),
-                ("下载状态", "支持断点续传")
-            ])
         }
         .sheet(isPresented: $showCreateVoice) {
             CreateVoiceProfileView(onDismiss: { showCreateVoice = false })
