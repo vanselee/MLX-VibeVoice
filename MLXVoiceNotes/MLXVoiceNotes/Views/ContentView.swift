@@ -42,8 +42,6 @@ struct ContentView: View {
         switch selectedPage {
         case .scriptLibrary:
             ScriptLibraryView(scripts: scripts, selectedScriptID: $selectedScriptID, selectedPage: $selectedPage)
-        case .workbench:
-            WorkbenchView(scripts: scripts, selectedScriptID: $selectedScriptID, selectedPage: $selectedPage)
         case .roleReview:
             RoleReviewView(script: selectedScript)
         case .resources:
@@ -117,7 +115,6 @@ struct ContentView: View {
 
 private enum AppPage: String, CaseIterable, Identifiable {
     case scriptLibrary
-    case workbench
     case roleReview
     case resources
     case taskQueue
@@ -128,7 +125,6 @@ private enum AppPage: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .scriptLibrary: return "文案库"
-        case .workbench: return "配音工作台（整理中）"
         case .roleReview: return "角色确认"
         case .resources: return "资源中心"
         case .taskQueue: return "任务队列"
@@ -139,7 +135,6 @@ private enum AppPage: String, CaseIterable, Identifiable {
     var systemImage: String {
         switch self {
         case .scriptLibrary: return "doc.text"
-        case .workbench: return "waveform.badge.exclamationmark"
         case .roleReview: return "person.2"
         case .resources: return "externaldrive"
         case .taskQueue: return "list.bullet.rectangle"
@@ -621,203 +616,6 @@ private struct ScriptListRow: View {
             }
         }
         .padding(.vertical, 6)
-    }
-}
-
-private struct WorkbenchView: View {
-    @Environment(\.modelContext) private var modelContext
-    let scripts: [Script]
-    @Binding var selectedScriptID: UUID?
-    @Binding var selectedPage: AppPage
-    @State private var parseSummary = "等待解析"
-
-    private var selectedScript: Script? {
-        scripts.first { $0.id == selectedScriptID } ?? scripts.first
-    }
-
-    var body: some View {
-        AppPageScaffold(title: "配音工作台", subtitle: "输入文案、确认角色音色，然后生成完整成品音频。") {
-            if let selectedScript {
-                VStack(alignment: .leading, spacing: 12) {
-                    Picker("当前文案", selection: currentScriptBinding) {
-                        ForEach(scripts) { script in
-                            Text(script.title).tag(Optional(script.id))
-                        }
-                    }
-                    .pickerStyle(.menu)
-
-                    TextField("标题", text: binding(for: selectedScript, keyPath: \.title))
-                        .textFieldStyle(.roundedBorder)
-
-                    TextField("副标题", text: binding(for: selectedScript, keyPath: \.subtitle))
-                        .textFieldStyle(.roundedBorder)
-
-                    HStack {
-                        Button("新建") {
-                            createScript()
-                        }
-                        Button("一键粘贴") {
-                            pasteClipboard(into: selectedScript)
-                        }
-                        Button("AI 文案整理提示词") {}
-                        Button("解析角色") {
-                            parseRolesAndSegments(for: selectedScript)
-                        }
-                        Spacer()
-                        Button("生成整篇") {
-                            startPlaceholderGeneration(for: selectedScript)
-                        }
-                            .buttonStyle(.borderedProminent)
-                    }
-
-                    TextEditor(text: binding(for: selectedScript, keyPath: \.bodyText))
-                        .font(.body.monospaced())
-                        .scrollContentBackground(.hidden)
-                        .padding(8)
-                        .background(.background)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-            } else {
-                ContentUnavailableView {
-                    Label("暂无文案", systemImage: "doc.text")
-                } description: {
-                    Text("先新建一篇配音文案。")
-                } actions: {
-                    Button("新建文案") {
-                        createScript()
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-            }
-        } sidebar: {
-            if let selectedScript {
-                ActionCard(title: "当前文案", rows: [
-                    ("状态", selectedScript.status.displayName),
-                    ("角色", "\(selectedScript.roles.count)"),
-                    ("段落", "\(selectedScript.segments.count)"),
-                    ("解析", parseSummary),
-                    ("修改时间", selectedScript.updatedAt.relativeLabel),
-                    ("输出", "完整 WAV")
-                ])
-            }
-        }
-    }
-
-    private var currentScriptBinding: Binding<UUID?> {
-        Binding(
-            get: { selectedScript?.id },
-            set: { selectedScriptID = $0 }
-        )
-    }
-
-    private func binding(for script: Script, keyPath: ReferenceWritableKeyPath<Script, String>) -> Binding<String> {
-        Binding {
-            script[keyPath: keyPath]
-        } set: { value in
-            script[keyPath: keyPath] = value
-            script.updatedAt = .now
-            script.status = .draft
-        }
-    }
-
-    private func createScript() {
-        let script = Script(
-            title: "未命名文案",
-            subtitle: "新建配音文案",
-            bodyText: "[旁白] 在这里输入要配音的文案。",
-            updatedAt: .now,
-            segments: [
-                ScriptSegment(order: 1, text: "在这里输入要配音的文案。", roleName: "旁白")
-            ],
-            roles: [
-                VoiceRole(name: "旁白", normalizedName: "旁白", defaultVoiceName: "默认清晰女声")
-            ]
-        )
-        modelContext.insert(script)
-        selectedScriptID = script.id
-    }
-
-    private func pasteClipboard(into script: Script) {
-        #if os(macOS)
-        guard let clipboardText = NSPasteboard.general.string(forType: .string),
-              !clipboardText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        else {
-            return
-        }
-        script.bodyText = clipboardText
-        script.updatedAt = .now
-        script.status = .draft
-        #endif
-    }
-
-    private func parseRolesAndSegments(for script: Script) {
-        let parsedScript = ScriptParser.parse(script.bodyText)
-
-        let oldSegments = script.segments
-        let oldRoles = script.roles
-        script.segments.removeAll()
-        script.roles.removeAll()
-        oldSegments.forEach(modelContext.delete)
-        oldRoles.forEach(modelContext.delete)
-
-        for parsedRole in parsedScript.roles {
-            let role = VoiceRole(
-                name: parsedRole.name,
-                normalizedName: parsedRole.normalizedName,
-                defaultVoiceName: defaultVoiceName(for: parsedRole.normalizedName),
-                script: script
-            )
-            modelContext.insert(role)
-            script.roles.append(role)
-        }
-
-        for parsedSegment in parsedScript.segments {
-            let segment = ScriptSegment(
-                order: parsedSegment.order,
-                text: parsedSegment.text,
-                roleName: parsedSegment.roleName,
-                script: script
-            )
-            modelContext.insert(segment)
-            script.segments.append(segment)
-        }
-
-        script.status = .ready
-        script.updatedAt = .now
-        parseSummary = "\(parsedScript.roles.count) 角色 / \(parsedScript.segments.count) 段"
-        if parsedScript.unmarkedSegmentCount > 0 {
-            parseSummary += "，\(parsedScript.unmarkedSegmentCount) 段旁白兜底"
-        }
-    }
-
-    private func defaultVoiceName(for roleName: String) -> String {
-        if roleName == "旁白" {
-            return "默认清晰女声"
-        }
-        if roleName.contains("男") || roleName.contains("博主") || roleName.contains("老板") {
-            return "自然男声"
-        }
-        return "默认清晰女声"
-    }
-
-    private func startPlaceholderGeneration(for script: Script) {
-        if script.segments.isEmpty || script.roles.isEmpty {
-            parseRolesAndSegments(for: script)
-        }
-
-        guard !script.segments.isEmpty else { return }
-
-        GenerationService.start(script: script)
-        parseSummary = "已创建生成任务"
-
-        let job = GenerationJob(
-            scriptTitle: script.title,
-            totalSegments: script.segments.count,
-            status: .generating
-        )
-        modelContext.insert(job)
-        selectedScriptID = script.id
-        selectedPage = .taskQueue
     }
 }
 
