@@ -225,19 +225,9 @@ private struct ScriptLibraryView: View {
 
             // 第二行：操作按钮（展开时显示保存，否则显示编辑）
             HStack(spacing: 8) {
-                Button(expandedScriptID == script.id ? "保存" : "编辑") {
-                    if expandedScriptID == script.id {
-                        saveAndCollapse(script)
-                    } else {
-                        openEditor(for: script)
-                    }
+                Button("编辑") {
+                    openEditor(for: script)
                 }
-
-                Button("生成音频") {
-                    startPlaceholderGeneration(for: script)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(script.status == .generating)
 
                 Button("删除", role: .destructive) {
                     deleteCandidate = script
