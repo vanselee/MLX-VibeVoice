@@ -1423,6 +1423,7 @@ private struct ExportSettingsView: View {
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
+                                .frame(width: Self.controlWidth, alignment: .trailing)
                         }
                         // 第二排：按钮靠近，右对齐
                         HStack {
@@ -1452,7 +1453,7 @@ private struct ExportSettingsView: View {
                             Text(cacheUsage)
                                 .font(.body)
                                 .foregroundStyle(.secondary)
-                                .frame(width: Self.controlWidth, height: Self.controlHeight, alignment: .trailing)
+                                .frame(width: Self.controlWidth, alignment: .trailing)
                         }
 
                         Divider().padding(.horizontal, 16)
@@ -1466,7 +1467,7 @@ private struct ExportSettingsView: View {
                             .labelsHidden()
                             .font(.body)
                             .controlSize(.regular)
-                            .frame(width: Self.controlWidth, height: Self.controlHeight)
+                            .frame(width: Self.controlWidth)
                         }
 
                         Divider().padding(.horizontal, 16)
@@ -1478,7 +1479,7 @@ private struct ExportSettingsView: View {
                             .font(.body)
                             .buttonStyle(.bordered)
                             .controlSize(.regular)
-                            .frame(width: Self.controlWidth, height: Self.controlHeight)
+                            .frame(width: Self.controlWidth)
                             .disabled(true)
                         }
                     }
@@ -1534,7 +1535,6 @@ private struct ExportSettingsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             control()
-                .frame(width: Self.trailingColumnWidth, alignment: .trailing)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
