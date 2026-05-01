@@ -257,6 +257,9 @@ private struct ScriptLibraryView: View {
 
             if expandedScriptID == script.id {
                 currentScriptEditor(for: script)
+                    .padding()
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         }
         .padding()
