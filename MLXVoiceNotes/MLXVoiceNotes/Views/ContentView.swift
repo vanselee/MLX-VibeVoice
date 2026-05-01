@@ -3,7 +3,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Script.updatedAt, order: .reverse) private var scripts: [Script]
+    @Query(sort: \Script.createdAt, order: .reverse) private var scripts: [Script]
     @State private var selectedPage: AppPage = .scriptLibrary
     @State private var selectedScriptID: UUID?
 
