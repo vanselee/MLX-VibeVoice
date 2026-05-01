@@ -181,8 +181,8 @@ private struct ScriptLibraryView: View {
                         }
                     }
                     .padding(.vertical, 2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
             .alert("删除文案？", isPresented: deleteAlertBinding) {
                 Button("取消", role: .cancel) {}
@@ -213,6 +213,7 @@ private struct ScriptLibraryView: View {
     @ViewBuilder
     private func scriptRow(for script: Script) -> some View {
         VStack(alignment: .leading, spacing: 10) {
+            // 第一行：标题 + 状态
             HStack(spacing: 12) {
                 Button {
                     openEditor(for: script)
@@ -234,7 +235,10 @@ private struct ScriptLibraryView: View {
                     ProgressView(value: generationProgress(for: script))
                         .frame(width: 120)
                 }
+            }
 
+            // 第二行：操作按钮（展开时显示保存，否则显示编辑）
+            HStack(spacing: 8) {
                 Button(expandedScriptID == script.id ? "保存" : "编辑") {
                     if expandedScriptID == script.id {
                         saveAndCollapse(script)
@@ -253,16 +257,20 @@ private struct ScriptLibraryView: View {
                     deleteCandidate = script
                 }
                 .disabled(script.status == .generating)
+
+                Spacer()
             }
 
             if expandedScriptID == script.id {
                 currentScriptEditor(for: script)
-                    .padding()
+                    .padding(12)
                     .background(Color(nsColor: .controlBackgroundColor))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(script.id == selectedScriptID ? Color.accentColor.opacity(0.08) : Color(nsColor: .textBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
@@ -288,6 +296,7 @@ private struct ScriptLibraryView: View {
 
             TextField("标题", text: binding(for: script, keyPath: \.title))
                 .textFieldStyle(.roundedBorder)
+                .frame(maxWidth: .infinity)
 
             HStack {
                 Button("一键粘贴") {
@@ -304,6 +313,7 @@ private struct ScriptLibraryView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             if !script.roles.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
@@ -311,21 +321,27 @@ private struct ScriptLibraryView: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.secondary)
                     ForEach(script.roles.sorted { $0.normalizedName < $1.normalizedName }) { role in
-                        HStack(spacing: 10) {
-                            Text(role.name)
-                                .fontWeight(.medium)
-                                .frame(width: 90, alignment: .leading)
-                            Picker("音色", selection: Binding(
-                                get: { role.defaultVoiceName },
-                                set: { role.defaultVoiceName = $0; script.updatedAt = .now }
-                            )) {
-                                ForEach(availableVoices, id: \.self) { voice in
-                                    Text(voice).tag(voice)
+                        VStack(alignment: .leading, spacing: 6) {
+                            // 第一行：角色名 + 音色选择
+                            HStack(spacing: 10) {
+                                Text(role.name)
+                                    .fontWeight(.medium)
+                                    .frame(width: 70, alignment: .leading)
+                                Picker("音色", selection: Binding(
+                                    get: { role.defaultVoiceName },
+                                    set: { role.defaultVoiceName = $0; script.updatedAt = .now }
+                                )) {
+                                    ForEach(availableVoices, id: \.self) { voice in
+                                        Text(voice).tag(voice)
+                                    }
                                 }
+                                .labelsHidden()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                Spacer(minLength: 0)
                             }
-                            .labelsHidden()
-                            .frame(width: 180)
-                            HStack(spacing: 4) {
+
+                            // 第二行：语速 + 试听
+                            HStack(spacing: 10) {
                                 Text("语速")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
@@ -336,14 +352,14 @@ private struct ScriptLibraryView: View {
                                 Text("\(role.speed.formatted(.number.precision(.fractionLength(2))))x")
                                     .font(.caption)
                                     .frame(width: 36)
+                                Button("试听") {}
+                                    .font(.caption)
+                                    .buttonStyle(.bordered)
+                                Spacer(minLength: 0)
                             }
-                            .frame(width: 140)
-                            Button("试听") {}
-                                .font(.caption)
-                                .buttonStyle(.bordered)
-                            Spacer()
                         }
-                        .padding(8)
+                        .padding(10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color(nsColor: .textBackgroundColor))
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
@@ -380,8 +396,13 @@ private struct ScriptLibraryView: View {
                 .scrollContentBackground(.hidden)
                 .padding(8)
                 .frame(minHeight: 220)
-                .background(.background)
+                .frame(maxWidth: .infinity)
+                .background(Color(nsColor: .textBackgroundColor))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color(nsColor: .separatorColor).opacity(0.8), lineWidth: 1)
+                )
 
             HStack(spacing: 12) {
                 Label(parseSummary, systemImage: "text.badge.checkmark")
