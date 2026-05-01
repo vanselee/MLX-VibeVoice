@@ -5,7 +5,16 @@ struct AudioExportResult {
 }
 
 enum AudioExportService {
-    static let exportDirectory = FileManager.default.homeDirectoryForCurrentUser
+    static var exportDirectory: URL {
+        if let customPath = UserDefaults.standard.string(forKey: "defaultExportDirectory"), !customPath.isEmpty {
+            return URL(fileURLWithPath: customPath)
+        }
+        return FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Downloads", isDirectory: true)
+            .appendingPathComponent("MLX Voice Notes Exports", isDirectory: true)
+    }
+
+    static let defaultExportDirectory = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Downloads", isDirectory: true)
         .appendingPathComponent("MLX Voice Notes Exports", isDirectory: true)
 

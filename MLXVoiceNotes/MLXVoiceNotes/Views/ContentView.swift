@@ -548,6 +548,18 @@ private struct ScriptLibraryView: View {
         return "默认清晰女声"
     }
 
+    private var exportDisplayPath: String {
+        let dir = AudioExportService.exportDirectory
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let path = dir.path
+        if path.hasPrefix(home) {
+            let relative = String(path.dropFirst(home.count))
+            return relative
+                .replacingOccurrences(of: "/Downloads/MLX Voice Notes Exports", with: "Downloads / MLX Voice Notes Exports")
+        }
+        return path
+    }
+
     private func exportWAV(for script: Script) {
         let safeName = (script.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? "未命名文案" : script.title)
@@ -685,7 +697,9 @@ private struct ScriptLibraryView: View {
 
                 HStack(spacing: 4) {
                     Image(systemName: "folder")
-                    Text("Downloads / MLX Voice Notes Exports")
+                    Text(exportDisplayPath)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -1105,21 +1119,33 @@ private struct TaskQueueView: View {
 private struct ExportSettingsView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .system
     @AppStorage("cacheLimit") private var cacheLimit: CacheLimit = .gb20
+    @AppStorage("defaultExportDirectory") private var defaultExportDirectory: String = ""
     @State private var cacheUsage: String = "待统计"
+
+    private var currentExportDisplayPath: String {
+        if defaultExportDirectory.isEmpty {
+            return "Downloads / MLX Voice Notes Exports"
+        } else {
+            let home = FileManager.default.homeDirectoryForCurrentUser.path
+            let path = defaultExportDirectory
+            if path.hasPrefix(home) {
+                return String(path.dropFirst(home.count))
+                    .replacingOccurrences(of: "/Downloads/MLX Voice Notes Exports", with: "Downloads / MLX Voice Notes Exports")
+            }
+            return path
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("偏好设置")
                 .font(.largeTitle.bold())
 
-            Text("管理语言、缓存上限和本地存储。")
+            Text("管理语言、导出位置和本地缓存。")
                 .foregroundStyle(.secondary)
 
             // 语言
-            VStack(alignment: .leading, spacing: 16) {
-                Text("语言")
-                    .font(.headline)
-
+            preferenceCard(title: "语言") {
                 HStack {
                     Text("界面语言")
                     Spacer()
@@ -1136,15 +1162,37 @@ private struct ExportSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            .padding()
-            .background(Color(nsColor: .controlBackgroundColor))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            // 导出位置
+            preferenceCard(title: "导出位置") {
+                HStack {
+                    Text("默认位置")
+                    Spacer()
+                    Text(currentExportDisplayPath)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+
+                HStack(spacing: 8) {
+                    Button("更改位置") {
+                        changeExportDirectory()
+                    }
+                    Button("恢复默认") {
+                        defaultExportDirectory = ""
+                    }
+                    .disabled(defaultExportDirectory.isEmpty)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                Text("导出的 WAV 文件将保存到此目录。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             // 缓存
-            VStack(alignment: .leading, spacing: 16) {
-                Text("缓存")
-                    .font(.headline)
-
+            preferenceCard(title: "缓存") {
                 HStack {
                     Text("当前占用")
                     Spacer()
@@ -1169,14 +1217,48 @@ private struct ExportSettingsView: View {
                 }
                 .disabled(true)
             }
-            .padding()
-            .background(Color(nsColor: .controlBackgroundColor))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
         .frame(maxWidth: 760, alignment: .leading)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(.horizontal, 24)
         .padding(.vertical, 24)
+    }
+
+    private func preferenceCard<Content: View>(
+        title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(title)
+                .font(.headline)
+
+            content()
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func changeExportDirectory() {
+        #if os(macOS)
+        let panel = NSOpenPanel()
+        panel.title = "选择导出目录"
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.canCreateDirectories = true
+
+        if !defaultExportDirectory.isEmpty {
+            panel.directoryURL = URL(fileURLWithPath: defaultExportDirectory)
+        } else {
+            panel.directoryURL = AudioExportService.defaultExportDirectory
+        }
+
+        if panel.runModal() == .OK, let url = panel.url {
+            defaultExportDirectory = url.path
+        }
+        #endif
     }
 }
 
