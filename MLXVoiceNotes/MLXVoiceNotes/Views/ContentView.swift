@@ -4,6 +4,7 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Script.createdAt, order: .reverse) private var scripts: [Script]
+    @Query private var voiceProfiles: [VoiceProfile]
     @State private var selectedPage: AppPage = .scriptLibrary
     @State private var selectedScriptID: UUID?
 
@@ -25,6 +26,7 @@ struct ContentView: View {
         }
         .onAppear {
             seedSampleScriptsIfNeeded()
+            seedSampleVoiceProfilesIfNeeded()
             selectedScriptID = selectedScriptID ?? scripts.first?.id
         }
         .onChange(of: scripts.map(\.id)) { _, scriptIDs in
@@ -109,6 +111,11 @@ struct ContentView: View {
 
         samples.forEach(modelContext.insert)
         selectedScriptID = samples.first?.id
+    }
+
+    private func seedSampleVoiceProfilesIfNeeded() {
+        guard voiceProfiles.isEmpty else { return }
+        VoiceProfile.samples.forEach(modelContext.insert)
     }
 
 }
