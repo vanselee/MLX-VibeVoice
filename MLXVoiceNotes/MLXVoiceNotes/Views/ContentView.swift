@@ -672,6 +672,43 @@ private struct ScriptLibraryView: View {
             }
             .padding(.top, 12)
 
+            // 导出操作区域
+            VStack(alignment: .leading, spacing: 10) {
+                Divider()
+                    .padding(.top, 4)
+
+                Text("导出音频").font(.headline)
+
+                HStack(spacing: 16) {
+                    Label("WAV", systemImage: "waveform")
+                    Label("24kHz", systemImage: "waveform.path")
+                    Label("Mono", systemImage: "speaker.wave.1")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+                if script.lastExportedAt != nil {
+                    Text("最近导出：\(script.lastExportedAt!.relativeLabel)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                let isCompleted = completed == total && total > 0
+                Button("导出 WAV") {
+                    exportWAV(for: script)
+                    parseSummary = "已导出到 Downloads"
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!isCompleted)
+
+                if !isCompleted {
+                    Text("生成完成后可导出")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.top, 12)
+
             Spacer()
         }
     }
