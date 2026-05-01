@@ -1388,57 +1388,78 @@ private struct ExportSettingsView: View {
     var body: some View {
         AppPageScaffold(title: "偏好设置", subtitle: "管理语言、导出位置和本地缓存。") {
             VStack(alignment: .leading, spacing: 14) {
-                // 语言模块 — 标准设置行
+                // 语言
                 settingsCard("") {
-                    settingsRowLabel("语言", subtitle: nil) {
+                    preferenceRow("语言") {
                         Picker("", selection: $appLanguage) {
                             ForEach(AppLanguage.allCases) { lang in
                                 Text(lang.displayName).tag(lang)
                             }
                         }
                         .labelsHidden()
-                        .font(.body)
                         .controlSize(.regular)
                         .frame(width: Self.controlWidth, height: Self.controlHeight)
                     }
                 }
 
-                // 导出位置模块 — 专用行
+                // 导出位置
                 settingsCard("") {
-                    exportLocationRow
+                    preferenceRow("导出位置") {
+                        VStack(alignment: .trailing, spacing: 8) {
+                            Text(currentExportDisplayPath)
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                                .frame(width: Self.trailingColumnWidth, alignment: .trailing)
+                            HStack(spacing: 8) {
+                                Button("恢复默认位置") {
+                                    defaultExportDirectory = ""
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.regular)
+                                .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
+                                Button("更改位置") {
+                                    changeExportDirectory()
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.regular)
+                                .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
+                            }
+                            .frame(width: Self.trailingColumnWidth, alignment: .trailing)
+                        }
+                    }
                 }
 
-                // 缓存模块
+                // 缓存
                 settingsCard("") {
                     VStack(spacing: 0) {
-                        settingsRowLabel("当前占用缓存", subtitle: nil) {
+                        preferenceRow("当前占用缓存") {
                             Text(cacheUsage)
                                 .font(.body)
                                 .foregroundStyle(.secondary)
-                                .frame(width: Self.controlWidth, height: Self.controlHeight, alignment: .trailing)
+                                .frame(width: Self.controlWidth, alignment: .trailing)
                         }
 
                         Divider().padding(.horizontal, 16)
 
-                        settingsRowLabel("缓存上限", subtitle: "达到上限后提醒用户清理缓存。") {
-                            Picker("缓存上限", selection: $cacheLimit) {
+                        preferenceRow("缓存上限", subtitle: "达到上限后提醒用户清理缓存。") {
+                            Picker("", selection: $cacheLimit) {
                                 ForEach(CacheLimit.allCases) { limit in
                                     Text(limit.displayName).tag(limit)
                                 }
                             }
                             .labelsHidden()
-                            .font(.body)
                             .controlSize(.regular)
                             .frame(width: Self.controlWidth, height: Self.controlHeight)
                         }
 
                         Divider().padding(.horizontal, 16)
 
-                        settingsRowLabel("清理缓存", subtitle: "清除可再生成的临时文件，不删除用户文案和导出音频。") {
+                        preferenceRow("清理缓存", subtitle: "清除可再生成的临时文件，不删除用户文案和导出音频。") {
                             Button("清理缓存") {
                                 // TODO: implement cache cleanup
                             }
-                            .font(.body)
                             .buttonStyle(.bordered)
                             .controlSize(.regular)
                             .frame(width: Self.controlWidth, height: Self.controlHeight)
@@ -1474,18 +1495,21 @@ private struct ExportSettingsView: View {
         }
     }
 
-    // MARK: - Settings Row Helper
+
+
+
+
+    // MARK: - Preference Row Helper
 
     @ViewBuilder
-    private func settingsRowLabel(
-        _ label: String,
-        subtitle: String?,
-        @ViewBuilder control: () -> some View
+    private func preferenceRow(
+        _ title: String,
+        subtitle: String? = nil,
+        @ViewBuilder trailing: () -> some View
     ) -> some View {
-        HStack(alignment: .center, spacing: 16) {
+        HStack(alignment: .top, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(label)
-                    .font(.body)
+                Text(title).font(.body)
                 if let subtitle {
                     Text(subtitle)
                         .font(.caption)
@@ -1496,52 +1520,8 @@ private struct ExportSettingsView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            control()
+            trailing()
                 .frame(width: Self.trailingColumnWidth, alignment: .trailing)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-    }
-
-
-
-    // MARK: - Export Location Row
-
-    private var exportLocationRow: some View {
-        HStack(alignment: .top, spacing: 16) {
-            Text("导出的音频文件会保存到此目录。")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .padding(.top, 4)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            VStack(alignment: .trailing, spacing: 8) {
-                Text(currentExportDisplayPath)
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .frame(width: Self.trailingColumnWidth, alignment: .trailing)
-
-                HStack(spacing: 8) {
-                    Button("恢复默认位置") {
-                        defaultExportDirectory = ""
-                    }
-                    .font(.body)
-                    .buttonStyle(.bordered)
-                    .controlSize(.regular)
-                    .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
-
-                    Button("更改位置") {
-                        changeExportDirectory()
-                    }
-                    .font(.body)
-                    .buttonStyle(.bordered)
-                    .controlSize(.regular)
-                    .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
-                }
-                .frame(width: Self.trailingColumnWidth, alignment: .trailing)
-            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
