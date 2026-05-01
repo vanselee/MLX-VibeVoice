@@ -1278,43 +1278,26 @@ private struct ExportSettingsView: View {
                     // 导出位置模块
                     settingsCard("导出位置") {
                         VStack(spacing: 0) {
-                            HStack(alignment: .center, spacing: 16) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("默认位置")
-                                        .font(.body)
-                                    Text(currentExportDisplayPath)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(1)
-                                        .truncationMode(.middle)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                            settingsRowLabel("默认位置", subtitle: currentExportDisplayPath) {
+                                Spacer()
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
 
                             Divider().padding(.horizontal, 16)
 
-                            HStack(alignment: .center, spacing: 16) {
-                                Spacer(minLength: 0)
-                                HStack(spacing: 8) {
-                                    Button("恢复默认位置") {
+                            settingsRowLabel("导出操作", subtitle: nil) {
+                                HStack(spacing: 6) {
+                                    Button("恢复默认") {
                                         defaultExportDirectory = ""
                                     }
                                     .buttonStyle(.bordered)
-                                    .controlSize(.small)
-                                    .frame(width: 110)
 
                                     Button("更改位置") {
                                         changeExportDirectory()
                                     }
                                     .buttonStyle(.bordered)
-                                    .controlSize(.small)
-                                    .frame(width: 110)
                                 }
+                                .frame(width: 176)
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
                         }
                     }
 
@@ -1322,7 +1305,8 @@ private struct ExportSettingsView: View {
                     settingsCard("缓存") {
                         VStack(spacing: 0) {
                             settingsRowLabel("当前占用", subtitle: nil) {
-                                Text(cacheUsage).foregroundStyle(.secondary)
+                                Text(cacheUsage)
+                                    .frame(width: 176, alignment: .trailing)
                             }
 
                             Divider().padding(.horizontal, 16)
@@ -1344,8 +1328,8 @@ private struct ExportSettingsView: View {
                                     // TODO: implement cache cleanup
                                 }
                                 .buttonStyle(.bordered)
-                                .controlSize(.small)
                                 .disabled(true)
+                                .frame(width: 176)
                             }
                         }
                     }
