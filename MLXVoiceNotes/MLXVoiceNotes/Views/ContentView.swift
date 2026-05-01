@@ -49,7 +49,7 @@ struct ContentView: View {
         case .taskQueue:
             TaskQueueView(scripts: scripts, selectedScriptID: $selectedScriptID)
         case .exportSettings:
-            ExportSettingsView(script: selectedScript)
+            ExportSettingsView()
         }
     }
 
@@ -128,7 +128,7 @@ private enum AppPage: String, CaseIterable, Identifiable {
         case .roleReview: return "角色确认"
         case .resources: return "资源中心"
         case .taskQueue: return "后台任务总览"
-        case .exportSettings: return "导出与设置"
+        case .exportSettings: return "偏好设置"
         }
     }
 
@@ -138,7 +138,7 @@ private enum AppPage: String, CaseIterable, Identifiable {
         case .roleReview: return "person.2"
         case .resources: return "externaldrive"
         case .taskQueue: return "list.bullet.rectangle"
-        case .exportSettings: return "square.and.arrow.up"
+        case .exportSettings: return "gearshape"
         }
     }
 }
@@ -1058,92 +1058,67 @@ private struct TaskQueueView: View {
 }
 
 private struct ExportSettingsView: View {
-    @Environment(\.modelContext) private var modelContext
-    let script: Script?
-    @State private var exportStatus = "等待导出"
-    @State private var lastExportPath: String?
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .system
+    @AppStorage("cacheLimit") private var cacheLimit: CacheLimit = .gb20
+    @State private var cacheUsage: String = "待统计"
 
     var body: some View {
-        AppPageScaffold(title: "导出与设置", subtitle: "管理默认导出规则、保存位置和缓存清理。") {
+        AppPageScaffold(title: "偏好设置", subtitle: "管理语言、缓存上限和本地存储。") {
             VStack(spacing: 12) {
-                ActionCard(title: "默认导出规则", rows: [
-                    ("默认格式", "WAV"),
-                    ("默认采样率", "24kHz"),
-                    ("默认声道", "Mono"),
-                    ("默认保存位置", "Downloads"),
-                    ("文件命名规则", "{标题}_{时间戳}.wav"),
-                    ("导出后打开文件夹", "未启用"),
-                    ("字幕", "句子级 SRT · UTF-8"),
-                    ("音频文件", "仅完整成品")
-                ])
-
-                ActionCard(title: "缓存管理", rows: [
-                    ("缓存上限", "20GB"),
-                    ("界面语言", "跟随系统"),
-                    ("自动更新", "MVP 不启用")
-                ])
-
-                HStack {
-                    Button("打开导出文件夹") {
-                        openExportFolder()
+                // 语言设置
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("语言").font(.headline)
+                    Picker("界面语言", selection: $appLanguage) {
+                        ForEach(AppLanguage.allCases) { lang in
+                            Text(lang.displayName).tag(lang)
+                        }
                     }
-                    Button("复制最近路径") {
-                        copyLastExportPath()
+                    .pickerStyle(.radioGroup)
+
+                    if appLanguage == .system {
+                        Text("系统语言为中文时显示中文，否则显示 English")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                    .disabled(lastExportPath == nil)
-                    Spacer()
                 }
+                .padding(12)
+                .background(Color(nsColor: .textBackgroundColor))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                Text("单篇文案请在文案库右侧详情面板导出")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                // 缓存设置
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("缓存").font(.headline)
+
+                    HStack {
+                        Text("当前占用")
+                        Spacer()
+                        Text(cacheUsage)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    HStack {
+                        Text("缓存上限")
+                        Spacer()
+                        Picker("缓存上限", selection: $cacheLimit) {
+                            ForEach(CacheLimit.allCases) { limit in
+                                Text(limit.displayName).tag(limit)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
+
+                    Button("清理缓存") {
+                        // TODO: implement cache cleanup
+                    }
+                    .disabled(true)
+                }
+                .padding(12)
+                .background(Color(nsColor: .textBackgroundColor))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         } sidebar: {
-            ActionCard(title: "最近导出", rows: [
-                ("最近路径", lastExportPath ?? "尚未导出"),
-                ("状态", exportStatus)
-            ])
+            EmptyView()
         }
-    }
-
-    private var safeFileName: String {
-        let title = script?.title.trimmingCharacters(in: .whitespacesAndNewlines)
-        return title?.isEmpty == false ? "\(title!)_\(Date.now.fileStamp)" : "未命名文案_\(Date.now.fileStamp)"
-    }
-
-    private func exportPlaceholderWAV() {
-        guard let script else { return }
-        guard script.status == .completed else {
-            exportStatus = "请先完成整篇生成"
-            return
-        }
-
-        do {
-            let result = try AudioExportService.exportPlaceholderWAV(for: script, fileName: safeFileName)
-
-            script.lastExportedAt = .now
-            script.updatedAt = .now
-            modelContext.insert(ExportRecord(scriptTitle: script.title, kind: .wav, filePath: result.fileURL.path))
-            lastExportPath = result.fileURL.path
-            exportStatus = "已导出占位 WAV"
-        } catch {
-            exportStatus = "导出失败：\(error.localizedDescription)"
-        }
-    }
-
-    private func openExportFolder() {
-        #if os(macOS)
-        NSWorkspace.shared.open(AudioExportService.exportDirectory)
-        #endif
-    }
-
-    private func copyLastExportPath() {
-        #if os(macOS)
-        guard let lastExportPath else { return }
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(lastExportPath, forType: .string)
-        exportStatus = "已复制路径"
-        #endif
     }
 }
 
