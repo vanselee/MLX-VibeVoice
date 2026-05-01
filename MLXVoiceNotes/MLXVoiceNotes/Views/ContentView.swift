@@ -1388,18 +1388,77 @@ private struct ExportSettingsView: View {
     var body: some View {
         AppPageScaffold(title: "偏好设置", subtitle: "管理语言、导出位置和本地缓存。") {
             VStack(alignment: .leading, spacing: 14) {
-                // 浅灰主容器
-                VStack(spacing: 14) {
-                        // 语言模块 — 标题与控件合并到同一行
-                    settingsCard("") {
-                        HStack(spacing: 0) {
-                            Text("语言")
+                // 语言模块 — 标题与控件合并到同一行
+                settingsCard("语言") {
+                    HStack(spacing: 0) {
+                        Text("语言")
+                            .font(.body)
+                            .frame(width: 80, alignment: .leading)
+                        Spacer()
+                        Picker("", selection: $appLanguage) {
+                            ForEach(AppLanguage.allCases) { lang in
+                                Text(lang.displayName).tag(lang)
+                            }
+                        }
+                        .labelsHidden()
+                        .font(.body)
+                        .controlSize(.regular)
+                        .frame(width: Self.controlWidth, height: Self.controlHeight)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                }
+
+                // 导出位置模块 — 标题+路径+按钮合并到同一行
+                settingsCard("导出位置") {
+                    HStack(spacing: 0) {
+                        Text("导出位置")
+                            .font(.body)
+                            .frame(width: 80, alignment: .leading)
+                        Spacer()
+                        Text(currentExportDisplayPath)
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .frame(width: 200, alignment: .trailing)
+                        HStack(spacing: 8) {
+                            Button("恢复默认位置") {
+                                defaultExportDirectory = ""
+                            }
+                            .font(.body)
+                            .buttonStyle(.bordered)
+                            .controlSize(.regular)
+                            .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
+                            Button("更改位置") {
+                                changeExportDirectory()
+                            }
+                            .font(.body)
+                            .buttonStyle(.bordered)
+                            .controlSize(.regular)
+                            .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                }
+
+                // 缓存模块
+                settingsCard("缓存") {
+                    VStack(spacing: 0) {
+                        settingsRowLabel("当前占用缓存", subtitle: nil) {
+                            Text(cacheUsage)
                                 .font(.body)
-                                .frame(width: 80, alignment: .leading)
-                            Spacer()
-                            Picker("", selection: $appLanguage) {
-                                ForEach(AppLanguage.allCases) { lang in
-                                    Text(lang.displayName).tag(lang)
+                                .foregroundStyle(.secondary)
+                                .frame(width: Self.controlWidth, height: Self.controlHeight, alignment: .trailing)
+                        }
+
+                        Divider().padding(.horizontal, 16)
+
+                        settingsRowLabel("缓存上限", subtitle: "达到上限后提醒用户清理缓存。") {
+                            Picker("缓存上限", selection: $cacheLimit) {
+                                ForEach(CacheLimit.allCases) { limit in
+                                    Text(limit.displayName).tag(limit)
                                 }
                             }
                             .labelsHidden()
@@ -1407,87 +1466,21 @@ private struct ExportSettingsView: View {
                             .controlSize(.regular)
                             .frame(width: Self.controlWidth, height: Self.controlHeight)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                    }
 
-                    // 导出位置模块 — 标题+路径+按钮合并到同一行
-                    settingsCard("") {
-                        HStack(spacing: 0) {
-                            Text("导出位置")
-                                .font(.body)
-                                .frame(width: 80, alignment: .leading)
-                            Spacer()
-                            Text(currentExportDisplayPath)
-                                .font(.body)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                                .frame(width: 200, alignment: .trailing)
-                            HStack(spacing: 8) {
-                                Button("恢复默认位置") {
-                                    defaultExportDirectory = ""
-                                }
-                                .font(.body)
-                                .buttonStyle(.bordered)
-                                .controlSize(.regular)
-                                .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
-                                Button("更改位置") {
-                                    changeExportDirectory()
-                                }
-                                .font(.body)
-                                .buttonStyle(.bordered)
-                                .controlSize(.regular)
-                                .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
+                        Divider().padding(.horizontal, 16)
+
+                        settingsRowLabel("清理缓存", subtitle: "清除可再生成的临时文件，不删除用户文案和导出音频。") {
+                            Button("清理缓存") {
+                                // TODO: implement cache cleanup
                             }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                    }
-
-                    // 缓存模块 — 无顶部标题，首行标签改为"当前占用缓存"
-                    settingsCard("") {
-                        VStack(spacing: 0) {
-                            settingsRowLabel("当前占用缓存", subtitle: nil) {
-                                Text(cacheUsage)
-                                    .font(.body)
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: Self.controlWidth, height: Self.controlHeight, alignment: .trailing)
-                            }
-
-                            Divider().padding(.horizontal, 16)
-
-                            settingsRowLabel("缓存上限", subtitle: "达到上限后提醒用户清理缓存。") {
-                                Picker("缓存上限", selection: $cacheLimit) {
-                                    ForEach(CacheLimit.allCases) { limit in
-                                        Text(limit.displayName).tag(limit)
-                                    }
-                                }
-                                .labelsHidden()
-                                .font(.body)
-                                .controlSize(.regular)
-                                .frame(width: Self.controlWidth, height: Self.controlHeight)
-                            }
-
-                            Divider().padding(.horizontal, 16)
-
-                            settingsRowLabel("清理缓存", subtitle: "清除可再生成的临时文件，不删除用户文案和导出音频。") {
-                                Button("清理缓存") {
-                                    // TODO: implement cache cleanup
-                                }
-                                .font(.body)
-                                .buttonStyle(.bordered)
-                                .controlSize(.regular)
-                                .frame(width: Self.controlWidth, height: Self.controlHeight)
-                                .disabled(true)
-                            }
+                            .font(.body)
+                            .buttonStyle(.bordered)
+                            .controlSize(.regular)
+                            .frame(width: Self.controlWidth, height: Self.controlHeight)
+                            .disabled(true)
                         }
                     }
                 }
-                .padding(20)
-                .frame(maxWidth: 860, alignment: .leading)
-                .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
         }
     }
