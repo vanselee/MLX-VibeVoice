@@ -656,6 +656,29 @@ private struct ScriptLibraryView: View {
                     }
                     .font(.caption)
                 }
+
+                // 操作按钮
+                HStack(spacing: 8) {
+                    if script.status == .generating {
+                        Button("暂停") { GenerationService.pause(script: script) }
+                        Button("取消") { GenerationService.cancel(script: script) }
+                    } else if completed == total && total > 0 {
+                        Button("导出 WAV") { exportWAV(for: script) }
+                        Button("重新生成") { startPlaceholderGeneration(for: script) }
+                    } else if failed > 0 {
+                        Button("重试失败") { GenerationService.retryFailedSegments(script: script) }
+                        Button("取消") { GenerationService.cancel(script: script) }
+                    } else if pending > 0 && completed == 0 && failed == 0 {
+                        Button("生成音频") { startPlaceholderGeneration(for: script) }
+                    } else if completed > 0 {
+                        Button("继续生成") { GenerationService.resume(script: script) }
+                        Button("取消") { GenerationService.cancel(script: script) }
+                    } else {
+                        Button("生成音频") { startPlaceholderGeneration(for: script) }
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
             .padding(.top, 12)
 
