@@ -1384,6 +1384,12 @@ private struct ExportSettingsView: View {
             return path
         }
     }
+    
+    private func shouldTruncatePath(_ path: String) -> Bool {
+        let pathWidth = path.size(withAttributes: [.font: NSFont.systemFont(ofSize: NSFont.systemFontSize)]).width
+        let totalWidth: CGFloat = 600  // 估算整行宽度
+        return pathWidth > totalWidth * 0.5
+    }
 
     var body: some View {
         AppPageScaffold(title: "偏好设置", subtitle: "管理语言、导出位置和本地缓存。") {
@@ -1409,9 +1415,9 @@ private struct ExportSettingsView: View {
                             Text(currentExportDisplayPath)
                                 .font(.body)
                                 .foregroundStyle(.secondary)
-                                .lineLimit(1)
+                                .lineLimit(shouldTruncatePath(currentExportDisplayPath) ? 1 : nil)
                                 .truncationMode(.middle)
-                                .frame(width: Self.controlWidth, alignment: .trailing)
+                                .frame(width: Self.trailingColumnWidth, alignment: .trailing)
                             HStack(spacing: 8) {
                                 Button("恢复默认位置") {
                                     defaultExportDirectory = ""
@@ -1507,7 +1513,7 @@ private struct ExportSettingsView: View {
         subtitle: String? = nil,
         @ViewBuilder trailing: () -> some View
     ) -> some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(.body)
                 if let subtitle {
