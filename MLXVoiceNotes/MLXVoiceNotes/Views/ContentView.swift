@@ -876,31 +876,36 @@ private struct RoleVoiceBindingRow: View {
     let onChange: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(role.name)
-                    .fontWeight(.semibold)
-                Text("\(role.speed.formatted(.number.precision(.fractionLength(2))))x · \(role.volumeDB.formatted(.number.precision(.fractionLength(0)))) dB")
-                    .foregroundStyle(.secondary)
-                    .font(.caption)
-            }
-            .frame(width: 120, alignment: .leading)
-
-            Picker("音色", selection: voiceBinding) {
-                ForEach(availableVoices, id: \.self) { voice in
-                    Text(voice).tag(voice)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(role.name)
+                        .fontWeight(.semibold)
+                    Text("\(role.speed.formatted(.number.precision(.fractionLength(2))))x · \(role.volumeDB.formatted(.number.precision(.fractionLength(0)))) dB")
+                        .foregroundStyle(.secondary)
+                        .font(.caption)
                 }
-            }
-            .labelsHidden()
-            .frame(width: 190)
+                .frame(minWidth: 80, alignment: .leading)
 
-            Slider(value: speedBinding, in: 0.75...1.5) {
-                Text("语速")
-            }
-            .frame(width: 120)
+                Picker("音色", selection: voiceBinding) {
+                    ForEach(availableVoices, id: \.self) { voice in
+                        Text(voice).tag(voice)
+                    }
+                }
+                .labelsHidden()
+                .frame(maxWidth: 200)
 
-            Button("试听") {}
-            Spacer()
+                Spacer()
+            }
+            HStack(spacing: 12) {
+                Slider(value: speedBinding, in: 0.75...1.5) {
+                    Text("语速")
+                }
+                .frame(maxWidth: 160)
+
+                Button("试听") {}
+                Spacer()
+            }
         }
         .padding()
         .background(.background)
@@ -988,12 +993,12 @@ private struct TaskQueueView: View {
 
                 VStack(spacing: 8) {
                     HStack {
-                        Text("段落").frame(width: 56, alignment: .leading)
-                        Text("角色").frame(width: 80, alignment: .leading)
-                        Text("音色").frame(width: 160, alignment: .leading)
-                        Text("状态").frame(width: 80, alignment: .leading)
+                        Text("段落").frame(width: 36, alignment: .leading)
+                        Text("角色").frame(width: 60, alignment: .leading)
+                        Text("音色").frame(minWidth: 80, maxWidth: 140, alignment: .leading)
+                        Text("状态").frame(width: 56, alignment: .leading)
                         Text("文本").frame(maxWidth: .infinity, alignment: .leading)
-                        Text("操作").frame(width: 88, alignment: .trailing)
+                        Text("操作").frame(width: 56, alignment: .trailing)
                     }
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
@@ -1221,16 +1226,23 @@ private struct AppPageScaffold<Content: View, Sidebar: View>: View {
                 Text(subtitle).foregroundStyle(.secondary)
             }
             HStack(alignment: .top, spacing: 16) {
-                content
-                    .padding()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                sidebar
-                    .padding()
-                    .frame(width: 280, alignment: .topLeading)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                ScrollView {
+                    content
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                ScrollView {
+                    sidebar
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                }
+                .frame(minWidth: 220, idealWidth: 280, maxWidth: 300, alignment: .topLeading)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
             }
         }
         .padding(20)
@@ -1342,16 +1354,17 @@ private struct SegmentQueueRow: View {
     let onRetry: () -> Void
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             Text(row.index)
-                .frame(width: 56, alignment: .leading)
+                .frame(width: 36, alignment: .leading)
             Text(row.role)
                 .fontWeight(.semibold)
-                .frame(width: 80, alignment: .leading)
+                .frame(width: 60, alignment: .leading)
             Text(row.voice)
-                .frame(width: 160, alignment: .leading)
+                .lineLimit(1)
+                .frame(minWidth: 80, maxWidth: 140, alignment: .leading)
             Text(row.status)
-                .frame(width: 80, alignment: .leading)
+                .frame(width: 56, alignment: .leading)
                 .foregroundStyle(statusColor)
             Text(row.text)
                 .lineLimit(1)
@@ -1361,10 +1374,11 @@ private struct SegmentQueueRow: View {
                     onRetry()
                 }
             }
-            .frame(width: 88, alignment: .trailing)
+            .frame(width: 56, alignment: .trailing)
             .disabled(row.segment.status != .failed)
         }
-        .padding(10)
+        .font(.callout)
+        .padding(8)
         .background(.background)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
