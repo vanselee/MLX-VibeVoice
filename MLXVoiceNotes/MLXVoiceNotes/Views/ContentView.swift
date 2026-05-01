@@ -1409,34 +1409,36 @@ private struct ExportSettingsView: View {
                     .padding(.vertical, 12)
                 }
 
-                // 导出位置模块 — 标题+路径+按钮合并到同一行
+                // 导出位置模块 — 标签+路径一行，按钮一行
                 settingsCard("") {
-                    HStack(spacing: 0) {
-                        Text("导出位置")
-                            .font(.body)
-                            .frame(width: 80, alignment: .leading)
-                        Spacer()
-                        Text(currentExportDisplayPath)
-                            .font(.body)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                            .frame(width: 200, alignment: .trailing)
-                        HStack(spacing: 8) {
+                    VStack(spacing: 12) {
+                        // 第一排：导出位置左，路径右
+                        HStack {
+                            Text("导出位置")
+                                .font(.body)
+                                .frame(width: 80, alignment: .leading)
+                            Spacer()
+                            Text(currentExportDisplayPath)
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                        // 第二排：按钮靠近，右对齐
+                        HStack {
+                            Spacer()
                             Button("恢复默认位置") {
                                 defaultExportDirectory = ""
                             }
                             .font(.body)
                             .buttonStyle(.bordered)
                             .controlSize(.regular)
-                            .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
                             Button("更改位置") {
                                 changeExportDirectory()
                             }
                             .font(.body)
                             .buttonStyle(.bordered)
                             .controlSize(.regular)
-                            .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
                         }
                     }
                     .padding(.horizontal, 16)
