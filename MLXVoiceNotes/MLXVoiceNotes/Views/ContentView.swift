@@ -152,6 +152,7 @@ private enum AppPage: String, CaseIterable, Identifiable {
 
 private struct ScriptLibraryView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query private var voiceProfiles: [VoiceProfile]
     let scripts: [Script]
     @Binding var selectedScriptID: UUID?
     @Binding var selectedPage: AppPage
@@ -262,7 +263,13 @@ private struct ScriptLibraryView: View {
         }
     }
 
-    private let availableVoices = ["默认清晰女声", "自然男声", "vanselee 参考音色", "默认旁白"]
+    /// 音色选项：从 VoiceProfile 动态读取（builtIn + available + pendingReview）
+    private var availableVoices: [String] {
+        let allowedStatuses: Set<VoiceProfileStatus> = [.builtIn, .available, .pendingReview]
+        return voiceProfiles
+            .filter { allowedStatuses.contains($0.status) }
+            .map(\.name)
+    }
 
     @ViewBuilder
     private func currentScriptEditor(for script: Script) -> some View {
@@ -815,8 +822,16 @@ private struct ScriptListRow: View {
 }
 
 private struct RoleReviewView: View {
+    @Query private var voiceProfiles: [VoiceProfile]
     let script: Script?
-    private let availableVoices = ["默认清晰女声", "自然男声", "vanselee 参考音色", "默认旁白"]
+
+    /// 音色选项：从 VoiceProfile 动态读取（builtIn + available + pendingReview）
+    private var availableVoices: [String] {
+        let allowedStatuses: Set<VoiceProfileStatus> = [.builtIn, .available, .pendingReview]
+        return voiceProfiles
+            .filter { allowedStatuses.contains($0.status) }
+            .map(\.name)
+    }
 
     var body: some View {
         AppPageScaffold(title: "角色确认", subtitle: "确认角色、绑定音色，并检查解析出的段落。") {
