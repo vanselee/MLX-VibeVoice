@@ -1243,6 +1243,12 @@ private struct ExportSettingsView: View {
     @AppStorage("defaultExportDirectory") private var defaultExportDirectory: String = ""
     @State private var cacheUsage: String = "待统计"
 
+    // 统一尺寸常量
+    private static let trailingColumnWidth: CGFloat = 300
+    private static let controlWidth: CGFloat = 176
+    private static let pairButtonWidth: CGFloat = 136
+    private static let controlHeight: CGFloat = 32
+
     private var currentExportDisplayPath: String {
         if defaultExportDirectory.isEmpty {
             return "Downloads / MLX Voice Notes Exports"
@@ -1271,32 +1277,41 @@ private struct ExportSettingsView: View {
                                 }
                             }
                             .labelsHidden()
-                            .frame(width: 176)
+                            .font(.body)
+                            .controlSize(.regular)
+                            .frame(width: Self.controlWidth, height: Self.controlHeight)
                         }
                     }
 
                     // 导出位置模块
                     settingsCard("导出位置") {
-                        VStack(spacing: 0) {
-                            settingsRowLabel("默认位置", subtitle: currentExportDisplayPath) {
-                                Spacer()
-                            }
+                        settingsRowLabel("默认位置", subtitle: "导出的 WAV 文件会保存到此目录。") {
+                            VStack(alignment: .trailing, spacing: 8) {
+                                Text(currentExportDisplayPath)
+                                    .font(.body)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                    .frame(width: Self.trailingColumnWidth, alignment: .trailing)
 
-                            Divider().padding(.horizontal, 16)
-
-                            settingsRowLabel("导出操作", subtitle: nil) {
-                                HStack(spacing: 6) {
-                                    Button("恢复默认") {
+                                HStack(spacing: 8) {
+                                    Button("恢复默认位置") {
                                         defaultExportDirectory = ""
                                     }
+                                    .font(.body)
                                     .buttonStyle(.bordered)
+                                    .controlSize(.regular)
+                                    .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
 
                                     Button("更改位置") {
                                         changeExportDirectory()
                                     }
+                                    .font(.body)
                                     .buttonStyle(.bordered)
+                                    .controlSize(.regular)
+                                    .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
                                 }
-                                .frame(width: 176)
+                                .frame(width: Self.trailingColumnWidth, alignment: .trailing)
                             }
                         }
                     }
@@ -1306,7 +1321,9 @@ private struct ExportSettingsView: View {
                         VStack(spacing: 0) {
                             settingsRowLabel("当前占用", subtitle: nil) {
                                 Text(cacheUsage)
-                                    .frame(width: 176, alignment: .trailing)
+                                    .font(.body)
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: Self.controlWidth, height: Self.controlHeight, alignment: .trailing)
                             }
 
                             Divider().padding(.horizontal, 16)
@@ -1318,7 +1335,9 @@ private struct ExportSettingsView: View {
                                     }
                                 }
                                 .labelsHidden()
-                                .frame(width: 176)
+                                .font(.body)
+                                .controlSize(.regular)
+                                .frame(width: Self.controlWidth, height: Self.controlHeight)
                             }
 
                             Divider().padding(.horizontal, 16)
@@ -1327,9 +1346,11 @@ private struct ExportSettingsView: View {
                                 Button("清理缓存") {
                                     // TODO: implement cache cleanup
                                 }
+                                .font(.body)
                                 .buttonStyle(.bordered)
+                                .controlSize(.regular)
+                                .frame(width: Self.controlWidth, height: Self.controlHeight)
                                 .disabled(true)
-                                .frame(width: 176)
                             }
                         }
                     }
@@ -1387,6 +1408,7 @@ private struct ExportSettingsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             control()
+                .frame(width: Self.trailingColumnWidth, alignment: .trailing)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
