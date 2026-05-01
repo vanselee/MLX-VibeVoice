@@ -1389,7 +1389,7 @@ private struct ExportSettingsView: View {
         AppPageScaffold(title: "偏好设置", subtitle: "管理语言、导出位置和本地缓存。") {
             VStack(alignment: .leading, spacing: 14) {
                 // 语言模块 — 标题与控件合并到同一行
-                settingsCard("语言") {
+                settingsCard("") {
                     HStack(spacing: 0) {
                         Text("语言")
                             .font(.body)
@@ -1410,7 +1410,7 @@ private struct ExportSettingsView: View {
                 }
 
                 // 导出位置模块 — 标题+路径+按钮合并到同一行
-                settingsCard("导出位置") {
+                settingsCard("") {
                     HStack(spacing: 0) {
                         Text("导出位置")
                             .font(.body)
@@ -1444,7 +1444,7 @@ private struct ExportSettingsView: View {
                 }
 
                 // 缓存模块
-                settingsCard("缓存") {
+                settingsCard("") {
                     VStack(spacing: 0) {
                         settingsRowLabel("当前占用缓存", subtitle: nil) {
                             Text(cacheUsage)
@@ -1492,10 +1492,12 @@ private struct ExportSettingsView: View {
         @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(title)
-                .font(.headline)
-                .padding(.horizontal, 16)
-                .padding(.top, 14)
+            if !title.isEmpty {
+                Text(title)
+                    .font(.headline)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 14)
+            }
 
             VStack(spacing: 0) {
                 content()
