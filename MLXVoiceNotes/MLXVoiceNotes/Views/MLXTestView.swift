@@ -1,15 +1,15 @@
 import SwiftUI
 import AVFoundation
 
-// Phase 0: MLX 测试视图
-// 此视图用于验证本地 TTS 引擎的功能
-// 仅用于开发测试
 struct MLXTestView: View {
     @StateObject private var mlxService = MLXAudioService()
-    @State private var testText: String = "你好，这是一段测试音频。"
+    @State private var testText: String = "Hello, this is a test of the local TTS system."
+    @State private var selectedVoice: String = "default"
     @State private var audioPlayer: AVAudioPlayer?
     @State private var isPlaying: Bool = false
     @State private var generatedURL: URL?
+    @State private var showModelPicker: Bool = false
+    @State private var selectedModel: String = "Soprano-80M"
 
     var body: some View {
         VStack(spacing: 16) {
@@ -20,9 +20,10 @@ struct MLXTestView: View {
                 resultSection(url: generatedURL)
             }
             Spacer()
+            footerSection
         }
         .padding()
-        .frame(width: 600, height: 450)
+        .frame(width: 650, height: 500)
         .task {
             await mlxService.loadModel()
         }
@@ -30,13 +31,62 @@ struct MLXTestView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Phase 0: MLX TTS Test").font(.title).fontWeight(.bold)
+            HStack {
+                Text("Phase 0: MLX TTS Test").font(.title2).fontWeight(.bold)
+                Spacer()
+                Button(action: { showModelPicker.toggle() }) {
+                    HStack(spacing: 4) {
+                        Text(mlxService.currentModelName)
+                        Image(systemName: "chevron.down")
+                    }
+                    .font(.caption)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color.secondary.opacity(0.2))
+                    .clipShape(Capsule())
+                }
+                .popover(isPresented: $showModelPicker) {
+                    modelPickerPopover
+                }
+            }
             HStack(spacing: 12) {
-                StatusBadgeText(text: "Model Status", color: mlxService.isModelLoaded ? .green : .secondary)
-                StatusBadgeText(text: mlxService.isGenerating ? "Generating..." : "Idle",
-                               color: mlxService.isGenerating ? .blue : .secondary)
+                StatusBadgeText(
+                    text: mlxService.isModelLoaded ? "Model Ready" : "Loading...",
+                    color: mlxService.isModelLoaded ? .green : .orange
+                )
+                StatusBadgeText(
+                    text: mlxService.isGenerating ? "Generating..." : "Idle",
+                    color: mlxService.isGenerating ? .blue : .secondary
+                )
             }
         }
+    }
+
+    private var modelPickerPopover: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Select Model").font(.headline)
+            ForEach(mlxService.availableModels(), id: \.name) { model in
+                Button(action: {
+                    Task {
+                        await mlxService.switchModel(model.name, modelRepo: model.repo)
+                        selectedModel = model.name
+                    }
+                    showModelPicker = false
+                }) {
+                    HStack {
+                        Text(model.name)
+                        Spacer()
+                        if mlxService.currentModelName == model.name {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding(.vertical, 4)
+            }
+        }
+        .padding()
+        .frame(width: 250)
     }
 
     private var formSection: some View {
@@ -79,7 +129,9 @@ struct MLXTestView: View {
             Text("Result").font(.headline)
 
             HStack(spacing: 12) {
-                Text(url.lastPathComponent).font(.body)
+                Text(url.lastPathComponent)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 Spacer()
                 Button(isPlaying ? "Stop" : "Play") {
                     togglePlayback(url)
@@ -92,6 +144,12 @@ struct MLXTestView: View {
                     NSWorkspace.shared.activateFileViewerSelecting([url])
                 }
                 Spacer()
+                Button("Copy to Clipboard") {
+                    #if os(macOS)
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.writeObjects([url as NSURL])
+                    #endif
+                }
             }
         }
         .padding(12)
@@ -99,16 +157,31 @@ struct MLXTestView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
+    private var footerSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Model Info").font(.caption).foregroundStyle(.secondary)
+            HStack(spacing: 16) {
+                Label("Sample Rate: 24kHz", systemImage: "waveform")
+                Label("Format: WAV", systemImage: "doc")
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+        }
+    }
+
     private func generateAudio() async {
         do {
-            let url = try await mlxService.generateAudio(text: testText)
+            let url = try await mlxService.generateAudio(
+                text: testText,
+                voice: selectedVoice == "default" ? nil : selectedVoice
+            )
             await MainActor.run {
                 self.generatedURL = url
                 self.mlxService.errorMessage = nil
             }
         } catch {
             await MainActor.run {
-                self.mlxService.errorMessage = "Error generating audio: \(error.localizedDescription)"
+                self.mlxService.errorMessage = "Error: \(error.localizedDescription)"
             }
         }
     }

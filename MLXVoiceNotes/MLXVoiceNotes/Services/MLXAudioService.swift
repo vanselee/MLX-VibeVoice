@@ -1,110 +1,184 @@
 import Foundation
 import AVFoundation
-
-// Phase 0: mlx-audio-swift 集成占位
-// 此处将集成真正的 MLX 本地 TTS 引擎
-// 目前暂时使用简单的占位，防止编译错误
+import MLXAudioTTS
+import MLXAudioCore
 
 class MLXAudioService: ObservableObject {
     @Published var isModelLoaded = false
     @Published var isGenerating = false
     @Published var progress: Double = 0
     @Published var errorMessage: String?
+    @Published var availableVoices: [String] = []
+    @Published var currentModelName: String = "Soprano"
 
-    // 占位实现
-    init() {}
+    private var ttsModel: SpeechGenerationModel?
+    private let sampleRate: Int = 24000
 
-    // 加载模型（Phase 0 将替换为真实的 mlx-audio-swift 代码）
+    init() {
+        loadModel()
+    }
+
     func loadModel() async {
         await MainActor.run {
-            isModelLoaded = true
+            isModelLoaded = false
+            errorMessage = nil
+        }
+
+        do {
+            // 加载 Soprano 模型（80M 参数，适合快速测试）
+            let model = try await TTS.loadModel(modelRepo: "mlx-community/Soprano-80M-bf16")
+
+            await MainActor.run {
+                self.ttsModel = model
+                self.isModelLoaded = true
+                self.currentModelName = "Soprano-80M"
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Failed to load model: \(error.localizedDescription)"
+            }
         }
     }
 
-    // 生成音频（Phase 0 将替换为真实的生成）
-    func generateAudio(text: String, voice: String = "default") async throws -> URL {
+    func generateAudio(text: String, voice: String? = nil) async throws -> URL {
+        guard let model = ttsModel else {
+            throw TTSError.modelNotLoaded
+        }
+
         await MainActor.run {
             isGenerating = true
             progress = 0
+            errorMessage = nil
         }
 
-        // 模拟生成过程
-        for i in 0..<5 {
-            try await Task.sleep(nanoseconds: 300_000_000)
+        do {
+            let audio = try await model.generate(
+                text: text,
+                voice: voice
+            )
+
             await MainActor.run {
-                progress = Double(i + 1) / 5.0
+                progress = 0.8
             }
+
+            // 保存为 WAV 文件
+            let tempDir = FileManager.default.temporaryDirectory
+            let fileName = "tts_\(UUID().uuidString).wav"
+            let url = tempDir.appendingPathComponent(fileName)
+
+            try saveAudioArray(audio, sampleRate: Double(sampleRate), to: url)
+
+            await MainActor.run {
+                progress = 1.0
+                isGenerating = false
+            }
+
+            return url
+        } catch {
+            await MainActor.run {
+                isGenerating = false
+                errorMessage = error.localizedDescription
+            }
+            throw TTSError.generationFailed
         }
-
-        // 生成一个简单的临时 WAV 占位文件
-        let tempDir = FileManager.default.temporaryDirectory
-        let fileName = UUID().uuidString + ".wav"
-        let url = tempDir.appendingPathComponent(fileName)
-
-        // 写入简单 WAV 文件（和 AudioExportService 类似）
-        let wavData = generatePlaceholderWAV(duration: 1)
-        try wavData.write(to: url)
-
-        await MainActor.run {
-            isGenerating = false
-        }
-
-        return url
     }
 
-    // 生成占位 WAV 数据
-    private func generatePlaceholderWAV(duration: Double) -> Data {
-        let sampleRate: Double = 24000
-        let sampleCount = Int(duration * sampleRate)
+    func generateAudioWithProgress(text: String, voice: String? = nil) -> AsyncThrowingStream<Double, Error> {
+        AsyncThrowingStream { continuation in
+            Task {
+                guard let model = ttsModel else {
+                    continuation.finish(throwing: TTSError.modelNotLoaded)
+                    return
+                }
 
-        var audioData = Data()
+                await MainActor.run {
+                    isGenerating = true
+                    errorMessage = nil
+                }
 
-        // 写入 WAV 头部
-        var chunkId: UInt32 = 0x46464952 // "RIFF"
-        audioData.append(UnsafeBufferPointer(start: &chunkId, count: 1))
+                do {
+                    continuation.yield(0.1)
+                    
+                    let audio = try await model.generate(
+                        text: text,
+                        voice: voice
+                    )
 
-        var chunkSize: UInt32 = UInt32(sampleCount * 2 + 36)
-        audioData.append(UnsafeBufferPointer(start: &chunkSize, count: 1))
+                    continuation.yield(0.8)
 
-        var format: UInt32 = 0x45564157 // "WAVE"
-        audioData.append(UnsafeBufferPointer(start: &format, count: 1))
+                    // 保存为 WAV 文件
+                    let tempDir = FileManager.default.temporaryDirectory
+                    let fileName = "tts_\(UUID().uuidString).wav"
+                    let url = tempDir.appendingPathComponent(fileName)
 
-        var subChunk1Id: UInt32 = 0x20746d66 // "fmt "
-        audioData.append(UnsafeBufferPointer(start: &subChunk1Id, count: 1))
+                    try saveAudioArray(audio, sampleRate: Double(sampleRate), to: url)
 
-        var subChunk1Size: UInt32 = 16
-        audioData.append(UnsafeBufferPointer(start: &subChunk1Size, count: 1))
+                    continuation.yield(1.0)
 
-        var audioFormat: UInt16 = 1 // PCM
-        audioData.append(UnsafeBufferPointer(start: &audioFormat, count: 1))
+                    await MainActor.run {
+                        isGenerating = false
+                    }
 
-        var numChannels: UInt16 = 1 // Mono
-        audioData.append(UnsafeBufferPointer(start: &numChannels, count: 1))
+                    continuation.finish()
+                } catch {
+                    await MainActor.run {
+                        isGenerating = false
+                        errorMessage = error.localizedDescription
+                    }
+                    continuation.finish(throwing: TTSError.generationFailed)
+                }
+            }
+        }
+    }
 
-        var sampleRateValue: UInt32 = UInt32(sampleRate)
-        audioData.append(UnsafeBufferPointer(start: &sampleRateValue, count: 1))
+    func setVoice(_ voiceName: String) {
+        // voiceName 设置当前音色
+    }
 
-        var byteRate: UInt32 = UInt32(sampleRate) * 2 // 16-bit mono
-        audioData.append(UnsafeBufferPointer(start: &byteRate, count: 1))
-
-        var blockAlign: UInt16 = 2 // 16-bit mono
-        audioData.append(UnsafeBufferPointer(start: &blockAlign, count: 1))
-
-        var bitsPerSample: UInt16 = 16
-        audioData.append(UnsafeBufferPointer(start: &bitsPerSample, count: 1))
-
-        var subChunk2Id: UInt32 = 0x61746164 // "data"
-        audioData.append(UnsafeBufferPointer(start: &subChunk2Id, count: 1))
-
-        var subChunk2Size: UInt32 = UInt32(sampleCount * 2)
-        audioData.append(UnsafeBufferPointer(start: &subChunk2Size, count: 1))
-
-        // 写入静音 PCM 数据
-        for _ in 0..<sampleCount {
-            var sample: Int16 = 0
-            audioData.append(UnsafeBufferPointer(start: &sample, count: 1))
+    func switchModel(_ modelName: String, modelRepo: String) async {
+        await MainActor.run {
+            isModelLoaded = false
+            errorMessage = nil
         }
 
-        return audioData
+        do {
+            let model = try await TTS.loadModel(modelRepo: modelRepo)
+
+            await MainActor.run {
+                self.ttsModel = model
+                self.isModelLoaded = true
+                self.currentModelName = modelName
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Failed to load model: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    func availableModels() -> [(name: String, repo: String)] {
+        return [
+            ("Soprano-80M", "mlx-community/Soprano-80M-bf16"),
+            ("Pocket TTS", "mlx-community/pocket-tts"),
+            ("Kokoro", "mlx-community/Kokoro-77M"),
+            ("VyvoTTS", "mlx-community/VyvoTTS-EN-Beta-4bit")
+        ]
+    }
+}
+
+enum TTSError: Error, LocalizedError {
+    case modelNotLoaded
+    case generationFailed
+    case audioSaveFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .modelNotLoaded:
+            return "TTS model not loaded"
+        case .generationFailed:
+            return "Audio generation failed"
+        case .audioSaveFailed:
+            return "Failed to save audio file"
+        }
     }
 }
