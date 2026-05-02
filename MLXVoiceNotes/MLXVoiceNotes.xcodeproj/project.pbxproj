@@ -7,42 +7,45 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		189D68E42FA5B77800A9486C /* MLXAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 189D68E32FA5B77800A9486C /* MLXAudio */; };
+		189D68E62FA5B77800A9486C /* MLXAudioCore in Frameworks */ = {isa = PBXBuildFile; productRef = 189D68E52FA5B77800A9486C /* MLXAudioCore */; };
+		189D68E82FA5B77800A9486C /* MLXAudioTTS in Frameworks */ = {isa = PBXBuildFile; productRef = 189D68E72FA5B77800A9486C /* MLXAudioTTS */; };
 		1A0000010000000000000001 /* MLXVoiceNotesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000011 /* MLXVoiceNotesApp.swift */; };
-		1A0000010000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000012 /* ContentView.swift */; };
-		1A0000010000000000000003 /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000013 /* AppModels.swift */; };
+		1A0000010000000000000002 /* Views/ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000012 /* Views/ContentView.swift */; };
+		1A0000010000000000000003 /* Models/AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000013 /* Models/AppModels.swift */; };
 		1A0000010000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000014 /* Assets.xcassets */; };
-		1A0000010000000000000005 /* ScriptParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000015 /* ScriptParser.swift */; };
-		1A0000010000000000000006 /* GenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000016 /* GenerationService.swift */; };
-		1A0000010000000000000007 /* AudioExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000017 /* AudioExportService.swift */; };
-		1A0000010000000000000108 /* MLXAudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000018 /* MLXAudioService.swift */; };
-		1A0000010000000000000109 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000019 /* SharedComponents.swift */; };
-		1A000001000000000000010A /* ScriptLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001A /* ScriptLibraryView.swift */; };
-		1A000001000000000000010B /* RoleReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001B /* RoleReviewView.swift */; };
-		1A000001000000000000010C /* ResourceCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001C /* ResourceCenterView.swift */; };
-		1A000001000000000000010D /* TaskQueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001D /* TaskQueueView.swift */; };
-		1A000001000000000000010E /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001E /* PreferencesView.swift */; };
-		1A000001000000000000010F /* CreateVoiceProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001F /* CreateVoiceProfileView.swift */; };
-		1A0000010000000000000111 /* MLXTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000021 /* MLXTestView.swift */; };
+		1A0000010000000000000005 /* Services/ScriptParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000015 /* Services/ScriptParser.swift */; };
+		1A0000010000000000000006 /* Services/GenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000016 /* Services/GenerationService.swift */; };
+		1A0000010000000000000007 /* Services/AudioExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000017 /* Services/AudioExportService.swift */; };
+		1A0000010000000000000108 /* Services/MLXAudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000018 /* Services/MLXAudioService.swift */; };
+		1A0000010000000000000109 /* Views/SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000019 /* Views/SharedComponents.swift */; };
+		1A000001000000000000010A /* Views/ScriptLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001A /* Views/ScriptLibraryView.swift */; };
+		1A000001000000000000010B /* Views/RoleReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001B /* Views/RoleReviewView.swift */; };
+		1A000001000000000000010C /* Views/ResourceCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001C /* Views/ResourceCenterView.swift */; };
+		1A000001000000000000010D /* Views/TaskQueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001D /* Views/TaskQueueView.swift */; };
+		1A000001000000000000010E /* Views/PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001E /* Views/PreferencesView.swift */; };
+		1A000001000000000000010F /* Views/CreateVoiceProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001F /* Views/CreateVoiceProfileView.swift */; };
+		1A0000010000000000000111 /* Views/MLXTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000021 /* Views/MLXTestView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		1A0000010000000000000010 /* MLX Voice Notes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MLX Voice Notes.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A0000010000000000000011 /* MLXVoiceNotesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXVoiceNotesApp.swift; sourceTree = "<group>"; };
-		1A0000010000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ContentView.swift; sourceTree = "<group>"; };
-		1A0000010000000000000013 /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AppModels.swift; sourceTree = "<group>"; };
+		1A0000010000000000000012 /* Views/ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ContentView.swift; sourceTree = "<group>"; };
+		1A0000010000000000000013 /* Models/AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AppModels.swift; sourceTree = "<group>"; };
 		1A0000010000000000000014 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		1A0000010000000000000015 /* ScriptParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ScriptParser.swift; sourceTree = "<group>"; };
-		1A0000010000000000000016 /* GenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/GenerationService.swift; sourceTree = "<group>"; };
-		1A0000010000000000000017 /* AudioExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AudioExportService.swift; sourceTree = "<group>"; };
-		1A0000010000000000000018 /* MLXAudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/MLXAudioService.swift; sourceTree = "<group>"; };
-		1A0000010000000000000019 /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SharedComponents.swift; sourceTree = "<group>"; };
-		1A000001000000000000001A /* ScriptLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ScriptLibraryView.swift; sourceTree = "<group>"; };
-		1A000001000000000000001B /* RoleReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/RoleReviewView.swift; sourceTree = "<group>"; };
-		1A000001000000000000001C /* ResourceCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ResourceCenterView.swift; sourceTree = "<group>"; };
-		1A000001000000000000001D /* TaskQueueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/TaskQueueView.swift; sourceTree = "<group>"; };
-		1A000001000000000000001E /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/PreferencesView.swift; sourceTree = "<group>"; };
-		1A000001000000000000001F /* CreateVoiceProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/CreateVoiceProfileView.swift; sourceTree = "<group>"; };
-		1A0000010000000000000021 /* MLXTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/MLXTestView.swift; sourceTree = "<group>"; };
+		1A0000010000000000000015 /* Services/ScriptParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ScriptParser.swift; sourceTree = "<group>"; };
+		1A0000010000000000000016 /* Services/GenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/GenerationService.swift; sourceTree = "<group>"; };
+		1A0000010000000000000017 /* Services/AudioExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AudioExportService.swift; sourceTree = "<group>"; };
+		1A0000010000000000000018 /* Services/MLXAudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/MLXAudioService.swift; sourceTree = "<group>"; };
+		1A0000010000000000000019 /* Views/SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SharedComponents.swift; sourceTree = "<group>"; };
+		1A000001000000000000001A /* Views/ScriptLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ScriptLibraryView.swift; sourceTree = "<group>"; };
+		1A000001000000000000001B /* Views/RoleReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/RoleReviewView.swift; sourceTree = "<group>"; };
+		1A000001000000000000001C /* Views/ResourceCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ResourceCenterView.swift; sourceTree = "<group>"; };
+		1A000001000000000000001D /* Views/TaskQueueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/TaskQueueView.swift; sourceTree = "<group>"; };
+		1A000001000000000000001E /* Views/PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/PreferencesView.swift; sourceTree = "<group>"; };
+		1A000001000000000000001F /* Views/CreateVoiceProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/CreateVoiceProfileView.swift; sourceTree = "<group>"; };
+		1A0000010000000000000021 /* Views/MLXTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/MLXTestView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,6 +53,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				189D68E62FA5B77800A9486C /* MLXAudioCore in Frameworks */,
+				189D68E82FA5B77800A9486C /* MLXAudioTTS in Frameworks */,
+				189D68E42FA5B77800A9486C /* MLXAudio in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -68,20 +74,20 @@
 			isa = PBXGroup;
 			children = (
 				1A0000010000000000000011 /* MLXVoiceNotesApp.swift */,
-				1A0000010000000000000012 /* ContentView.swift */,
-				1A0000010000000000000013 /* AppModels.swift */,
-				1A0000010000000000000015 /* ScriptParser.swift */,
-				1A0000010000000000000016 /* GenerationService.swift */,
-				1A0000010000000000000017 /* AudioExportService.swift */,
-				1A0000010000000000000018 /* MLXAudioService.swift */,
-				1A0000010000000000000019 /* SharedComponents.swift */,
-				1A000001000000000000001A /* ScriptLibraryView.swift */,
-				1A000001000000000000001B /* RoleReviewView.swift */,
-				1A000001000000000000001C /* ResourceCenterView.swift */,
-				1A000001000000000000001D /* TaskQueueView.swift */,
-				1A000001000000000000001E /* PreferencesView.swift */,
-				1A000001000000000000001F /* CreateVoiceProfileView.swift */,
-				1A0000010000000000000021 /* MLXTestView.swift */,
+				1A0000010000000000000012 /* Views/ContentView.swift */,
+				1A0000010000000000000013 /* Models/AppModels.swift */,
+				1A0000010000000000000015 /* Services/ScriptParser.swift */,
+				1A0000010000000000000016 /* Services/GenerationService.swift */,
+				1A0000010000000000000017 /* Services/AudioExportService.swift */,
+				1A0000010000000000000018 /* Services/MLXAudioService.swift */,
+				1A0000010000000000000019 /* Views/SharedComponents.swift */,
+				1A000001000000000000001A /* Views/ScriptLibraryView.swift */,
+				1A000001000000000000001B /* Views/RoleReviewView.swift */,
+				1A000001000000000000001C /* Views/ResourceCenterView.swift */,
+				1A000001000000000000001D /* Views/TaskQueueView.swift */,
+				1A000001000000000000001E /* Views/PreferencesView.swift */,
+				1A000001000000000000001F /* Views/CreateVoiceProfileView.swift */,
+				1A0000010000000000000021 /* Views/MLXTestView.swift */,
 				1A0000010000000000000014 /* Assets.xcassets */,
 			);
 			path = MLXVoiceNotes;
@@ -137,9 +143,12 @@
 			knownRegions = (
 				en,
 				Base,
-				zh-Hans,
+				"zh-Hans",
 			);
 			mainGroup = 1A0000010000000000000030;
+			packageReferences = (
+				189D68E22FA5B77800A9486C /* XCRemoteSwiftPackageReference "mlx-audio-swift" */,
+			);
 			productRefGroup = 1A0000010000000000000032 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -166,20 +175,20 @@
 			buildActionMask = 2147483647;
 			files = (
 				1A0000010000000000000001 /* MLXVoiceNotesApp.swift in Sources */,
-				1A0000010000000000000002 /* ContentView.swift in Sources */,
-				1A0000010000000000000003 /* AppModels.swift in Sources */,
-				1A0000010000000000000005 /* ScriptParser.swift in Sources */,
-				1A0000010000000000000006 /* GenerationService.swift in Sources */,
-				1A0000010000000000000007 /* AudioExportService.swift in Sources */,
-				1A0000010000000000000108 /* MLXAudioService.swift in Sources */,
-				1A0000010000000000000109 /* SharedComponents.swift in Sources */,
-				1A000001000000000000010A /* ScriptLibraryView.swift in Sources */,
-				1A000001000000000000010B /* RoleReviewView.swift in Sources */,
-				1A000001000000000000010C /* ResourceCenterView.swift in Sources */,
-				1A000001000000000000010D /* TaskQueueView.swift in Sources */,
-				1A000001000000000000010E /* PreferencesView.swift in Sources */,
-				1A000001000000000000010F /* CreateVoiceProfileView.swift in Sources */,
-				1A0000010000000000000111 /* MLXTestView.swift in Sources */,
+				1A0000010000000000000002 /* Views/ContentView.swift in Sources */,
+				1A0000010000000000000003 /* Models/AppModels.swift in Sources */,
+				1A0000010000000000000005 /* Services/ScriptParser.swift in Sources */,
+				1A0000010000000000000006 /* Services/GenerationService.swift in Sources */,
+				1A0000010000000000000007 /* Services/AudioExportService.swift in Sources */,
+				1A0000010000000000000108 /* Services/MLXAudioService.swift in Sources */,
+				1A0000010000000000000109 /* Views/SharedComponents.swift in Sources */,
+				1A000001000000000000010A /* Views/ScriptLibraryView.swift in Sources */,
+				1A000001000000000000010B /* Views/RoleReviewView.swift in Sources */,
+				1A000001000000000000010C /* Views/ResourceCenterView.swift in Sources */,
+				1A000001000000000000010D /* Views/TaskQueueView.swift in Sources */,
+				1A000001000000000000010E /* Views/PreferencesView.swift in Sources */,
+				1A000001000000000000010F /* Views/CreateVoiceProfileView.swift in Sources */,
+				1A0000010000000000000111 /* Views/MLXTestView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -351,15 +360,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1A0000010000000000000090 /* Build configuration list for PBXProject "MLXVoiceNotes" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				1A00000100000000000000A0 /* Debug */,
-				1A00000100000000000000A1 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		1A0000010000000000000050 /* Build configuration list for PBXNativeTarget "MLX Voice Notes" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -369,7 +369,45 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		1A0000010000000000000090 /* Build configuration list for PBXProject "MLXVoiceNotes" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A00000100000000000000A0 /* Debug */,
+				1A00000100000000000000A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		189D68E22FA5B77800A9486C /* XCRemoteSwiftPackageReference "mlx-audio-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Blaizzy/mlx-audio-swift";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		189D68E32FA5B77800A9486C /* MLXAudio */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 189D68E22FA5B77800A9486C /* XCRemoteSwiftPackageReference "mlx-audio-swift" */;
+			productName = MLXAudio;
+		};
+		189D68E52FA5B77800A9486C /* MLXAudioCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 189D68E22FA5B77800A9486C /* XCRemoteSwiftPackageReference "mlx-audio-swift" */;
+			productName = MLXAudioCore;
+		};
+		189D68E72FA5B77800A9486C /* MLXAudioTTS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 189D68E22FA5B77800A9486C /* XCRemoteSwiftPackageReference "mlx-audio-swift" */;
+			productName = MLXAudioTTS;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1A0000010000000000000080 /* Project object */;
 }

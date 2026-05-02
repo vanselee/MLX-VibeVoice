@@ -4,6 +4,7 @@ import AVFoundation
 #if canImport(MLXAudioTTS)
 import MLXAudioTTS
 import MLXAudioCore
+import MLXLMCommon
 #endif
 
 class MLXAudioService: ObservableObject {
@@ -71,20 +72,28 @@ class MLXAudioService: ObservableObject {
 
 #if canImport(MLXAudioTTS)
         do {
-            let audio = try await model.generate(
+            let audioArray = try await model.generate(
                 text: text,
-                voice: voice
+                voice: voice,
+                refAudio: nil,
+                refText: nil,
+                language: "auto",
+                generationParameters: GenerateParameters()
             )
 
             await MainActor.run {
                 progress = 0.8
             }
 
+            let samples = audioArray.asArray(Float.self)
+
             let tempDir = FileManager.default.temporaryDirectory
             let fileName = "tts_\(UUID().uuidString).wav"
             let url = tempDir.appendingPathComponent(fileName)
 
-            try saveAudioArray(audio, sampleRate: Double(sampleRate), to: url)
+            // 将 [Float] 转换为 WAV Data 并保存
+            let wavData = createWAVData(from: samples, sampleRate: sampleRate)
+            try wavData.write(to: url)
 
             await MainActor.run {
                 progress = 1.0
@@ -199,6 +208,65 @@ class MLXAudioService: ObservableObject {
         for _ in 0..<Int(duration * 24000) {
             var sample: Int16 = 0
             audioData.append(UnsafeBufferPointer(start: &sample, count: 1))
+        }
+        
+        return audioData
+    }
+
+    private func createWAVData(from samples: [Float], sampleRate: Int) -> Data {
+        var audioData = Data()
+        
+        let numSamples = samples.count
+        let dataSize = numSamples * 2  // 16-bit samples
+        
+        // RIFF header
+        var chunkID: UInt32 = 0x46464952  // "RIFF"
+        audioData.append(UnsafeBufferPointer(start: &chunkID, count: 1))
+        
+        var chunkSize: UInt32 = UInt32(36 + dataSize)
+        audioData.append(UnsafeBufferPointer(start: &chunkSize, count: 1))
+        
+        var format: UInt32 = 0x45564157  // "WAVE"
+        audioData.append(UnsafeBufferPointer(start: &format, count: 1))
+        
+        // fmt subchunk
+        var subChunk1Id: UInt32 = 0x20746d66  // "fmt "
+        audioData.append(UnsafeBufferPointer(start: &subChunk1Id, count: 1))
+        
+        var subChunk1Size: UInt32 = 16
+        audioData.append(UnsafeBufferPointer(start: &subChunk1Size, count: 1))
+        
+        var audioFormat: UInt16 = 1  // PCM
+        audioData.append(UnsafeBufferPointer(start: &audioFormat, count: 1))
+        
+        var numChannels: UInt16 = 1
+        audioData.append(UnsafeBufferPointer(start: &numChannels, count: 1))
+        
+        var sampleRateValue: UInt32 = UInt32(sampleRate)
+        audioData.append(UnsafeBufferPointer(start: &sampleRateValue, count: 1))
+        
+        var byteRate: UInt32 = UInt32(sampleRate * 2)
+        audioData.append(UnsafeBufferPointer(start: &byteRate, count: 1))
+        
+        var blockAlign: UInt16 = 2
+        audioData.append(UnsafeBufferPointer(start: &blockAlign, count: 1))
+        
+        var bitsPerSample: UInt16 = 16
+        audioData.append(UnsafeBufferPointer(start: &bitsPerSample, count: 1))
+        
+        // data subchunk
+        var subChunk2Id: UInt32 = 0x61746164  // "data"
+        audioData.append(UnsafeBufferPointer(start: &subChunk2Id, count: 1))
+        
+        var subChunk2Size: UInt32 = UInt32(dataSize)
+        audioData.append(UnsafeBufferPointer(start: &subChunk2Size, count: 1))
+        
+        // Convert Float samples to Int16
+        for sample in samples {
+            // Clamp to [-1.0, 1.0] and scale to Int16 range
+            let clamped = max(-1.0, min(1.0, sample))
+            var intSample: Int16 = Int16(clamped * 32767.0)
+            audioData.append(UnsafeBufferPointer(start: &intSample, count: 1))
         }
         
         return audioData
