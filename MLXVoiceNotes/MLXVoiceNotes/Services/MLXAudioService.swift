@@ -51,10 +51,11 @@ class MLXAudioService: ObservableObject {
         }
 
 #if canImport(MLXAudioTTS)
-        // 本地缓存完整性检查，阻止自动下载
-        let modelRepo = "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-8bit"
+        // Phase 0 结论：bf16 通过，8bit 输出杂音
+        // 默认使用 bf16 本地模型
+        let modelRepo = "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16"
         let cacheDir = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".cache/huggingface/hub/mlx-audio/mlx-community_Qwen3-TTS-12Hz-0.6B-Base-8bit")
+            .appendingPathComponent(".cache/huggingface/hub/mlx-audio/mlx-community_Qwen3-TTS-12Hz-0.6B-Base-bf16")
 
         let requiredFiles = [
             "config.json",
@@ -66,15 +67,19 @@ class MLXAudioService: ObservableObject {
         ]
 
         var cacheValid = true
+        var missingFiles: [String] = []
+
         for file in requiredFiles {
             let filePath = cacheDir.appendingPathComponent(file)
             if !FileManager.default.fileExists(atPath: filePath.path) {
                 cacheValid = false
+                missingFiles.append(file)
                 break
             }
             if let attrs = try? FileManager.default.attributesOfItem(atPath: filePath.path),
                let size = attrs[.size] as? Int, size == 0 {
                 cacheValid = false
+                missingFiles.append("\(file) (empty)")
                 break
             }
         }
@@ -83,13 +88,14 @@ class MLXAudioService: ObservableObject {
         let speechTokenizerConfig = cacheDir.appendingPathComponent("speech_tokenizer/config.json")
         if !FileManager.default.fileExists(atPath: speechTokenizerConfig.path) {
             cacheValid = false
+            missingFiles.append("speech_tokenizer/config.json")
         }
 
         if !cacheValid {
             await MainActor.run {
-                self.errorMessage = "本地 Qwen3 模型缓存不完整，已阻止自动下载"
+                self.errorMessage = "bf16 本地模型不完整，缺少: \(missingFiles.joined(separator: ", "))。已阻止自动下载。"
                 self.isModelLoaded = true
-                self.currentModelName = "Missing Local Qwen3 Cache"
+                self.currentModelName = "Missing bf16 Model"
             }
             return
         }
@@ -100,11 +106,11 @@ class MLXAudioService: ObservableObject {
             await MainActor.run {
                 self.ttsModel = model
                 self.isModelLoaded = true
-                self.currentModelName = "Qwen3 0.6B Base 8bit"
+                self.currentModelName = "Qwen3 0.6B Base bf16"
             }
         } catch {
             await MainActor.run {
-                self.errorMessage = "Failed to load model: \(error.localizedDescription)"
+                self.errorMessage = "Failed to load bf16 model: \(error.localizedDescription)"
                 self.isModelLoaded = true
                 self.currentModelName = "Simulated"
             }
@@ -274,20 +280,18 @@ class MLXAudioService: ObservableObject {
     }
 
     func availableModels() -> [(name: String, repo: String)] {
-        // bf16 模型需检查本地缓存完整性
+        // Phase 0 结论：bf16 通过，8bit 输出杂音
+        // MVP 阶段仅保留 bf16
         let bf16CacheDir = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".cache/huggingface/hub/mlx-audio/mlx-community_Qwen3-TTS-12Hz-0.6B-Base-bf16")
         let bf16ConfigExists = FileManager.default.fileExists(atPath: bf16CacheDir.appendingPathComponent("config.json").path)
 
-        var models: [(name: String, repo: String)] = [
-            ("Qwen3 0.6B Base 8bit", "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-8bit")
-        ]
-
         if bf16ConfigExists {
-            models.append(("Qwen3 0.6B Base bf16", "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16"))
+            return [("Qwen3 0.6B Base bf16", "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16")]
+        } else {
+            // bf16 不存在时返回空，触发错误提示
+            return []
         }
-
-        return models
     }
 
     /// 测试 instruct voice（自由文本，非预设名）
