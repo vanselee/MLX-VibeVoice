@@ -17,7 +17,6 @@ class MLXAudioService: ObservableObject {
 
 #if canImport(MLXAudioTTS)
     private var ttsModel: (any SpeechGenerationModel)?
-    private let sampleRate: Int = 24000
 #endif
 
     init() {
@@ -131,12 +130,27 @@ class MLXAudioService: ObservableObject {
 
             let samples = audioArray.asArray(Float.self)
 
+            // 使用模型真实采样率
+            let outputSampleRate = model.sampleRate
+
+            // 样本诊断
+            let sampleCount = samples.count
+            print("[MLXTTS] samples.count: \(sampleCount)")
+            if sampleCount > 0 {
+                let absValues = samples.map { abs($0) }
+                let maxAbs = absValues.max() ?? 0.0
+                let sumOfSquares: Double = absValues.reduce(0.0) { $0 + Double($1) * Double($1) }
+                let rms = sqrt(sumOfSquares / Double(sampleCount))
+                print("[MLXTTS] maxAbs: \(maxAbs), rms: \(rms), sampleRate: \(outputSampleRate)")
+            }
+
             let tempDir = FileManager.default.temporaryDirectory
             let fileName = "tts_\(UUID().uuidString).wav"
             let url = tempDir.appendingPathComponent(fileName)
 
-            // 将 [Float] 转换为 WAV Data 并保存
-            let wavData = createWAVData(from: samples, sampleRate: sampleRate)
+            // 归一化后写 WAV
+            let normalizedSamples = normalizeSamples(samples)
+            let wavData = createWAVData(from: normalizedSamples, sampleRate: outputSampleRate)
             try wavData.write(to: url)
 
             await MainActor.run {
@@ -254,6 +268,36 @@ class MLXAudioService: ObservableObject {
         }
         
         return audioData
+    }
+
+    /// 归一化浮点样本：过滤 NaN/Inf，自动增益低幅度信号到目标峰值 0.8
+    private func normalizeSamples(_ samples: [Float]) -> [Float] {
+        guard !samples.isEmpty else {
+            print("[MLXTTS] normalizeSamples: empty input")
+            return []
+        }
+
+        // 过滤 NaN / infinite → 替换为 0
+        let cleaned = samples.map { s -> Float in
+            s.isFinite ? s : 0.0
+        }
+
+        let absCleaned = cleaned.map { abs($0) }
+        let maxAbs = absCleaned.max() ?? 0
+
+        guard maxAbs > 0 else {
+            print("[MLXTTS] normalizeSamples: all-zero signal (maxAbs == 0)")
+            return cleaned
+        }
+
+        var gain: Float = 1.0
+        if maxAbs < 0.05 {
+            gain = min(0.8 / maxAbs, 1000)  // 上限 1000x 防止极端值
+            print("[MLXTTS] normalizeSamples: low amplitude detected (maxAbs=\(maxAbs)), applying gain \(gain)x")
+        }
+
+        // 增益 + clamp 到 [-1.0, 1.0]
+        return cleaned.map { s in max(-1.0, min(1.0, s * gain)) }
     }
 
     private func createWAVData(from samples: [Float], sampleRate: Int) -> Data {
