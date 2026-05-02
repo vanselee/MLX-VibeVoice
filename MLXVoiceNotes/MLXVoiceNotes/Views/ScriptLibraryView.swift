@@ -85,6 +85,7 @@ struct ScriptLibraryView: View {
                 Button("编辑") {
                     openEditor(for: script)
                 }
+                .disabled(script.status == .generating)
 
                 Button("删除", role: .destructive) {
                     deleteCandidate = script
@@ -297,12 +298,18 @@ struct ScriptLibraryView: View {
 
     private func deleteSelectedCandidate() {
         guard let script = deleteCandidate else { return }
+        // 如果正在生成，先取消
+        if script.status == .generating {
+            GenerationService.cancel(script: script)
+        }
         if selectedScriptID == script.id {
             selectedScriptID = scripts.first { $0.id != script.id }?.id
         }
         if expandedScriptID == script.id {
             expandedScriptID = nil
         }
+        // 清理关联的音频文件（失败不阻止删除）
+        try? AudioStorageService.deleteAudioFiles(for: script.id)
         modelContext.delete(script)
         deleteCandidate = nil
     }
@@ -433,7 +440,6 @@ struct ScriptLibraryView: View {
             ? "未命名文案" : script.title)
         let fileName = "\(safeName)_\(Date().fileStamp)"
         do {
-            // Phase 0.5: 调用真实导出
             _ = try AudioExportService.exportRealWAV(for: script, fileName: fileName)
             script.lastExportedAt = .now
             parseSummary = "已导出 WAV"
@@ -464,12 +470,15 @@ struct ScriptLibraryView: View {
         let completed = completedCount(for: script)
         let failed = failedCount(for: script)
         let pending = total - completed - failed
+        let isAnyGenerating = GenerationService.currentlyGeneratingScriptID != nil
+        let isCurrentGenerating = script.status == .generating
+        let canStartGeneration = !isAnyGenerating && !isCurrentGenerating
 
         return VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 10) {
                 Text("生成状态").font(.headline)
 
-                if script.status == .generating {
+                if isCurrentGenerating {
                     HStack(spacing: 8) {
                         ProgressView(value: total > 0 ? Double(completed) / Double(total) : 0)
                             .frame(height: 6)
@@ -487,14 +496,16 @@ struct ScriptLibraryView: View {
                     }
                     .font(.caption)
                 } else if failed > 0 {
-                    HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-                        Text("\(failed) 段失败").foregroundStyle(.orange)
-                    }
-                    .font(.caption)
-                    Text("\(completed)/\(total) · \(pending) 段待生成")
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                            Text("\(failed) 段生成失败").foregroundStyle(.orange)
+                        }
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        Text("\(completed)/\(total) 已完成 · \(pending) 段待生成")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 } else if completed > 0 {
                     HStack(spacing: 6) {
                         Image(systemName: "circle.lefthalf.filled").foregroundStyle(.blue)
@@ -509,8 +520,14 @@ struct ScriptLibraryView: View {
                     .font(.caption)
                 }
 
+                if isAnyGenerating && !isCurrentGenerating {
+                    Text("其他文案正在生成中，请等待完成")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
                 HStack(spacing: 8) {
-                    if script.status == .generating {
+                    if isCurrentGenerating {
                         Button("暂停") { GenerationService.pause(script: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
@@ -521,28 +538,38 @@ struct ScriptLibraryView: View {
                         Button("重新生成") { startPlaceholderGeneration(for: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.regular)
+                            .disabled(!canStartGeneration)
                     } else if failed > 0 {
-                        Button("重试失败") { GenerationService.retryFailedSegments(script: script) }
+                        Button("重试失败") {
+                            GenerationService.retryFailedSegments(script: script) { result in
+                                if case .failure(let error) = result {
+                                    parseSummary = "重试失败：\(error.localizedDescription)"
+                                }
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.regular)
+                        .disabled(!canStartGeneration)
+                        Button("全部重新生成") { startPlaceholderGeneration(for: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
-                        Button("取消") { GenerationService.cancel(script: script) }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
-                    } else if pending > 0 && completed == 0 && failed == 0 {
-                        Button("生成音频") { startPlaceholderGeneration(for: script) }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.regular)
+                            .disabled(!canStartGeneration)
                     } else if completed > 0 {
-                        Button("继续生成") { GenerationService.resume(script: script) }
+                        Button("继续生成") {
+                            GenerationService.resume(script: script) { result in
+                                if case .failure(let error) = result {
+                                    parseSummary = "继续生成失败：\(error.localizedDescription)"
+                                }
+                            }
+                        }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
-                        Button("取消") { GenerationService.cancel(script: script) }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
+                            .disabled(!canStartGeneration)
                     } else {
                         Button("生成音频") { startPlaceholderGeneration(for: script) }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.regular)
+                            .disabled(!canStartGeneration)
                     }
                 }
             }
@@ -582,7 +609,7 @@ struct ScriptLibraryView: View {
                         exportWAV(for: script)
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(!isCompleted)
+                    .disabled(!isCompleted || isCurrentGenerating)
 
                     Button("打开文件夹") {
                         #if os(macOS)
@@ -591,10 +618,20 @@ struct ScriptLibraryView: View {
                     }
                 }
 
-                if !isCompleted {
-                    Text("生成完成后可导出")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                if !isCompleted && total > 0 {
+                    if isCurrentGenerating {
+                        Text("生成完成后可导出")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else if failed > 0 {
+                        Text("有段落生成失败，请重试后再导出")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    } else {
+                        Text("生成完成后可导出")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             .padding(.top, 12)

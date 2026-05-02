@@ -8,6 +8,9 @@ enum GenerationService {
     /// 当前正在生成的文案 ID（防止重复启动）
     static var currentlyGeneratingScriptID: UUID?
 
+    /// 活跃任务句柄字典，用于真正取消/暂停 Task
+    static var activeTaskByScriptID: [UUID: Task<Void, Never>] = [:]
+
     /// MLX 音频服务实例（共享）
     static var mlxService = MLXAudioService()
 
@@ -36,30 +39,44 @@ enum GenerationService {
         script.updatedAt = .now
         currentlyGeneratingScriptID = script.id
 
-        // 创建后台 Task 串行生成
-        Task {
+        // 创建后台 Task 串行生成，存入字典以便取消
+        let task = Task {
             do {
                 try await generateAllSegments(script: script, voiceInstruct: voiceInstruct)
                 await MainActor.run {
                     script.status = .completed
                     script.updatedAt = .now
                     currentlyGeneratingScriptID = nil
+                    activeTaskByScriptID.removeValue(forKey: script.id)
                     completion?(.success(()))
+                }
+            } catch is CancellationError {
+                await MainActor.run {
+                    currentlyGeneratingScriptID = nil
+                    activeTaskByScriptID.removeValue(forKey: script.id)
                 }
             } catch {
                 await MainActor.run {
                     script.status = .failed
                     script.updatedAt = .now
                     currentlyGeneratingScriptID = nil
+                    activeTaskByScriptID.removeValue(forKey: script.id)
                     completion?(.failure(error))
                 }
             }
         }
+        activeTaskByScriptID[script.id] = task
     }
 
     /// 暂停生成（用户点击"暂停"按钮）
     static func pause(script: Script) {
         guard script.status == .generating else { return }
+
+        // 取消正在运行的 Task
+        if let task = activeTaskByScriptID[script.id] {
+            task.cancel()
+            activeTaskByScriptID.removeValue(forKey: script.id)
+        }
 
         for segment in script.segments where segment.status == .generating {
             segment.status = .pending
@@ -71,7 +88,14 @@ enum GenerationService {
 
     /// 取消生成（用户点击"取消"按钮）
     static func cancel(script: Script) {
-        for segment in script.segments {
+        // 取消正在运行的 Task
+        if let task = activeTaskByScriptID[script.id] {
+            task.cancel()
+            activeTaskByScriptID.removeValue(forKey: script.id)
+        }
+
+        // 已完成的段落保持 completed，其余回 pending
+        for segment in script.segments where segment.status != .completed {
             segment.status = .pending
         }
         script.status = .draft
@@ -95,24 +119,32 @@ enum GenerationService {
         script.updatedAt = .now
         currentlyGeneratingScriptID = script.id
 
-        Task {
+        let task = Task {
             do {
                 try await generateAllSegments(script: script, voiceInstruct: voiceInstruct)
                 await MainActor.run {
                     script.status = .completed
                     script.updatedAt = .now
                     currentlyGeneratingScriptID = nil
+                    activeTaskByScriptID.removeValue(forKey: script.id)
                     completion?(.success(()))
+                }
+            } catch is CancellationError {
+                await MainActor.run {
+                    currentlyGeneratingScriptID = nil
+                    activeTaskByScriptID.removeValue(forKey: script.id)
                 }
             } catch {
                 await MainActor.run {
                     script.status = .failed
                     script.updatedAt = .now
                     currentlyGeneratingScriptID = nil
+                    activeTaskByScriptID.removeValue(forKey: script.id)
                     completion?(.failure(error))
                 }
             }
         }
+        activeTaskByScriptID[script.id] = task
     }
 
     /// 重试单个段落
@@ -127,24 +159,32 @@ enum GenerationService {
         script.updatedAt = .now
         currentlyGeneratingScriptID = script.id
 
-        Task {
+        let task = Task {
             do {
                 try await generateAllSegments(script: script, voiceInstruct: voiceInstruct)
                 await MainActor.run {
                     script.status = .completed
                     script.updatedAt = .now
                     currentlyGeneratingScriptID = nil
+                    activeTaskByScriptID.removeValue(forKey: script.id)
                     completion?(.success(()))
+                }
+            } catch is CancellationError {
+                await MainActor.run {
+                    currentlyGeneratingScriptID = nil
+                    activeTaskByScriptID.removeValue(forKey: script.id)
                 }
             } catch {
                 await MainActor.run {
                     script.status = .failed
                     script.updatedAt = .now
                     currentlyGeneratingScriptID = nil
+                    activeTaskByScriptID.removeValue(forKey: script.id)
                     completion?(.failure(error))
                 }
             }
         }
+        activeTaskByScriptID[script.id] = task
     }
 
     /// 继续生成（用户点击"继续生成"按钮）
@@ -168,24 +208,32 @@ enum GenerationService {
         script.updatedAt = .now
         currentlyGeneratingScriptID = script.id
 
-        Task {
+        let task = Task {
             do {
                 try await generateAllSegments(script: script, voiceInstruct: voiceInstruct)
                 await MainActor.run {
                     script.status = .completed
                     script.updatedAt = .now
                     currentlyGeneratingScriptID = nil
+                    activeTaskByScriptID.removeValue(forKey: script.id)
                     completion?(.success(()))
+                }
+            } catch is CancellationError {
+                await MainActor.run {
+                    currentlyGeneratingScriptID = nil
+                    activeTaskByScriptID.removeValue(forKey: script.id)
                 }
             } catch {
                 await MainActor.run {
                     script.status = .failed
                     script.updatedAt = .now
                     currentlyGeneratingScriptID = nil
+                    activeTaskByScriptID.removeValue(forKey: script.id)
                     completion?(.failure(error))
                 }
             }
         }
+        activeTaskByScriptID[script.id] = task
     }
 
     // MARK: - Private Implementation
@@ -200,6 +248,9 @@ enum GenerationService {
 
             // 检查是否被暂停或取消
             guard script.status == .generating else { break }
+
+            // 检查 Task 是否被取消（pause/cancel 会调用 task.cancel()）
+            try Task.checkCancellation()
 
             // 标记当前段落为生成中
             await MainActor.run {

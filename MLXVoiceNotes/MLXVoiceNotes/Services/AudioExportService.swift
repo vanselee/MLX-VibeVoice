@@ -34,13 +34,25 @@ enum AudioExportService {
         // 确保导出目录存在
         try FileManager.default.createDirectory(at: exportDirectory, withIntermediateDirectories: true)
 
-        // 获取所有已完成的段落（按顺序）
+        // 收集所有 completed 段落（按顺序）
         let completedSegments = script.segments
-            .filter { $0.status == .completed && $0.generatedAudioPath != nil }
+            .filter { $0.status == .completed }
             .sorted { $0.order < $1.order }
 
         guard !completedSegments.isEmpty else {
             throw AudioExportError.noCompletedSegments
+        }
+
+        // 严格检查：每个 completed 段落必须有音频文件
+        for segment in completedSegments {
+            let segmentIndex = segment.order + 1  // 1-based 显示
+            guard let relativePath = segment.generatedAudioPath else {
+                throw AudioExportError.missingGeneratedAudio(segmentIndex: segmentIndex)
+            }
+            let audioURL = AudioStorageService.absoluteURL(from: relativePath)
+            guard FileManager.default.fileExists(atPath: audioURL.path) else {
+                throw AudioExportError.missingAudioFile(segmentIndex: segmentIndex)
+            }
         }
 
         // 合并所有段落的 PCM samples
@@ -48,23 +60,11 @@ enum AudioExportService {
         var sampleRate: Double = 24000  // 默认 24kHz
 
         for segment in completedSegments {
-            guard let relativePath = segment.generatedAudioPath else { continue }
-
+            let relativePath = segment.generatedAudioPath!
             let audioURL = AudioStorageService.absoluteURL(from: relativePath)
-
-            guard FileManager.default.fileExists(atPath: audioURL.path) else {
-                print("[AudioExportService] Warning: Audio file not found: \(audioURL.path)")
-                continue
-            }
-
-            // 使用 AVAudioFile 读取 PCM samples
-            do {
-                let (samples, sr) = try readPCMSamples(from: audioURL)
-                allSamples.append(contentsOf: samples)
-                sampleRate = sr
-            } catch {
-                print("[AudioExportService] Warning: Failed to read \(audioURL.path): \(error.localizedDescription)")
-            }
+            let (samples, sr) = try readPCMSamples(from: audioURL)
+            allSamples.append(contentsOf: samples)
+            sampleRate = sr
         }
 
         guard !allSamples.isEmpty else {
@@ -149,6 +149,8 @@ enum AudioExportService {
 
 enum AudioExportError: Error, LocalizedError {
     case noCompletedSegments
+    case missingGeneratedAudio(segmentIndex: Int)
+    case missingAudioFile(segmentIndex: Int)
     case emptyAudioData
     case failedToReadAudioFile
     case failedToCreateBuffer
@@ -158,7 +160,11 @@ enum AudioExportError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noCompletedSegments:
-            return "没有已完成的段落"
+            return "没有可导出的已生成音频"
+        case .missingGeneratedAudio(let idx):
+            return "第 \(idx) 段缺少生成音频，请重新生成"
+        case .missingAudioFile(let idx):
+            return "第 \(idx) 段音频文件丢失，请重新生成"
         case .emptyAudioData:
             return "音频数据为空"
         case .failedToReadAudioFile:
