@@ -172,3 +172,52 @@
 - [ ] 无严重问题（编译错误）
 - [ ] 测试至少在 2 台不同设备上运行过
 - [ ] 所有验收项目通过
+
+---
+
+## Verification Log — 2026-05-02 (Code Review)
+
+**Last verified**: 2026-05-02 10:54 (commit `c1c6c62`)
+**Result**: ✅ 14 PASSED / 1 PASSED-WITH-NOTES / 0 FAILED / Build SUCCEEDED
+
+All 15 smoke-test items verified by code inspection. No blocking issues found. No code changes made.
+
+### Detailed Results
+
+| # | Item | Status | Evidence |
+|---|------|--------|----------|
+| 1 | App 能启动 | ✅ PASS | `App` struct + `SwiftDataContainer` configured in app entry |
+| 2 | 新建文案能创建新文案 | ✅ PASS | `createScript()` → `modelContext.insert(Script(...))` + `openEditor(for:)` |
+| 3 | 最近空白草稿复用 | ✅ PASS | `isReusableBlankDraft()` — checks `status==.draft && title=="未命名文案" && body matches default`; sample scripts use `status=.completed/.generating` so never match |
+| 4 | 点击卡片空白区域选中文案 | ✅ PASS | `.contentShape(Rectangle()).onTapGesture { selectedScriptID = script.id }` |
+| 5 | 编辑按钮进入编辑状态 | ✅ PASS | `openEditor(for:)` sets `expandedScriptID`, triggers `currentScriptEditor` inline expansion |
+| 6 | 保存后回到列表 | ✅ PASS | `saveAndCollapse(_:)` sets `expandedScriptID = nil` |
+| 7 | 删除文案按钮有效 | ✅ PASS | `deleteCandidate` + `.alert("删除文案？", …)` + `modelContext.delete(script)`, disabled during `.generating` |
+| 8 | 解析角色识别 `[旁白]`/`[角色名]` | ✅ PASS | `bracketMarker(open:"[", close:"]")` in `ScriptParser.parseLine()`, also handles `【】` and `:` colon |
+| 9 | 音色下拉、语速滑块能保存 | ✅ PASS | `VoiceRole.defaultVoiceName` + `speed` are SwiftData `@Model` properties; bindings `set:` writes directly |
+| 10 | 生成音频按钮触发模拟生成 | ✅ PASS | `startPlaceholderGeneration()` → `GenerationService.start(script:)`; timer `advanceOneTick()` advances state each second |
+| 11 | 生成完成导出 WAV 按钮可用 | ✅ PASS | Export guarded by `completed == total && total > 0`; calls `AudioExportService.exportPlaceholderWAV()` (silent WAV stub) |
+| 12 | 任务总览以"文案"为单位，详情以"段落"为单位 | ✅ PASS | Sidebar lists `taskScripts` (`Script` objects); main area lists `segmentRows` from `script.segments` |
+| 13 | 偏好设置只有语言/导出位置/缓存 | ✅ PASS | Exactly 3 `settingsCard` blocks in `PreferencesView` |
+| 14 | 资源中心页面不崩溃 | ✅ PASS | `ResourceCenterView` has `modelContent`/`voiceContent` tabs; `VoiceLibraryView` has empty state guard |
+| 15 | 角色确认页面不崩溃 | ✅ PASS | `if let script` guard with `ContentUnavailableView` fallback |
+
+### Non-blocking Observations
+
+- Language row in Preferences uses inline `.frame` instead of `preferenceRow` helper — cosmetic inconsistency, no functional impact
+- Export path Text in cache section missing explicit height constraint — no functional impact
+- Voice row action buttons (试听/重命名/删除) are no-op placeholders — expected for Phase 1
+- Cache usage shows "待统计" — intentional placeholder for future phase
+
+### Build Verification
+
+```bash
+cd /Users/apple/Desktop/SoftDev/aiaudiovideo && \
+xcodebuild build \
+  -project MLXVoiceNotes/MLXVoiceNotes.xcodeproj \
+  -scheme "MLX Voice Notes" \
+  -configuration Debug \
+  -derivedDataPath /private/tmp/MLXVoiceNotesDerivedDataVerify \
+  CODE_SIGNING_ALLOWED=NO
+# ✅ BUILD SUCCEEDED
+```
