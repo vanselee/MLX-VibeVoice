@@ -209,6 +209,27 @@ All 15 smoke-test items verified by code inspection. No blocking issues found. N
 - Voice row action buttons (试听/重命名/删除) are no-op placeholders — expected for Phase 1
 - Cache usage shows "待统计" — intentional placeholder for future phase
 
+---
+
+## Verification Log — 2026-05-02 (Phase 0.5 Manual)
+
+**Result**: ✅ Real generation/export loop passed, with voice-control blocker recorded.
+
+| # | Item | Status | Notes |
+|---|------|--------|-------|
+| 1 | 单篇文案生成音频 | ✅ PASS | bf16 真实生成可听音频 |
+| 2 | 多角色/多段生成音频 | ✅ PASS-WITH-NOTES | 可生成多段并导出，但角色绑定音色未真正控制输出音色 |
+| 3 | App 重启后再次导出 | ✅ PASS | 生成音频保存在 Application Support 持久化目录 |
+| 4 | 删除文案后关联音频清理 | ⏳ NOT TESTED | 后续补测：删除 Script 时是否删除 `GeneratedAudio/<scriptID>` |
+| 5 | 失败状态可见 | ✅ PASS | 失败时 UI 能看到状态 |
+
+### Blocking Follow-up
+
+- 角色音色绑定当前只保存 UI 状态，真实生成仍未稳定受控。
+- 绑定音色不能试听。
+- 单音色和多音色输出均可能表现为随机音色。
+- 多音色 MVP 前必须先验证模型层的稳定控制方式：`voice` instruct、`refAudio`/`refText`，或可复用参考音色资产。
+
 ### Build Verification
 
 ```bash
