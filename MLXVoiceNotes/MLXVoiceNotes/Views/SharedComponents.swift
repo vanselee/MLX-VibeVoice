@@ -200,7 +200,21 @@ struct ScriptListRow: View {
     }
 }
 
-private extension ScriptStatus {
+struct StatusBadge: View {
+    let status: ScriptStatus
+
+    var body: some View {
+        Text(status.displayName)
+            .font(.caption.weight(.semibold))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .foregroundStyle(status.foregroundColor)
+            .background(status.backgroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+    }
+}
+
+extension ScriptStatus {
     var displayName: String {
         switch self {
         case .draft: "草稿"
@@ -230,7 +244,7 @@ private extension ScriptStatus {
     }
 }
 
-private extension SegmentStatus {
+extension SegmentStatus {
     var displayName: String {
         switch self {
         case .pending: "等待"
@@ -242,7 +256,7 @@ private extension SegmentStatus {
     }
 }
 
-private extension Date {
+extension Date {
     var relativeLabel: String {
         if Calendar.current.isDateInToday(self) {
             return "今天 " + Self.timeFormatter.string(from: self)
