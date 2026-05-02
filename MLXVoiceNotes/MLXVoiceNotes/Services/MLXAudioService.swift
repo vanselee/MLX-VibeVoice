@@ -25,6 +25,13 @@ let testInstructVoices: [String?] = [
     "中文男声，自然、稳定、适合解说"
 ]
 
+// MARK: - Phase 2 音色可控性验证
+let phase2TestInstructVoices: [String] = [
+    "中文女声，自然、清晰、适合旁白",   // A1
+    "中文男声，自然、稳定、适合解说",   // A2
+    "平淡叙述，语速适中，不带感情色彩"   // A3
+]
+
 class MLXAudioService: ObservableObject {
     @Published var isModelLoaded = false
     @Published var isGenerating = false
@@ -323,6 +330,28 @@ class MLXAudioService: ObservableObject {
             language: "zh"
         )
         return lastDiag
+    }
+
+    /// Phase 2 音色稳定性测试：3 组 voice instruct × 各 3 次生成
+    /// 返回 [(instructLabel, runIndex, diag)]
+    func runInstructVoiceStabilityTests(text: String) async throws -> [(String, Int, AudioDiagInfo)] {
+        var results: [(String, Int, AudioDiagInfo)] = []
+
+        for (index, instruct) in phase2TestInstructVoices.enumerated() {
+            let label = "A\(index + 1)"
+            for run in 1...3 {
+                _ = try await generateAudio(
+                    text: text,
+                    voice: instruct,
+                    language: "zh"
+                )
+                if let diag = lastDiag {
+                    results.append((label, run, diag))
+                    print("[Phase2] \(label) run#\(run): instruct=\"\(instruct)\" → samples=\(diag.sampleCount), maxAbs=\(diag.maxAbs), rms=\(String(format: "%.6f", diag.rms)), dur=\(String(format: "%.2f", diag.durationSec))s")
+                }
+            }
+        }
+        return results
     }
 #endif
 
