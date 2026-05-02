@@ -386,7 +386,15 @@ struct ScriptLibraryView: View {
 
         guard !script.segments.isEmpty else { return }
 
-        GenerationService.start(script: script)
+        // Phase 0.5: 调用真实生成
+        GenerationService.start(script: script, voiceInstruct: nil) { result in
+            switch result {
+            case .success:
+                parseSummary = "生成完成"
+            case .failure(let error):
+                parseSummary = "生成失败：\(error.localizedDescription)"
+            }
+        }
         parseSummary = "已开始生成"
 
         let job = GenerationJob(
@@ -425,7 +433,8 @@ struct ScriptLibraryView: View {
             ? "未命名文案" : script.title)
         let fileName = "\(safeName)_\(Date().fileStamp)"
         do {
-            _ = try AudioExportService.exportPlaceholderWAV(for: script, fileName: fileName)
+            // Phase 0.5: 调用真实导出
+            _ = try AudioExportService.exportRealWAV(for: script, fileName: fileName)
             script.lastExportedAt = .now
             parseSummary = "已导出 WAV"
         } catch {

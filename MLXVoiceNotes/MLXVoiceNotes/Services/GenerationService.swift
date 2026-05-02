@@ -1,97 +1,273 @@
 import Foundation
 
+/// Phase 0.5: 真实音频生成服务
+/// - 点击生成音频时创建 Task，按段串行生成
+/// - 不使用 Timer 调度
+/// - 每段生成完成后保存到 App 持久化目录
 enum GenerationService {
-    static func start(script: Script) {
-        resetSegments(for: script)
-        resume(script: script)
-    }
+    /// 当前正在生成的文案 ID（防止重复启动）
+    static var currentlyGeneratingScriptID: UUID?
 
-    static func resume(script: Script) {
-        let orderedSegments = script.segments.sorted { $0.order < $1.order }
-        guard !orderedSegments.isEmpty else {
-            script.status = .ready
-            script.updatedAt = .now
+    /// MLX 音频服务实例（共享）
+    static var mlxService = MLXAudioService()
+
+    // MARK: - Public API
+
+    /// 开始生成（用户点击"生成音频"按钮时调用）
+    /// - Parameters:
+    ///   - script: 要生成的文案
+    ///   - voiceInstruct: 可选的 voice instruct 文本（如 "中文女声，自然、清晰、适合旁白"）
+    ///   - completion: 生成完成回调（成功或失败）
+    static func start(script: Script, voiceInstruct: String? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
+        // 防止重复启动
+        guard currentlyGeneratingScriptID == nil else {
+            completion?(.failure(GenerationError.alreadyGenerating))
             return
         }
 
-        if script.status == .completed {
-            orderedSegments.forEach { $0.status = .pending }
+        guard script.status != .generating else {
+            completion?(.failure(GenerationError.alreadyGenerating))
+            return
         }
 
-        if let nextSegment = orderedSegments.first(where: { $0.status == .pending }) {
-            nextSegment.status = .generating
-            script.status = .generating
-        } else if orderedSegments.allSatisfy({ $0.status == .completed }) {
-            script.status = .completed
-        } else {
-            script.status = .ready
-        }
+        // 重置所有段落状态
+        resetSegments(for: script)
+        script.status = .generating
         script.updatedAt = .now
+        currentlyGeneratingScriptID = script.id
+
+        // 创建后台 Task 串行生成
+        Task {
+            do {
+                try await generateAllSegments(script: script, voiceInstruct: voiceInstruct)
+                await MainActor.run {
+                    script.status = .completed
+                    script.updatedAt = .now
+                    currentlyGeneratingScriptID = nil
+                    completion?(.success(()))
+                }
+            } catch {
+                await MainActor.run {
+                    script.status = .failed
+                    script.updatedAt = .now
+                    currentlyGeneratingScriptID = nil
+                    completion?(.failure(error))
+                }
+            }
+        }
     }
 
+    /// 暂停生成（用户点击"暂停"按钮）
     static func pause(script: Script) {
+        guard script.status == .generating else { return }
+
         for segment in script.segments where segment.status == .generating {
             segment.status = .pending
         }
         script.status = .ready
         script.updatedAt = .now
+        currentlyGeneratingScriptID = nil
     }
 
+    /// 取消生成（用户点击"取消"按钮）
     static func cancel(script: Script) {
         for segment in script.segments {
             segment.status = .pending
         }
         script.status = .draft
         script.updatedAt = .now
+        currentlyGeneratingScriptID = nil
     }
 
-    static func retryFailedSegments(script: Script) {
+    /// 重试失败段落
+    static func retryFailedSegments(script: Script, voiceInstruct: String? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
+        guard currentlyGeneratingScriptID == nil else {
+            completion?(.failure(GenerationError.alreadyGenerating))
+            return
+        }
+
+        // 只重置失败段落
         for segment in script.segments where segment.status == .failed {
             segment.status = .pending
         }
-        resume(script: script)
-    }
 
-    static func retry(segment: ScriptSegment, in script: Script) {
-        segment.status = .pending
-        resume(script: script)
-    }
-
-    static func advanceOneTick(in scripts: [Script]) {
-        guard let script = scripts
-            .filter({ $0.status == .generating })
-            .sorted(by: { $0.updatedAt < $1.updatedAt })
-            .first
-        else {
-            return
-        }
-
-        let orderedSegments = script.segments.sorted { $0.order < $1.order }
-        guard !orderedSegments.isEmpty else {
-            script.status = .ready
-            script.updatedAt = .now
-            return
-        }
-
-        if let generatingSegment = orderedSegments.first(where: { $0.status == .generating }) {
-            generatingSegment.status = .completed
-        }
-
-        if let nextSegment = orderedSegments.first(where: { $0.status == .pending }) {
-            nextSegment.status = .generating
-        } else if orderedSegments.allSatisfy({ $0.status == .completed }) {
-            script.status = .completed
-        } else if orderedSegments.contains(where: { $0.status == .failed }) {
-            script.status = .failed
-        } else {
-            script.status = .ready
-        }
+        script.status = .generating
         script.updatedAt = .now
+        currentlyGeneratingScriptID = script.id
+
+        Task {
+            do {
+                try await generateAllSegments(script: script, voiceInstruct: voiceInstruct)
+                await MainActor.run {
+                    script.status = .completed
+                    script.updatedAt = .now
+                    currentlyGeneratingScriptID = nil
+                    completion?(.success(()))
+                }
+            } catch {
+                await MainActor.run {
+                    script.status = .failed
+                    script.updatedAt = .now
+                    currentlyGeneratingScriptID = nil
+                    completion?(.failure(error))
+                }
+            }
+        }
+    }
+
+    /// 重试单个段落
+    static func retry(segment: ScriptSegment, in script: Script, voiceInstruct: String? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
+        guard currentlyGeneratingScriptID == nil else {
+            completion?(.failure(GenerationError.alreadyGenerating))
+            return
+        }
+
+        segment.status = .pending
+        script.status = .generating
+        script.updatedAt = .now
+        currentlyGeneratingScriptID = script.id
+
+        Task {
+            do {
+                try await generateAllSegments(script: script, voiceInstruct: voiceInstruct)
+                await MainActor.run {
+                    script.status = .completed
+                    script.updatedAt = .now
+                    currentlyGeneratingScriptID = nil
+                    completion?(.success(()))
+                }
+            } catch {
+                await MainActor.run {
+                    script.status = .failed
+                    script.updatedAt = .now
+                    currentlyGeneratingScriptID = nil
+                    completion?(.failure(error))
+                }
+            }
+        }
+    }
+
+    /// 继续生成（用户点击"继续生成"按钮）
+    static func resume(script: Script, voiceInstruct: String? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
+        guard currentlyGeneratingScriptID == nil else {
+            completion?(.failure(GenerationError.alreadyGenerating))
+            return
+        }
+
+        let pendingSegments = script.segments.filter { $0.status == .pending }
+        guard !pendingSegments.isEmpty else {
+            // 没有待生成段落，检查是否全部完成
+            if script.segments.allSatisfy({ $0.status == .completed }) {
+                script.status = .completed
+            }
+            completion?(.success(()))
+            return
+        }
+
+        script.status = .generating
+        script.updatedAt = .now
+        currentlyGeneratingScriptID = script.id
+
+        Task {
+            do {
+                try await generateAllSegments(script: script, voiceInstruct: voiceInstruct)
+                await MainActor.run {
+                    script.status = .completed
+                    script.updatedAt = .now
+                    currentlyGeneratingScriptID = nil
+                    completion?(.success(()))
+                }
+            } catch {
+                await MainActor.run {
+                    script.status = .failed
+                    script.updatedAt = .now
+                    currentlyGeneratingScriptID = nil
+                    completion?(.failure(error))
+                }
+            }
+        }
+    }
+
+    // MARK: - Private Implementation
+
+    /// 串行生成所有待生成段落
+    private static func generateAllSegments(script: Script, voiceInstruct: String?) async throws {
+        let orderedSegments = script.segments.sorted { $0.order < $1.order }
+
+        for segment in orderedSegments {
+            // 检查段落状态
+            guard segment.status == .pending else { continue }
+
+            // 检查是否被暂停或取消
+            guard script.status == .generating else { break }
+
+            // 标记当前段落为生成中
+            await MainActor.run {
+                segment.status = .generating
+                script.updatedAt = .now
+            }
+
+            do {
+                // 调用 MLXAudioService 生成音频
+                let tempURL = try await mlxService.generateAudio(
+                    text: segment.text,
+                    voice: voiceInstruct,
+                    language: "zh"
+                )
+
+                // 复制到持久化目录
+                let persistentURL = try AudioStorageService.persistAudioFile(
+                    tempURL: tempURL,
+                    for: script.id,
+                    segmentID: segment.id
+                )
+
+                // 保存相对路径到段落
+                let relativePath = AudioStorageService.relativePath(from: persistentURL)
+
+                await MainActor.run {
+                    segment.generatedAudioPath = relativePath
+                    segment.status = .completed
+                    script.updatedAt = .now
+                }
+
+                // 删除临时文件
+                try? FileManager.default.removeItem(at: tempURL)
+
+            } catch {
+                await MainActor.run {
+                    segment.status = .failed
+                    script.updatedAt = .now
+                }
+                // 继续生成下一个段落（不抛出错误，允许部分失败）
+                print("[GenerationService] Segment \(segment.order) failed: \(error.localizedDescription)")
+            }
+        }
     }
 
     private static func resetSegments(for script: Script) {
         for segment in script.segments {
             segment.status = .pending
+            segment.generatedAudioPath = nil
+        }
+    }
+}
+
+// MARK: - Errors
+
+enum GenerationError: Error, LocalizedError {
+    case alreadyGenerating
+    case noPendingSegments
+    case audioGenerationFailed(Error)
+
+    var errorDescription: String? {
+        switch self {
+        case .alreadyGenerating:
+            return "已有文案正在生成中"
+        case .noPendingSegments:
+            return "没有待生成的段落"
+        case .audioGenerationFailed(let error):
+            return "音频生成失败：\(error.localizedDescription)"
         }
     }
 }

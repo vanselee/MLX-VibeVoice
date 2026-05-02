@@ -26,6 +26,7 @@
 		1A000001000000000000010E /* Views/PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001E /* Views/PreferencesView.swift */; };
 		1A000001000000000000010F /* Views/CreateVoiceProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001F /* Views/CreateVoiceProfileView.swift */; };
 		1A0000010000000000000111 /* Views/MLXTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000021 /* Views/MLXTestView.swift */; };
+		4F8542AB8AF47E7DCC7F01CD /* AudioStorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11F437995C019926039FB93 /* AudioStorageService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +47,7 @@
 		1A000001000000000000001E /* Views/PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/PreferencesView.swift; sourceTree = "<group>"; };
 		1A000001000000000000001F /* Views/CreateVoiceProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/CreateVoiceProfileView.swift; sourceTree = "<group>"; };
 		1A0000010000000000000021 /* Views/MLXTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/MLXTestView.swift; sourceTree = "<group>"; };
+		E11F437995C019926039FB93 /* AudioStorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioStorageService.swift; path = MLXVoiceNotes/Services/AudioStorageService.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +69,7 @@
 			children = (
 				1A0000010000000000000031 /* MLXVoiceNotes */,
 				1A0000010000000000000032 /* Products */,
+				E11F437995C019926039FB93 /* AudioStorageService.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -136,7 +139,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 1A0000010000000000000090 /* Build configuration list for PBXProject "MLXVoiceNotes" */;
+			buildConfigurationList = 1A0000010000000000000090 /* Build configuration list for PBXProject "MLX Voice Notes" */;
 			compatibilityVersion = "Xcode 15.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -189,6 +192,7 @@
 				1A000001000000000000010E /* Views/PreferencesView.swift in Sources */,
 				1A000001000000000000010F /* Views/CreateVoiceProfileView.swift in Sources */,
 				1A0000010000000000000111 /* Views/MLXTestView.swift in Sources */,
+				4F8542AB8AF47E7DCC7F01CD /* AudioStorageService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -369,7 +373,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1A0000010000000000000090 /* Build configuration list for PBXProject "MLXVoiceNotes" */ = {
+		1A0000010000000000000090 /* Build configuration list for PBXProject "MLX Voice Notes" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1A00000100000000000000A0 /* Debug */,

@@ -1,10 +1,15 @@
 import Foundation
+import AVFoundation
 
 struct AudioExportResult {
     let fileURL: URL
 }
 
+/// Phase 0.5: 真实音频导出服务
+/// - 合并所有段落的 WAV 文件（读取 PCM samples，合并后写新 WAV）
+/// - 不简单拼接 WAV 字节（WAV 有 header）
 enum AudioExportService {
+    /// 导出目录（用户偏好设置）
     static var exportDirectory: URL {
         if let customPath = UserDefaults.standard.string(forKey: "defaultExportDirectory"), !customPath.isEmpty {
             return URL(fileURLWithPath: customPath)
@@ -14,10 +19,66 @@ enum AudioExportService {
             .appendingPathComponent("MLX Voice Notes Exports", isDirectory: true)
     }
 
+    /// 默认导出目录
     static let defaultExportDirectory = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Downloads", isDirectory: true)
         .appendingPathComponent("MLX Voice Notes Exports", isDirectory: true)
 
+    /// 导出真实 WAV（合并所有段落音频）
+    /// - Parameters:
+    ///   - script: 文案
+    ///   - fileName: 输出文件名（不含扩展名）
+    /// - Returns: 导出结果
+    /// - Throws: 文件操作错误
+    static func exportRealWAV(for script: Script, fileName: String) throws -> AudioExportResult {
+        // 确保导出目录存在
+        try FileManager.default.createDirectory(at: exportDirectory, withIntermediateDirectories: true)
+
+        // 获取所有已完成的段落（按顺序）
+        let completedSegments = script.segments
+            .filter { $0.status == .completed && $0.generatedAudioPath != nil }
+            .sorted { $0.order < $1.order }
+
+        guard !completedSegments.isEmpty else {
+            throw AudioExportError.noCompletedSegments
+        }
+
+        // 合并所有段落的 PCM samples
+        var allSamples: [Float] = []
+        var sampleRate: Double = 24000  // 默认 24kHz
+
+        for segment in completedSegments {
+            guard let relativePath = segment.generatedAudioPath else { continue }
+
+            let audioURL = AudioStorageService.absoluteURL(from: relativePath)
+
+            guard FileManager.default.fileExists(atPath: audioURL.path) else {
+                print("[AudioExportService] Warning: Audio file not found: \(audioURL.path)")
+                continue
+            }
+
+            // 使用 AVAudioFile 读取 PCM samples
+            do {
+                let (samples, sr) = try readPCMSamples(from: audioURL)
+                allSamples.append(contentsOf: samples)
+                sampleRate = sr
+            } catch {
+                print("[AudioExportService] Warning: Failed to read \(audioURL.path): \(error.localizedDescription)")
+            }
+        }
+
+        guard !allSamples.isEmpty else {
+            throw AudioExportError.emptyAudioData
+        }
+
+        // 写入合并后的 WAV 文件
+        let outputURL = exportDirectory.appendingPathComponent("\(fileName).wav")
+        try writeWAVFile(samples: allSamples, sampleRate: Int(sampleRate), to: outputURL)
+
+        return AudioExportResult(fileURL: outputURL)
+    }
+
+    /// 占位 WAV 导出（Phase 0 兼容，生成静音 WAV）
     static func exportPlaceholderWAV(for script: Script, fileName: String) throws -> AudioExportResult {
         try FileManager.default.createDirectory(at: exportDirectory, withIntermediateDirectories: true)
         let fileURL = exportDirectory.appendingPathComponent("\(fileName).wav")
@@ -26,7 +87,93 @@ enum AudioExportService {
         try wavData.write(to: fileURL, options: .atomic)
         return AudioExportResult(fileURL: fileURL)
     }
+
+    // MARK: - Private Helpers
+
+    /// 使用 AVAudioFile 读取 PCM samples
+    /// - Parameter url: WAV 文件 URL
+    /// - Returns: (samples, sampleRate)
+    private static func readPCMSamples(from url: URL) throws -> ([Float], Double) {
+        guard let audioFile = try? AVAudioFile(forReading: url) else {
+            throw AudioExportError.failedToReadAudioFile
+        }
+
+        let format = audioFile.processingFormat
+        let frameCount = UInt32(audioFile.length)
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+            throw AudioExportError.failedToCreateBuffer
+        }
+
+        try audioFile.read(into: buffer)
+
+        // 提取 Float samples（假设 mono）
+        guard let channelData = buffer.floatChannelData else {
+            throw AudioExportError.noChannelData
+        }
+
+        let samples = Array(UnsafeBufferPointer(start: channelData[0], count: Int(buffer.frameLength)))
+        return (samples, format.sampleRate)
+    }
+
+    /// 写入 WAV 文件（使用 AVAudioFile）
+    /// - Parameters:
+    ///   - samples: PCM samples
+    ///   - sampleRate: 采样率
+    ///   - url: 输出 URL
+    private static func writeWAVFile(samples: [Float], sampleRate: Int, to url: URL) throws {
+        let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: Double(sampleRate), channels: 1, interleaved: false)!
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: UInt32(samples.count)) else {
+            throw AudioExportError.failedToCreateBuffer
+        }
+
+        buffer.frameLength = UInt32(samples.count)
+        guard let channelData = buffer.floatChannelData else {
+            throw AudioExportError.noChannelData
+        }
+
+        // 复制 samples 到 buffer
+        for (i, sample) in samples.enumerated() {
+            channelData[0][i] = sample
+        }
+
+        // 写入文件
+        guard let outputFile = try? AVAudioFile(forWriting: url, settings: format.settings, commonFormat: format.commonFormat, interleaved: false) else {
+            throw AudioExportError.failedToWriteAudioFile
+        }
+
+        try outputFile.write(from: buffer)
+    }
 }
+
+// MARK: - Errors
+
+enum AudioExportError: Error, LocalizedError {
+    case noCompletedSegments
+    case emptyAudioData
+    case failedToReadAudioFile
+    case failedToCreateBuffer
+    case noChannelData
+    case failedToWriteAudioFile
+
+    var errorDescription: String? {
+        switch self {
+        case .noCompletedSegments:
+            return "没有已完成的段落"
+        case .emptyAudioData:
+            return "音频数据为空"
+        case .failedToReadAudioFile:
+            return "无法读取音频文件"
+        case .failedToCreateBuffer:
+            return "无法创建音频缓冲区"
+        case .noChannelData:
+            return "音频无通道数据"
+        case .failedToWriteAudioFile:
+            return "无法写入音频文件"
+        }
+    }
+}
+
+// MARK: - Silent WAV Factory (Phase 0 兼容)
 
 private enum SilentWAVFactory {
     static func make(duration: Double, sampleRate: Int = 24_000) -> Data {

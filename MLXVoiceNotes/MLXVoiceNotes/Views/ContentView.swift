@@ -51,9 +51,8 @@ struct ContentView: View {
                 selectedScriptID = scriptIDs.first
             }
         }
-        .onReceive(Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()) { _ in
-            GenerationService.advanceOneTick(in: scripts)
-        }
+        // Phase 0.5: 移除 Timer 调度，改为 Task 串行生成
+        // 不再调用 GenerationService.advanceOneTick
     }
 
     @ViewBuilder

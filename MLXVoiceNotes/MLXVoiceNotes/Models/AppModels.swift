@@ -119,6 +119,7 @@ final class ScriptSegment {
     var roleName: String
     var status: SegmentStatus
     var selectedVersion: Int
+    var generatedAudioPath: String?  // Phase 0.5: 生成的音频文件路径（相对路径，位于 App GeneratedAudio 目录）
     var script: Script?
 
     init(
@@ -128,6 +129,7 @@ final class ScriptSegment {
         roleName: String = "旁白",
         status: SegmentStatus = .pending,
         selectedVersion: Int = 1,
+        generatedAudioPath: String? = nil,
         script: Script? = nil
     ) {
         self.id = id
@@ -136,6 +138,7 @@ final class ScriptSegment {
         self.roleName = roleName
         self.status = status
         self.selectedVersion = selectedVersion
+        self.generatedAudioPath = generatedAudioPath
         self.script = script
     }
 }
