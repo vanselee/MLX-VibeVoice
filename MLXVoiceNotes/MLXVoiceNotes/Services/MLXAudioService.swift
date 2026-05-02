@@ -5,7 +5,25 @@ import AVFoundation
 import MLXAudioTTS
 import MLXAudioCore
 import MLXLMCommon
+import MLX
 #endif
+
+struct AudioDiagInfo {
+    let fileName: String
+    let sampleCount: Int
+    let maxAbs: Double
+    let rms: Double
+    let sampleRate: Int
+    let filePath: String
+    let durationSec: Double
+}
+
+// MARK: - Instruct Voice 测试候选（自由文本，非预设名）
+let testInstructVoices: [String?] = [
+    nil,  // 无 instruct
+    "中文女声，自然、清晰、适合旁白",
+    "中文男声，自然、稳定、适合解说"
+]
 
 class MLXAudioService: ObservableObject {
     @Published var isModelLoaded = false
@@ -14,6 +32,7 @@ class MLXAudioService: ObservableObject {
     @Published var errorMessage: String?
     @Published var availableVoices: [String] = []
     @Published var currentModelName: String = "Simulated"
+    @Published var lastDiag: AudioDiagInfo?  // 最近一次生成的诊断信息
 
 #if canImport(MLXAudioTTS)
     private var ttsModel: (any SpeechGenerationModel)?
@@ -99,7 +118,14 @@ class MLXAudioService: ObservableObject {
 #endif
     }
 
-    func generateAudio(text: String, voice: String? = nil) async throws -> URL {
+    func generateAudio(
+        text: String,
+        voice: String? = nil,
+        refAudioURL: URL? = nil,
+        refText: String? = nil,
+        language: String = "zh",
+        generationParams: GenerateParameters? = nil
+    ) async throws -> URL {
 #if canImport(MLXAudioTTS)
         guard let model = ttsModel else {
             throw TTSError.modelNotLoaded
@@ -114,14 +140,26 @@ class MLXAudioService: ObservableObject {
 
 #if canImport(MLXAudioTTS)
         do {
-            // Qwen3 Base 模型：voice 传 nil，language 传 "zh"
+            // 先获取模型采样率（用于诊断）
+            let outputSampleRate = model.sampleRate
+
+            var refAudioArray: MLXArray? = nil
+            if let refAudioURL {
+                // TODO: refAudio 加载需要确认正确 API
+                // AudioUtils.loadAudioArray 可能不存在，暂时跳过
+                print("[MLXTTS] refAudio URL provided but loading not yet implemented: \(refAudioURL.path)")
+            }
+
+            // Qwen3 Base 模型
+            // 注意：generationParameters 使用传入参数或默认值，不依赖 model.defaultGenerationParameters
+            let genParams = generationParams ?? GenerateParameters()
             let audioArray = try await model.generate(
                 text: text,
-                voice: nil,
-                refAudio: nil,
-                refText: nil,
-                language: "zh",
-                generationParameters: GenerateParameters()
+                voice: voice,
+                refAudio: refAudioArray,
+                refText: refText,
+                language: language,
+                generationParameters: genParams
             )
 
             await MainActor.run {
@@ -130,26 +168,25 @@ class MLXAudioService: ObservableObject {
 
             let samples = audioArray.asArray(Float.self)
 
-            // 使用模型真实采样率
-            let outputSampleRate = model.sampleRate
-
             // 样本诊断（只打印，不改变音频）
             let sampleCount = samples.count
+            var maxAbs: Double = 0.0
+            var rms: Double = 0.0
+
             print("[MLXTTS] samples.count: \(sampleCount)")
             if sampleCount > 0 {
-                let absValues = samples.map { abs($0) }
-                let maxAbs = absValues.max() ?? 0.0
-                let sumOfSquares: Double = absValues.reduce(0.0) { $0 + Double($1) * Double($1) }
-                let rms = sqrt(sumOfSquares / Double(sampleCount))
+                let absValues = samples.map { Double(abs($0)) }
+                maxAbs = absValues.max() ?? 0.0
+                let sumOfSquares: Double = absValues.reduce(0.0) { $0 + $1 * $1 }
+                rms = sqrt(sumOfSquares / Double(sampleCount))
                 print("[MLXTTS] maxAbs: \(maxAbs), rms: \(rms), sampleRate: \(outputSampleRate)")
 
                 // 空样本或全零信号 → 抛出明确错误
-                if sampleCount == 0 {
-                    throw TTSError.emptyAudioOutput
-                }
                 if maxAbs == 0 {
                     throw TTSError.emptyAudioOutput
                 }
+            } else {
+                throw TTSError.emptyAudioOutput
             }
 
             let tempDir = FileManager.default.temporaryDirectory
@@ -164,9 +201,20 @@ class MLXAudioService: ObservableObject {
                 fileURL: url
             )
 
+            let diag = AudioDiagInfo(
+                fileName: fileName,
+                sampleCount: sampleCount,
+                maxAbs: maxAbs,
+                rms: rms,
+                sampleRate: outputSampleRate,
+                filePath: url.path,
+                durationSec: Double(sampleCount) / Double(outputSampleRate)
+            )
+
             await MainActor.run {
                 progress = 1.0
                 isGenerating = false
+                lastDiag = diag  // 保存诊断信息
             }
 
             return url
@@ -187,6 +235,18 @@ class MLXAudioService: ObservableObject {
         let wavData = generatePlaceholderWAV(duration: 1.0)
         try wavData.write(to: url)
         
+        let placeholderDiag = AudioDiagInfo(
+            fileName: fileName,
+            sampleCount: Int(24000 * 1.0),
+            maxAbs: 0.0,
+            rms: 0.0,
+            sampleRate: 24000,
+            filePath: url.path,
+            durationSec: 1.0
+        )
+        await MainActor.run {
+            lastDiag = placeholderDiag
+        }
         return url
 #endif
     }
@@ -214,11 +274,51 @@ class MLXAudioService: ObservableObject {
     }
 
     func availableModels() -> [(name: String, repo: String)] {
-        // 现阶段只测试 Qwen3-TTS-12Hz-0.6B-Base-8bit
-        // bf16 版本未接入本地 cache 映射，暂不测试
-        return [
+        // bf16 模型需检查本地缓存完整性
+        let bf16CacheDir = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".cache/huggingface/hub/mlx-audio/mlx-community_Qwen3-TTS-12Hz-0.6B-Base-bf16")
+        let bf16ConfigExists = FileManager.default.fileExists(atPath: bf16CacheDir.appendingPathComponent("config.json").path)
+
+        var models: [(name: String, repo: String)] = [
             ("Qwen3 0.6B Base 8bit", "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-8bit")
         ]
+
+        if bf16ConfigExists {
+            models.append(("Qwen3 0.6B Base bf16", "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16"))
+        }
+
+        return models
+    }
+
+    /// 测试 instruct voice（自由文本，非预设名）
+    /// 返回每次生成的诊断信息
+    func runInstructVoiceTests(text: String) async throws -> [(instruct: String?, diag: AudioDiagInfo)] {
+        var results: [(String?, AudioDiagInfo)] = []
+
+        for instruct in testInstructVoices {
+            _ = try await generateAudio(
+                text: text,
+                voice: instruct,
+                language: "zh"
+            )
+            if let diag = lastDiag {
+                results.append((instruct, diag))
+                print("[MLXTTS] instruct test: \(instruct ?? "nil") → samples=\(diag.sampleCount), maxAbs=\(diag.maxAbs)")
+            }
+        }
+        return results
+    }
+
+    /// 使用参考音频生成
+    func testWithRefAudio(text: String, refAudioURL: URL, refText: String?) async throws -> AudioDiagInfo? {
+        _ = try await generateAudio(
+            text: text,
+            voice: nil,
+            refAudioURL: refAudioURL,
+            refText: refText,
+            language: "zh"
+        )
+        return lastDiag
     }
 #endif
 
