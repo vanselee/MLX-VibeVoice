@@ -183,7 +183,7 @@ struct TaskQueueView: View {
 }
 
 #Preview {
-    TaskQueueView(scripts: .constant([]), selectedScriptID: .constant(nil))
+    TaskQueueView(scripts: [], selectedScriptID: .constant(nil))
         .modelContainer(for: [
             Script.self,
             ScriptSegment.self,

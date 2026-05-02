@@ -644,7 +644,7 @@ struct ScriptLibraryView: View {
 
 #Preview {
     ScriptLibraryView(
-        scripts: .constant([]),
+        scripts: [],
         selectedScriptID: .constant(nil),
         selectedPage: .constant(.scriptLibrary)
     )

@@ -14,6 +14,15 @@
 		1A0000010000000000000005 /* ScriptParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000015 /* ScriptParser.swift */; };
 		1A0000010000000000000006 /* GenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000016 /* GenerationService.swift */; };
 		1A0000010000000000000007 /* AudioExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000017 /* AudioExportService.swift */; };
+		1A0000010000000000000108 /* MLXAudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000018 /* MLXAudioService.swift */; };
+		1A0000010000000000000109 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000019 /* SharedComponents.swift */; };
+		1A000001000000000000010A /* ScriptLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001A /* ScriptLibraryView.swift */; };
+		1A000001000000000000010B /* RoleReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001B /* RoleReviewView.swift */; };
+		1A000001000000000000010C /* ResourceCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001C /* ResourceCenterView.swift */; };
+		1A000001000000000000010D /* TaskQueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001D /* TaskQueueView.swift */; };
+		1A000001000000000000010E /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001E /* PreferencesView.swift */; };
+		1A000001000000000000010F /* CreateVoiceProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000001000000000000001F /* CreateVoiceProfileView.swift */; };
+		1A0000010000000000000111 /* MLXTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000021 /* MLXTestView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +34,15 @@
 		1A0000010000000000000015 /* ScriptParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ScriptParser.swift; sourceTree = "<group>"; };
 		1A0000010000000000000016 /* GenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/GenerationService.swift; sourceTree = "<group>"; };
 		1A0000010000000000000017 /* AudioExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AudioExportService.swift; sourceTree = "<group>"; };
+		1A0000010000000000000018 /* MLXAudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/MLXAudioService.swift; sourceTree = "<group>"; };
+		1A0000010000000000000019 /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SharedComponents.swift; sourceTree = "<group>"; };
+		1A000001000000000000001A /* ScriptLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ScriptLibraryView.swift; sourceTree = "<group>"; };
+		1A000001000000000000001B /* RoleReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/RoleReviewView.swift; sourceTree = "<group>"; };
+		1A000001000000000000001C /* ResourceCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ResourceCenterView.swift; sourceTree = "<group>"; };
+		1A000001000000000000001D /* TaskQueueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/TaskQueueView.swift; sourceTree = "<group>"; };
+		1A000001000000000000001E /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/PreferencesView.swift; sourceTree = "<group>"; };
+		1A000001000000000000001F /* CreateVoiceProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/CreateVoiceProfileView.swift; sourceTree = "<group>"; };
+		1A0000010000000000000021 /* MLXTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/MLXTestView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +73,15 @@
 				1A0000010000000000000015 /* ScriptParser.swift */,
 				1A0000010000000000000016 /* GenerationService.swift */,
 				1A0000010000000000000017 /* AudioExportService.swift */,
+				1A0000010000000000000018 /* MLXAudioService.swift */,
+				1A0000010000000000000019 /* SharedComponents.swift */,
+				1A000001000000000000001A /* ScriptLibraryView.swift */,
+				1A000001000000000000001B /* RoleReviewView.swift */,
+				1A000001000000000000001C /* ResourceCenterView.swift */,
+				1A000001000000000000001D /* TaskQueueView.swift */,
+				1A000001000000000000001E /* PreferencesView.swift */,
+				1A000001000000000000001F /* CreateVoiceProfileView.swift */,
+				1A0000010000000000000021 /* MLXTestView.swift */,
 				1A0000010000000000000014 /* Assets.xcassets */,
 			);
 			path = MLXVoiceNotes;
@@ -144,6 +171,15 @@
 				1A0000010000000000000005 /* ScriptParser.swift in Sources */,
 				1A0000010000000000000006 /* GenerationService.swift in Sources */,
 				1A0000010000000000000007 /* AudioExportService.swift in Sources */,
+				1A0000010000000000000108 /* MLXAudioService.swift in Sources */,
+				1A0000010000000000000109 /* SharedComponents.swift in Sources */,
+				1A000001000000000000010A /* ScriptLibraryView.swift in Sources */,
+				1A000001000000000000010B /* RoleReviewView.swift in Sources */,
+				1A000001000000000000010C /* ResourceCenterView.swift in Sources */,
+				1A000001000000000000010D /* TaskQueueView.swift in Sources */,
+				1A000001000000000000010E /* PreferencesView.swift in Sources */,
+				1A000001000000000000010F /* CreateVoiceProfileView.swift in Sources */,
+				1A0000010000000000000111 /* MLXTestView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
