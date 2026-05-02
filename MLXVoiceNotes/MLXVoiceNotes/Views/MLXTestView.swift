@@ -8,8 +8,9 @@ struct MLXTestView: View {
     @State private var audioPlayer: AVAudioPlayer?
     @State private var isPlaying: Bool = false
     @State private var generatedURL: URL?
+#if canImport(MLXAudioTTS)
     @State private var showModelPicker: Bool = false
-    @State private var selectedModel: String = "Soprano-80M"
+#endif
 
     var body: some View {
         VStack(spacing: 16) {
@@ -33,6 +34,7 @@ struct MLXTestView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("Phase 0: MLX TTS Test").font(.title2).fontWeight(.bold)
+#if canImport(MLXAudioTTS)
                 Spacer()
                 Button(action: { showModelPicker.toggle() }) {
                     HStack(spacing: 4) {
@@ -48,6 +50,7 @@ struct MLXTestView: View {
                 .popover(isPresented: $showModelPicker) {
                     modelPickerPopover
                 }
+#endif
             }
             HStack(spacing: 12) {
                 StatusBadgeText(
@@ -62,6 +65,7 @@ struct MLXTestView: View {
         }
     }
 
+#if canImport(MLXAudioTTS)
     private var modelPickerPopover: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Select Model").font(.headline)
@@ -69,7 +73,6 @@ struct MLXTestView: View {
                 Button(action: {
                     Task {
                         await mlxService.switchModel(model.name, modelRepo: model.repo)
-                        selectedModel = model.name
                     }
                     showModelPicker = false
                 }) {
@@ -88,6 +91,7 @@ struct MLXTestView: View {
         .padding()
         .frame(width: 250)
     }
+#endif
 
     private var formSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -104,7 +108,7 @@ struct MLXTestView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(mlxService.isGenerating || !mlxService.isModelLoaded)
+                .disabled(mlxService.isGenerating)
 
                 if mlxService.isGenerating {
                     ProgressView(value: mlxService.progress)
@@ -145,10 +149,10 @@ struct MLXTestView: View {
                 }
                 Spacer()
                 Button("Copy to Clipboard") {
-                    #if os(macOS)
+#if os(macOS)
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.writeObjects([url as NSURL])
-                    #endif
+#endif
                 }
             }
         }
@@ -163,6 +167,11 @@ struct MLXTestView: View {
             HStack(spacing: 16) {
                 Label("Sample Rate: 24kHz", systemImage: "waveform")
                 Label("Format: WAV", systemImage: "doc")
+#if canImport(MLXAudioTTS)
+                Label("MLX Engine Available", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+#else
+                Label("MLX Engine Unavailable (Simulated)", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+#endif
             }
             .font(.caption2)
             .foregroundStyle(.secondary)
