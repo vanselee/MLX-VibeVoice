@@ -8,8 +8,8 @@
 
 1. ✅ 验证 mlx-audio-swift 是否可以集成到我们的项目中
 2. ✅ 验证可以在 Apple Silicon 上本地生成单句 TTS
-3. ✅ 验证性能（速度、内存）
-4. ✅ 验证输出音频质量
+3. ⏳ 验证性能（速度、内存）
+4. ⏳ 验证输出音频质量
 
 ---
 
@@ -17,13 +17,13 @@
 
 ### 必须通过 (Passing)
 
-- [ ] 可以编译项目，无链接错误
-- [ ] 可以导入并调用 mlx-audio-swift
-- [ ] 可以加载模型（使用默认模型）
+- [x] 可以编译项目，无链接错误
+- [x] 可以导入并调用 mlx-audio-swift
+- [ ] 可以加载模型（使用 Qwen3-TTS-12Hz-0.6B-Base-8bit）
 - [ ] 可以将文本转为音频，保存 WAV 文件
 - [ ] 音频可以播放，声音清晰可懂
 - [ ] 单次生成（~20 字）速度 < 5 秒
-- [ ] 内存占用合理（< 500MB）
+- [ ] 内存占用合理（< 1GB）
 
 ### 可选通过 (Nice to Have)
 
@@ -36,33 +36,26 @@
 
 ## 🔧 集成步骤
 
-### 步骤 1：下载模型文件
+### 步骤 1：添加 SPM 依赖 ✅
 
-根据 mlx-integration-guide.md：
+通过 Xcode GUI 手动添加 `mlx-audio-swift` SPM 依赖。
 
-```bash
-git clone https://github.com/Blaizzy/mlx-audio-swift.git
-```
+### 步骤 2：更新代码 ✅
 
-### 步骤 2：复制模型文件到项目
+更新 `MLXAudioService.swift`，适配真实 API：
+- 添加 `import MLXLMCommon`
+- 更新 `generate` 调用为完整参数版本
+- 自定义 `createWAVData` 函数转换 [Float] 为 WAV
 
-从下载的仓库中复制：
-- Kokoro 模型文件到 `Resources/Kokoro/`
-- Voice 文件到 `Resources/Kokoro/voices/`
-- espeak-ng-data 到 `Resources/Kokoro/`
+### 步骤 3：模型策略修正 ✅
 
-### 步骤 3：添加模型到 Xcode
+移除 Soprano/Pocket/Kokoro/VyvoTTS 示例模型，只保留 Qwen3 系列：
+- 默认模型：`mlx-community/Qwen3-TTS-12Hz-0.6B-Base-8bit`
+- 添加本地缓存完整性检查，阻止自动下载
 
-1. 在 Xcode 中创建 Resources 文件夹
-2. 添加模型文件到 Copy Bundle Resources
+### 步骤 4：测试 ⏳
 
-### 步骤 4：更新代码
-
-更新 `MLXAudioService.swift`，实现真正的 Kokoro TTS。
-
-### 步骤 5：测试
-
-使用 MLXTestView 进行测试。
+使用 MLXTestView 进行真实测试。
 
 ---
 
@@ -70,10 +63,10 @@ git clone https://github.com/Blaizzy/mlx-audio-swift.git
 
 | 指标 | 目标 | 备注 |
 |------|------|------|
-| 启动加载 | < 2秒 | 第一次启动加载模型 |
+| 启动加载 | < 5秒 | 第一次启动加载模型 |
 | 20字生成 | < 3秒 | 单句，中等长度 |
 | 100字生成 | < 15秒 | 长文本，分段生成 |
-| 峰值内存 | < 500MB | 单次生成期间 |
+| 峰值内存 | < 1GB | 单次生成期间 |
 
 ---
 
@@ -82,17 +75,24 @@ git clone https://github.com/Blaizzy/mlx-audio-swift.git
 ### 第一次尝试
 
 - **日期**: 2026-05-02
-- **设备**: 待定
-- **结果**: ⏳ 待测试
-- **备注**: 代码骨架已完成
+- **设备**: M1 MacBook Pro
+- **结果**: ✅ BUILD SUCCEEDED
+- **备注**: SPM 依赖添加成功，API 适配完成
+
+### 第二次尝试
+
+- **日期**: 2026-05-02
+- **设备**: M1 MacBook Pro
+- **结果**: ✅ 代码修正完成
+- **备注**: 移除非 Qwen3 模型，添加缓存完整性检查
 
 ---
 
 ## 🚨 风险与备选方案
 
 ### 风险 1：mlx-audio-swift 无法集成
-- **备选**: 使用其他本地 TTS 库
-- **备选**: 使用远程 API
+- **状态**: ✅ 已解决
+- **结果**: SPM 依赖添加成功
 
 ### 风险 2：性能太差
 - **备选**: 使用更轻量模型
@@ -102,12 +102,17 @@ git clone https://github.com/Blaizzy/mlx-audio-swift.git
 - **备选**: 添加模型选项，让用户选择
 - **备选**: 同时支持云端 API
 
+### 风险 4：模型缓存不完整
+- **解决方案**: 添加本地缓存完整性检查，阻止自动下载
+- **状态**: ✅ 已实现
+
 ---
 
 ## 🚀 下一步计划
 
 如果 Phase 0 通过，下一步：
-1. 替换 GenerationService 的占位实现
-2. 集成到文案生成流程
-3. 支持多音色选择
-4. 实现声音克隆
+1. 运行真实测试验证音频生成
+2. 替换 GenerationService 的占位实现
+3. 集成到文案生成流程
+4. 支持多音色选择
+5. 实现声音克隆

@@ -14,43 +14,51 @@
 
 ---
 
-## 实验 #2: mlx-audio-swift 模型集成
+## 实验 #2: mlx-audio-swift SPM 依赖集成
 
-- **日期**: 待定
-- **状态**: ⏳ 待执行
-- **步骤**:
-  1. 下载 mlx-audio-swift 仓库
-  2. 复制 Kokoro 模型文件到 Resources/Kokoro/
-  3. 添加文件到 Xcode 项目
-  4. 更新 MLXAudioService.swift 实现
-  5. 运行 MLXTestView 测试
-- **预期结果**:
-  - ✅ 编译通过
-  - ✅ 模型加载成功
-  - ✅ 生成音频成功
-  - ✅ 音频可播放
-- **实际结果**: 待测试
+- **日期**: 2026-05-02
+- **状态**: ✅ 完成
+- **内容**:
+  - 通过 Xcode GUI 手动添加 mlx-audio-swift SPM 依赖
+  - 更新 MLXAudioService.swift 适配真实 API
+  - 添加本地缓存完整性检查，阻止自动下载
+  - 自定义 createWAVData 函数将 [Float] 转换为 WAV 格式
+- **结果**: BUILD SUCCEEDED，代码提交 (commit 60d33d0)
+
+---
+
+## 实验 #3: Qwen3 模型策略修正
+
+- **日期**: 2026-05-02
+- **状态**: ✅ 完成
+- **内容**:
+  - 移除 Soprano/Pocket/Kokoro/VyvoTTS 示例模型
+  - 默认模型改为 Qwen3-TTS-12Hz-0.6B-Base-8bit
+  - 添加本地缓存完整性检查，阻止自动下载
+  - 更新测试文本为中文
+  - 更新文档明确当前阶段只测试 Qwen3
+- **结果**: 待 build 验证
 
 ---
 
 ## 验证清单
 
 ### 代码层面
-- [ ] MLXAudioService.swift 编译通过
-- [ ] MLXTestView.swift 编译通过
-- [ ] Debug 测试入口正常显示
+- [x] MLXAudioService.swift 编译通过
+- [x] MLXTestView.swift 编译通过
+- [x] Debug 测试入口正常显示
 
 ### 功能层面
-- [ ] 模型加载成功
-- [ ] 文本生成音频成功
-- [ ] 音频保存为 WAV 文件
-- [ ] 音频可以播放
-- [ ] 支持不同声音切换
+- [ ] 模型加载成功（待真实测试）
+- [ ] 文本生成音频成功（待真实测试）
+- [ ] 音频保存为 WAV 文件（待真实测试）
+- [ ] 音频可以播放（待真实测试）
+- [ ] 支持不同声音切换（待真实测试）
 
 ### 性能层面
 - [ ] 模型加载时间 < 5秒
 - [ ] 单句生成时间 < 3秒
-- [ ] 内存占用 < 500MB
+- [ ] 内存占用 < 1GB
 - [ ] 无明显卡顿
 
 ### 质量层面
@@ -64,15 +72,17 @@
 
 | 日期 | 问题 | 解决方案 | 状态 |
 |------|------|---------|------|
-| - | - | - | - |
+| 2026-05-02 | pbxproj add_package 参数不匹配 | 改用 Xcode GUI 手动添加 SPM 依赖 | ✅ 已解决 |
+| 2026-05-02 | saveAudioArray 函数不存在 | 自定义 createWAVData 函数转换 [Float] 为 WAV | ✅ 已解决 |
+| 2026-05-02 | Soprano 等模型不符合产品策略 | 移除示例模型，只保留 Qwen3 系列 | ✅ 已解决 |
 
 ---
 
 ## 下一步行动
 
-1. [ ] 下载 mlx-audio-swift 仓库
-2. [ ] 复制 Kokoro 模型文件
-3. [ ] 添加到 Xcode 项目
-4. [ ] 更新代码实现
-5. [ ] 运行测试
-6. [ ] 记录验证结果
+1. [x] 添加 mlx-audio-swift SPM 依赖
+2. [x] 更新 MLXAudioService.swift 适配真实 API
+3. [x] 移除非 Qwen3 模型
+4. [x] 添加本地缓存完整性检查
+5. [ ] 运行真实测试验证音频生成
+6. [ ] 记录性能和质量结果

@@ -2,31 +2,40 @@
 
 ## 📋 概述
 
-mlx-audio-swift 是一个本地 TTS 库，支持 Kokoro、Orpheus 和 Marvis 模型。
+mlx-audio-swift 是一个本地 TTS 库，支持 Qwen3-TTS、Kokoro、Orpheus 和 Marvis 模型。
+
+**当前阶段策略**：只测试 Qwen3-TTS-12Hz-0.6B-Base-8bit，其他模型（Kokoro/Orpheus/Marvis/Soprano/Pocket/VyvoTTS）不进入本轮测试。
 
 ## 🎯 支持的模型
 
-### 1. Kokoro（推荐）
+### 1. Qwen3-TTS 0.6B Base 8bit（当前测试模型）
+- **特点**：中文支持，体积小，适合 MVP
+- **Hugging Face repo**：`mlx-community/Qwen3-TTS-12Hz-0.6B-Base-8bit`
+- **本地缓存**：`~/.cache/huggingface/hub/mlx-audio/mlx-community_Qwen3-TTS-12Hz-0.6B-Base-8bit`
+- **体积**：约 528MB
+- **语言**：中文、英文
+- **状态**：✅ 本地缓存完整，已集成
+
+### 2. Qwen3-TTS 0.6B Base bf16（候选，暂不测试）
+- **特点**：更高精度，但体积更大
+- **Hugging Face repo**：`mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16`
+- **体积**：约 2.3GB
+- **状态**：⚠️ 未接入本地 cache 映射，暂不测试
+
+### 3. Kokoro（非当前 MVP 模型）
 - **特点**：速度快，体积小，音质好
-- **文件**：
-  - `kokoro-v1_0.safetensors`
-  - Voice JSON 文件
-- **位置**：`MLXAudio/Resources/Kokoro/`
-- **状态**：✅ 完全可用
+- **状态**：❌ 不进入本轮测试
 
-### 2. Orpheus
+### 4. Orpheus（非当前 MVP 模型）
 - **特点**：支持情感表达
-- **文件**：
-  - `orpheus-3b-0.1-ft-4bit.safetensors`
-  - `snac_model.safetensors`
-  - 配置文件
-- **位置**：`MLXAudio/Resources/Orpheus/`
-- **状态**：⚠️ 运行较慢
+- **状态**：❌ 不进入本轮测试
 
-### 3. Marvis
+### 5. Marvis（非当前 MVP 模型）
 - **特点**：流式生成，对话场景优化
-- **文件**：自动从 Hugging Face 下载
-- **状态**：⚠️ 实验性
+- **状态**：❌ 不进入本轮测试
+
+### 6. Soprano/Pocket/VyvoTTS（非当前 MVP 模型）
+- **状态**：❌ 不进入本轮测试
 
 ## 🔧 集成步骤
 

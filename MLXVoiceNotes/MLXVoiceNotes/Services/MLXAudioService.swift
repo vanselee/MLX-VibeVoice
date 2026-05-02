@@ -33,13 +33,56 @@ class MLXAudioService: ObservableObject {
         }
 
 #if canImport(MLXAudioTTS)
+        // 本地缓存完整性检查，阻止自动下载
+        let modelRepo = "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-8bit"
+        let cacheDir = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".cache/huggingface/hub/mlx-audio/mlx-community_Qwen3-TTS-12Hz-0.6B-Base-8bit")
+
+        let requiredFiles = [
+            "config.json",
+            "model.safetensors",
+            "tokenizer_config.json",
+            "generation_config.json",
+            "vocab.json",
+            "merges.txt"
+        ]
+
+        var cacheValid = true
+        for file in requiredFiles {
+            let filePath = cacheDir.appendingPathComponent(file)
+            if !FileManager.default.fileExists(atPath: filePath.path) {
+                cacheValid = false
+                break
+            }
+            if let attrs = try? FileManager.default.attributesOfItem(atPath: filePath.path),
+               let size = attrs[.size] as? Int, size == 0 {
+                cacheValid = false
+                break
+            }
+        }
+
+        // 检查 speech_tokenizer/config.json
+        let speechTokenizerConfig = cacheDir.appendingPathComponent("speech_tokenizer/config.json")
+        if !FileManager.default.fileExists(atPath: speechTokenizerConfig.path) {
+            cacheValid = false
+        }
+
+        if !cacheValid {
+            await MainActor.run {
+                self.errorMessage = "本地 Qwen3 模型缓存不完整，已阻止自动下载"
+                self.isModelLoaded = true
+                self.currentModelName = "Missing Local Qwen3 Cache"
+            }
+            return
+        }
+
         do {
-            let model = try await TTS.loadModel(modelRepo: "mlx-community/Soprano-80M-bf16")
+            let model = try await TTS.loadModel(modelRepo: modelRepo)
 
             await MainActor.run {
                 self.ttsModel = model
                 self.isModelLoaded = true
-                self.currentModelName = "Soprano-80M"
+                self.currentModelName = "Qwen3 0.6B Base 8bit"
             }
         } catch {
             await MainActor.run {
@@ -72,12 +115,13 @@ class MLXAudioService: ObservableObject {
 
 #if canImport(MLXAudioTTS)
         do {
+            // Qwen3 Base 模型：voice 传 nil，language 传 "zh"
             let audioArray = try await model.generate(
                 text: text,
-                voice: voice,
+                voice: nil,
                 refAudio: nil,
                 refText: nil,
-                language: "auto",
+                language: "zh",
                 generationParameters: GenerateParameters()
             )
 
@@ -145,11 +189,10 @@ class MLXAudioService: ObservableObject {
     }
 
     func availableModels() -> [(name: String, repo: String)] {
+        // 现阶段只测试 Qwen3-TTS-12Hz-0.6B-Base-8bit
+        // bf16 版本未接入本地 cache 映射，暂不测试
         return [
-            ("Soprano-80M", "mlx-community/Soprano-80M-bf16"),
-            ("Pocket TTS", "mlx-community/pocket-tts"),
-            ("Kokoro", "mlx-community/Kokoro-77M"),
-            ("VyvoTTS", "mlx-community/VyvoTTS-EN-Beta-4bit")
+            ("Qwen3 0.6B Base 8bit", "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-8bit")
         ]
     }
 #endif
