@@ -28,9 +28,11 @@ let testInstructVoices: [String?] = [
 // MARK: - Phase 2 音色可控性验证
 let phase2TestInstructVoices: [String] = [
     "中文女声，自然、清晰、适合旁白",   // A1
-    "中文男声，自然、稳定、适合解说",   // A2
-    "平淡叙述，语速适中，不带感情色彩"   // A3
+    "中文男声，沉稳、浑厚、适合解说",   // A2
+    "平淡叙述，无感情色彩"              // A3
 ]
+
+let phase2TestText = "你好，欢迎来到 MLX Voice Notes，今天我们将测试语音合成效果。"
 
 class MLXAudioService: ObservableObject {
     @Published var isModelLoaded = false
@@ -333,21 +335,51 @@ class MLXAudioService: ObservableObject {
     }
 
     /// Phase 2 音色稳定性测试：3 组 voice instruct × 各 3 次生成
-    /// 返回 [(instructLabel, runIndex, diag)]
-    func runInstructVoiceStabilityTests(text: String) async throws -> [(String, Int, AudioDiagInfo)] {
+    /// 保存到 Phase2VoiceInstruct/ 目录，返回 [(instructLabel, runIndex, diag)]
+    func runInstructVoiceStabilityTests(text: String = phase2TestText) async throws -> [(String, Int, AudioDiagInfo)] {
         var results: [(String, Int, AudioDiagInfo)] = []
+
+        // 准备输出目录
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let phase2Dir = appSupport
+            .appendingPathComponent("MLX Voice Notes")
+            .appendingPathComponent("GeneratedAudio")
+            .appendingPathComponent("Phase2VoiceInstruct")
+        try FileManager.default.createDirectory(at: phase2Dir, withIntermediateDirectories: true)
 
         for (index, instruct) in phase2TestInstructVoices.enumerated() {
             let label = "A\(index + 1)"
             for run in 1...3 {
-                _ = try await generateAudio(
+                let fileName = "\(label)_run\(run).wav"
+                let destURL = phase2Dir.appendingPathComponent(fileName)
+
+                // 生成音频（generateAudio 写入临时目录）
+                let tempURL = try await generateAudio(
                     text: text,
                     voice: instruct,
                     language: "zh"
                 )
+
+                // 移动到 Phase2 输出目录
+                if FileManager.default.fileExists(atPath: destURL.path) {
+                    try FileManager.default.removeItem(at: destURL)
+                }
+                try FileManager.default.moveItem(at: tempURL, to: destURL)
+
+                // 更新诊断信息中的文件路径
                 if let diag = lastDiag {
-                    results.append((label, run, diag))
-                    print("[Phase2] \(label) run#\(run): instruct=\"\(instruct)\" → samples=\(diag.sampleCount), maxAbs=\(diag.maxAbs), rms=\(String(format: "%.6f", diag.rms)), dur=\(String(format: "%.2f", diag.durationSec))s")
+                    let updatedDiag = AudioDiagInfo(
+                        fileName: fileName,
+                        sampleCount: diag.sampleCount,
+                        maxAbs: diag.maxAbs,
+                        rms: diag.rms,
+                        sampleRate: diag.sampleRate,
+                        filePath: destURL.path,
+                        durationSec: diag.durationSec
+                    )
+                    results.append((label, run, updatedDiag))
+                    print("[Phase2] \(label) run#\(run): instruct=\"\(instruct)\" → samples=\(diag.sampleCount), maxAbs=\(String(format: "%.6f", diag.maxAbs)), rms=\(String(format: "%.6f", diag.rms)), dur=\(String(format: "%.2f", diag.durationSec))s")
+                    print("[Phase2] saved: \(destURL.path)")
                 }
             }
         }

@@ -8,6 +8,7 @@ struct MLXTestView: View {
     @State private var audioPlayer: AVAudioPlayer?
     @State private var isPlaying: Bool = false
     @State private var generatedURL: URL?
+    @State private var phase2TestResults: String = ""
 #if canImport(MLXAudioTTS)
     @State private var showModelPicker: Bool = false
 #endif
@@ -120,6 +121,16 @@ struct MLXTestView: View {
                 .buttonStyle(.borderedProminent)
                 .disabled(mlxService.isGenerating)
 
+#if canImport(MLXAudioTTS)
+                Button("Phase 2A: Voice Instruct Test") {
+                    Task {
+                        await runPhase2Test()
+                    }
+                }
+                .buttonStyle(.bordered)
+                .disabled(mlxService.isGenerating)
+#endif
+
                 if mlxService.isGenerating {
                     ProgressView(value: mlxService.progress)
                         .frame(width: 200)
@@ -133,6 +144,19 @@ struct MLXTestView: View {
                     .padding(8)
                     .background(Color.red.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
+
+            // Phase 2A 测试结果
+            if !phase2TestResults.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Phase 2A Results:").font(.caption).fontWeight(.bold)
+                    Text(phase2TestResults)
+                        .font(.caption).fontDesign(.monospaced)
+                        .textSelection(.enabled)
+                }
+                .padding(8)
+                .background(Color.green.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
             }
         }
     }
@@ -220,6 +244,25 @@ struct MLXTestView: View {
             }
         }
     }
+
+#if canImport(MLXAudioTTS)
+    private func runPhase2Test() async {
+        do {
+            let results = try await mlxService.runInstructVoiceStabilityTests()
+            let summary = results.map { (label, run, diag) in
+                "\(label) run#\(run): maxAbs=\(String(format: "%.6f", diag.maxAbs)) rms=\(String(format: "%.6f", diag.rms)) dur=\(String(format: "%.2f", diag.durationSec))s"
+            }.joined(separator: "\n")
+            await MainActor.run {
+                phase2TestResults = summary
+                mlxService.errorMessage = nil
+            }
+        } catch {
+            await MainActor.run {
+                mlxService.errorMessage = "Phase 2 Error: \(error.localizedDescription)"
+            }
+        }
+    }
+#endif
 
     private func togglePlayback(_ url: URL) {
         if isPlaying {
