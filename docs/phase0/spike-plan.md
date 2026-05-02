@@ -36,36 +36,33 @@
 
 ## 🔧 集成步骤
 
-### 1. 安装依赖
+### 步骤 1：下载模型文件
 
-使用 Swift Package Manager 添加 mlx-audio-swift：
+根据 mlx-integration-guide.md：
 
-```
-Package: mlx-audio-swift
-URL: https://github.com/Blaizzy/mlx-audio-swift
-Branch/Tag: main (或最新稳定版)
+```bash
+git clone https://github.com/Blaizzy/mlx-audio-swift.git
 ```
 
-### 2. 创建 Spike 服务
+### 步骤 2：复制模型文件到项目
 
-创建 `MLXAudioService.swift`，包含：
-- 模型加载
-- 文本到音频转换
-- 音频保存
+从下载的仓库中复制：
+- Kokoro 模型文件到 `Resources/Kokoro/`
+- Voice 文件到 `Resources/Kokoro/voices/`
+- espeak-ng-data 到 `Resources/Kokoro/`
 
-### 3. 创建测试视图
+### 步骤 3：添加模型到 Xcode
 
-在项目中添加一个测试页面（隐藏在 Debug 菜单中），用于：
-- 输入测试文本
-- 生成音频
-- 播放音频
-- 查看统计信息
+1. 在 Xcode 中创建 Resources 文件夹
+2. 添加模型文件到 Copy Bundle Resources
 
-### 4. 验证与优化
+### 步骤 4：更新代码
 
-- 测试不同文本长度
-- 测试内存占用
-- 优化性能
+更新 `MLXAudioService.swift`，实现真正的 Kokoro TTS。
+
+### 步骤 5：测试
+
+使用 MLXTestView 进行测试。
 
 ---
 
@@ -85,27 +82,9 @@ Branch/Tag: main (或最新稳定版)
 ### 第一次尝试
 
 - **日期**: 2026-05-02
-- **设备**: M1 Pro (16GB RAM)
+- **设备**: 待定
 - **结果**: ⏳ 待测试
-- **备注**: -
-
-### 第二次尝试
-
-- **日期**: 2026-05-02
-- **设备**: M1 Pro (16GB RAM)
-- **结果**: ⏳ 待测试
-- **备注**: -
-
----
-
-## 📦 模型下载管理
-
-（如果模型需要下载）
-- 模型大小: 待定
-- 下载源: 待定
-- 缓存位置: `~/Library/Application Support/MLXVoiceNotes/Models/`
-- 下载进度需要显示
-- 支持断点续传
+- **备注**: 代码骨架已完成
 
 ---
 

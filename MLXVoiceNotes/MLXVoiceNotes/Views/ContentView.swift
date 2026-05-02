@@ -7,6 +7,11 @@ struct ContentView: View {
     @Query private var voiceProfiles: [VoiceProfile]
     @State private var selectedPage: AppPage = .scriptLibrary
     @State private var selectedScriptID: UUID?
+    
+    // Debug 测试页面（仅在 DEBUG 模式启用）
+    #if DEBUG
+    @State private var showMLXTest = false
+    #endif
 
     var selectedScript: Script? {
         scripts.first { $0.id == selectedScriptID } ?? scripts.first
@@ -14,7 +19,7 @@ struct ContentView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(AppPage.allCases, selection: $selectedPage) { page in
+            List(allPages, selection: $selectedPage) { page in
                 Label(page.title, systemImage: page.systemImage)
                     .tag(page)
             }
@@ -24,6 +29,18 @@ struct ContentView: View {
             detailView
                 .frame(minWidth: 860, minHeight: 620)
         }
+        #if DEBUG
+        .sheet(isPresented: $showMLXTest) {
+            MLXTestView()
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button(action: { showMLXTest.toggle() }) {
+                    Image(systemName: "wand.and.stars")
+                }
+            }
+        }
+        #endif
         .onAppear {
             seedSampleScriptsIfNeeded()
             seedSampleVoiceProfilesIfNeeded()
@@ -40,6 +57,15 @@ struct ContentView: View {
     }
 
     @ViewBuilder
+    private var allPages: [AppPage] {
+        var pages = AppPage.allCases
+        #if DEBUG
+        pages.append(.mlxTest)
+        #endif
+        return pages
+    }
+
+    @ViewBuilder
     private var detailView: some View {
         switch selectedPage {
         case .scriptLibrary:
@@ -52,6 +78,10 @@ struct ContentView: View {
             TaskQueueView(scripts: scripts, selectedScriptID: $selectedScriptID)
         case .exportSettings:
             PreferencesView()
+        #if DEBUG
+        case .mlxTest:
+            MLXTestView()
+        #endif
         }
     }
 
@@ -126,6 +156,9 @@ enum AppPage: String, CaseIterable, Identifiable {
     case resources
     case taskQueue
     case exportSettings
+    #if DEBUG
+    case mlxTest
+    #endif
 
     var id: String { rawValue }
 
@@ -136,6 +169,9 @@ enum AppPage: String, CaseIterable, Identifiable {
         case .resources: return "资源中心"
         case .taskQueue: return "任务总览"
         case .exportSettings: return "偏好设置"
+        #if DEBUG
+        case .mlxTest: return "MLX Test"
+        #endif
         }
     }
 
@@ -146,6 +182,9 @@ enum AppPage: String, CaseIterable, Identifiable {
         case .resources: return "externaldrive"
         case .taskQueue: return "list.bullet.rectangle"
         case .exportSettings: return "gearshape"
+        #if DEBUG
+        case .mlxTest: return "wand.and.stars"
+        #endif
         }
     }
 }
