@@ -98,8 +98,18 @@ struct MLXTestView: View {
             Text("Test Text").font(.headline)
             TextEditor(text: $testText)
                 .font(.body)
-                .frame(minHeight: 100, maxHeight: 150)
+                .frame(minHeight: 80, maxHeight: 120)
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.5), lineWidth: 1))
+
+            // Voice instruct 输入（Phase 0 对照测试用）
+            HStack {
+                Text("Voice Instruct:").font(.subheadline)
+                TextField("nil = 无 instruct", text: $selectedVoice)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 300)
+                Button("Clear") { selectedVoice = "default" }
+                    .buttonStyle(.bordered)
+            }
 
             HStack(spacing: 12) {
                 Button("Generate Audio") {
@@ -141,6 +151,22 @@ struct MLXTestView: View {
                     togglePlayback(url)
                 }
                 .buttonStyle(.bordered)
+            }
+
+            // 诊断信息显示
+            if let diag = mlxService.lastDiag {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Diagnostics:").font(.caption).fontWeight(.bold)
+                    Text("samples: \(diag.sampleCount), maxAbs: \(String(format: "%.6f", diag.maxAbs)), rms: \(String(format: "%.6f", diag.rms))")
+                        .font(.caption).fontDesign(.monospaced)
+                    Text("sampleRate: \(diag.sampleRate) Hz, duration: \(String(format: "%.2f", diag.durationSec))s")
+                        .font(.caption).fontDesign(.monospaced)
+                    Text("path: \(diag.filePath)")
+                        .font(.caption).fontDesign(.monospaced).lineLimit(1).truncationMode(.middle)
+                }
+                .padding(8)
+                .background(Color.yellow.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
             }
 
             HStack(spacing: 12) {
