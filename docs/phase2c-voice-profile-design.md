@@ -76,5 +76,32 @@ refText     = profile.referenceText
 
 - 不修改正式生成流程（现有 segment → generation 链路）
 - 不修改 SwiftData schema 主干（Script、ScriptSegment 不动）
-- 不提交代码改动（仅文档）
 - 禁止 destructive git 命令
+
+---
+
+## 6. 实施记录
+
+| 日期 | 步骤 | 状态 | Commit |
+|------|------|------|--------|
+| 2026-05-03 | Step 1A: VoiceProfile init 字段补全 | ✅ | ec87ada |
+| 2026-05-03 | Step 1B: VoiceProfileStorageService 新建 | ✅ | - |
+
+### Step 1B 实施详情
+
+**新增文件**：`MLXVoiceNotes/Services/VoiceProfileStorageService.swift`
+
+| 方法 | 职责 |
+|------|------|
+| `voiceProfilesRoot` | 返回 `~/Library/Application Support/MLX Voice Notes/VoiceProfiles/` |
+| `directory(for:)` | 拼接 `<root>/<voiceProfileID>/` |
+| `referenceAudioURL(for:originalExtension:)` | 返回 `.../reference.<ext>` |
+| `persistReferenceAudio(sourceURL:for:)` | createDirectory → copyItem；重复导入覆盖旧文件 |
+| `relativePath(from:)` | 绝对路径 → `VoiceProfiles/<profileID>/reference.<ext>` 相对路径 |
+| `absoluteURL(from:)` | 相对路径 → 绝对 URL |
+| `assetExists(at:)` | fileExists 检查 |
+| `deleteVoiceProfileAssets(for:)` | 删除整个 `<profileID>/` 目录 |
+
+**Build**：✅ `** BUILD SUCCEEDED **`
+
+**下一步**：Step 1C 接入 CreateVoiceProfileView UI（参考音频导入 → 存储 → 写入 VoiceProfile.referenceAudioLocalPath）
