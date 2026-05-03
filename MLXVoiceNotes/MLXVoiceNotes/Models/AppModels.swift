@@ -186,6 +186,8 @@ final class VoiceProfile {
     var referenceAudioPath: String?
     var referenceText: String?
     var durationSeconds: Double?
+    var isVerifiedForGeneration: Bool
+    var lastTestedAt: Date?
     var isDefaultNarrator: Bool
     var createdAt: Date
     var modifiedAt: Date
@@ -201,6 +203,8 @@ final class VoiceProfile {
         referenceAudioPath: String? = nil,
         referenceText: String? = nil,
         durationSeconds: Double? = nil,
+        isVerifiedForGeneration: Bool = false,
+        lastTestedAt: Date? = nil,
         isDefaultNarrator: Bool = false,
         createdAt: Date = .now,
         modifiedAt: Date = .now,
@@ -215,6 +219,8 @@ final class VoiceProfile {
         self.referenceAudioPath = referenceAudioPath
         self.referenceText = referenceText
         self.durationSeconds = durationSeconds
+        self.isVerifiedForGeneration = isVerifiedForGeneration
+        self.lastTestedAt = lastTestedAt
         self.isDefaultNarrator = isDefaultNarrator
         self.createdAt = createdAt
         self.modifiedAt = modifiedAt
