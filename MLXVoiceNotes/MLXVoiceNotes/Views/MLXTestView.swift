@@ -122,9 +122,9 @@ struct MLXTestView: View {
                 .disabled(mlxService.isGenerating)
 
 #if canImport(MLXAudioTTS)
-                Button("Phase 2A: Voice Instruct Test") {
+                Button("Phase 2B: RefAudio Test") {
                     Task {
-                        await runPhase2Test()
+                        await runPhase2BTest()
                     }
                 }
                 .buttonStyle(.bordered)
@@ -246,11 +246,11 @@ struct MLXTestView: View {
     }
 
 #if canImport(MLXAudioTTS)
-    private func runPhase2Test() async {
+    private func runPhase2BTest() async {
         do {
-            let results = try await mlxService.runInstructVoiceStabilityTests()
-            let summary = results.map { (label, run, diag) in
-                "\(label) run#\(run): maxAbs=\(String(format: "%.6f", diag.maxAbs)) rms=\(String(format: "%.6f", diag.rms)) dur=\(String(format: "%.2f", diag.durationSec))s"
+            let results = try await mlxService.runRefAudioStabilityTests()
+            let summary = results.map { (run, diag) in
+                "run#\(run): maxAbs=\(String(format: "%.6f", diag.maxAbs)) rms=\(String(format: "%.6f", diag.rms)) dur=\(String(format: "%.2f", diag.durationSec))s"
             }.joined(separator: "\n")
             await MainActor.run {
                 phase2TestResults = summary
@@ -258,7 +258,7 @@ struct MLXTestView: View {
             }
         } catch {
             await MainActor.run {
-                mlxService.errorMessage = "Phase 2 Error: \(error.localizedDescription)"
+                mlxService.errorMessage = "Phase 2B Error: \(error.localizedDescription)"
             }
         }
     }

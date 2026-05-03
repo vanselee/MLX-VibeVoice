@@ -18,21 +18,10 @@ struct AudioDiagInfo {
     let durationSec: Double
 }
 
-// MARK: - Instruct Voice 测试候选（自由文本，非预设名）
-let testInstructVoices: [String?] = [
-    nil,  // 无 instruct
-    "中文女声，自然、清晰、适合旁白",
-    "中文男声，自然、稳定、适合解说"
-]
-
-// MARK: - Phase 2 音色可控性验证
-let phase2TestInstructVoices: [String] = [
-    "中文女声，自然、清晰、适合旁白",   // A1
-    "中文男声，沉稳、浑厚、适合解说",   // A2
-    "平淡叙述，无感情色彩"              // A3
-]
-
-let phase2TestText = "你好，欢迎来到 MLX Voice Notes，今天我们将测试语音合成效果。"
+// MARK: - Phase 2B: refAudio/refText Stability Test
+let phase2RefAudioPath = "/Users/apple/Desktop/李不二聊电商/4月12日音频母带/4月22日声音母带.mp3"
+let phase2RefText = "你永远都搞不清楚这些平台它到底要什么，不要什么，有时候一条视频吧，花几个小时你把它做出来了，发到了a平台呢，正常通过，发到b平台呢，直接限流，有的还给你封号呢"
+let phase2TargetText = "你好，这是 MLX Voice Notes 的参考音色稳定性测试。如果三次声音接近一致，说明参考音色可以用于角色绑定。"
 
 class MLXAudioService: ObservableObject {
     @Published var isModelLoaded = false
@@ -160,9 +149,10 @@ class MLXAudioService: ObservableObject {
 
             var refAudioArray: MLXArray? = nil
             if let refAudioURL {
-                // TODO: refAudio 加载需要确认正确 API
-                // AudioUtils.loadAudioArray 可能不存在，暂时跳过
-                print("[MLXTTS] refAudio URL provided but loading not yet implemented: \(refAudioURL.path)")
+                // loadAudioArray returns (sampleCount, MLXArray), we only need the audio array
+                let (_, refAudioArrayData) = try loadAudioArray(from: refAudioURL, sampleRate: outputSampleRate)
+                refAudioArray = refAudioArrayData
+                print("[MLXTTS] refAudio loaded from: \(refAudioURL.path)")
             }
 
             // Qwen3 Base 模型
@@ -303,86 +293,70 @@ class MLXAudioService: ObservableObject {
         }
     }
 
-    /// 测试 instruct voice（自由文本，非预设名）
-    /// 返回每次生成的诊断信息
-    func runInstructVoiceTests(text: String) async throws -> [(instruct: String?, diag: AudioDiagInfo)] {
-        var results: [(String?, AudioDiagInfo)] = []
+    /// Phase 2B refAudio 稳定性测试：同一目标文本 × 3 次生成
+    /// 使用参考音频和参考文本，验证音色克隆稳定性
+    func runRefAudioStabilityTests() async throws -> [(run: Int, diag: AudioDiagInfo)] {
+        var results: [(Int, AudioDiagInfo)] = []
 
-        for instruct in testInstructVoices {
-            _ = try await generateAudio(
-                text: text,
-                voice: instruct,
-                language: "zh"
-            )
-            if let diag = lastDiag {
-                results.append((instruct, diag))
-                print("[MLXTTS] instruct test: \(instruct ?? "nil") → samples=\(diag.sampleCount), maxAbs=\(diag.maxAbs)")
-            }
+        guard let refAudioURL = URL(string: phase2RefAudioPath) else {
+            throw TTSError.invalidRefAudioPath
         }
-        return results
-    }
 
-    /// 使用参考音频生成
-    func testWithRefAudio(text: String, refAudioURL: URL, refText: String?) async throws -> AudioDiagInfo? {
-        _ = try await generateAudio(
-            text: text,
-            voice: nil,
-            refAudioURL: refAudioURL,
-            refText: refText,
-            language: "zh"
-        )
-        return lastDiag
-    }
-
-    /// Phase 2 音色稳定性测试：3 组 voice instruct × 各 3 次生成
-    /// 保存到 Phase2VoiceInstruct/ 目录，返回 [(instructLabel, runIndex, diag)]
-    func runInstructVoiceStabilityTests(text: String = phase2TestText) async throws -> [(String, Int, AudioDiagInfo)] {
-        var results: [(String, Int, AudioDiagInfo)] = []
+        // 验证参考音频文件存在
+        guard FileManager.default.fileExists(atPath: refAudioURL.path) else {
+            throw TTSError.refAudioFileNotFound
+        }
 
         // 准备输出目录
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let phase2Dir = appSupport
             .appendingPathComponent("MLX Voice Notes")
             .appendingPathComponent("GeneratedAudio")
-            .appendingPathComponent("Phase2VoiceInstruct")
+            .appendingPathComponent("Phase2RefAudio")
         try FileManager.default.createDirectory(at: phase2Dir, withIntermediateDirectories: true)
 
-        for (index, instruct) in phase2TestInstructVoices.enumerated() {
-            let label = "A\(index + 1)"
-            for run in 1...3 {
-                let fileName = "\(label)_run\(run).wav"
-                let destURL = phase2Dir.appendingPathComponent(fileName)
+        guard let model = ttsModel else {
+            throw TTSError.modelNotLoaded
+        }
 
-                // 生成音频（generateAudio 写入临时目录）
-                let tempURL = try await generateAudio(
-                    text: text,
-                    voice: instruct,
-                    language: "zh"
+        for run in 1...3 {
+            let fileName = "refAudio_run\(run).wav"
+            let destURL = phase2Dir.appendingPathComponent(fileName)
+
+            // 生成音频
+            let genParams = model.defaultGenerationParameters
+            let tempURL = try await generateAudio(
+                text: phase2TargetText,
+                voice: nil,
+                refAudioURL: refAudioURL,
+                refText: phase2RefText,
+                language: "chinese",
+                generationParams: genParams
+            )
+
+            // 移动到 Phase2 输出目录
+            if FileManager.default.fileExists(atPath: destURL.path) {
+                try FileManager.default.removeItem(at: destURL)
+            }
+            try FileManager.default.moveItem(at: tempURL, to: destURL)
+
+            // 更新诊断信息
+            if var diag = lastDiag {
+                diag = AudioDiagInfo(
+                    fileName: fileName,
+                    sampleCount: diag.sampleCount,
+                    maxAbs: diag.maxAbs,
+                    rms: diag.rms,
+                    sampleRate: diag.sampleRate,
+                    filePath: destURL.path,
+                    durationSec: diag.durationSec
                 )
-
-                // 移动到 Phase2 输出目录
-                if FileManager.default.fileExists(atPath: destURL.path) {
-                    try FileManager.default.removeItem(at: destURL)
-                }
-                try FileManager.default.moveItem(at: tempURL, to: destURL)
-
-                // 更新诊断信息中的文件路径
-                if let diag = lastDiag {
-                    let updatedDiag = AudioDiagInfo(
-                        fileName: fileName,
-                        sampleCount: diag.sampleCount,
-                        maxAbs: diag.maxAbs,
-                        rms: diag.rms,
-                        sampleRate: diag.sampleRate,
-                        filePath: destURL.path,
-                        durationSec: diag.durationSec
-                    )
-                    results.append((label, run, updatedDiag))
-                    print("[Phase2] \(label) run#\(run): instruct=\"\(instruct)\" → samples=\(diag.sampleCount), maxAbs=\(String(format: "%.6f", diag.maxAbs)), rms=\(String(format: "%.6f", diag.rms)), dur=\(String(format: "%.2f", diag.durationSec))s")
-                    print("[Phase2] saved: \(destURL.path)")
-                }
+                results.append((run, diag))
+                print("[Phase2B] run#\(run): maxAbs=\(String(format: "%.6f", diag.maxAbs)), rms=\(String(format: "%.6f", diag.rms)), dur=\(String(format: "%.2f", diag.durationSec))s")
+                print("[Phase2B] saved: \(destURL.path)")
             }
         }
+
         return results
     }
 #endif
@@ -456,6 +430,9 @@ enum TTSError: Error, LocalizedError {
     case generationFailed
     case audioSaveFailed
     case emptyAudioOutput
+    case invalidRefAudioPath
+    case refAudioFileNotFound
+    case refAudioLoadFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -463,6 +440,9 @@ enum TTSError: Error, LocalizedError {
         case .generationFailed: return "Audio generation failed"
         case .audioSaveFailed: return "Failed to save audio file"
         case .emptyAudioOutput: return "Model returned empty or silent audio"
+        case .invalidRefAudioPath: return "Invalid refAudio path URL"
+        case .refAudioFileNotFound: return "Reference audio file not found"
+        case .refAudioLoadFailed(let msg): return "Failed to load reference audio: \(msg)"
         }
     }
 }
