@@ -4,22 +4,30 @@
 
 | 方向 | 状态 | 结论 |
 |------|------|------|
-| voice instruct | ❌ 不适合 | Base 模型无法通过 instruct 稳定控制音色，8bit 模型输出杂音 |
-| refAudio/refText | ⏳ 测试中 | Qwen3-TTS Base 支持参考音频克隆，待验证稳定性 |
+| voice instruct | ❌ 放弃 | Base 模型无法稳定控制音色，不适合 MVP 角色绑定 |
+| refAudio/refText | ✅ 通过 | bf16 Base + refAudio + refText 连续生成稳定，测试通过 |
 
 ---
 
 ## voice instruct 测试结论
 
-### 原因
-Qwen3-TTS Base 模型（bf16）在无参考音频时，voice instruct 参数无法稳定控制音色：
+### 测试配置
 
-1. **8bit 模型**：输出几乎全为噪声，无论 instruct 文案如何（已排除，commit 73376b0）
-2. **bf16 模型**：instruct 可以改变音色特征，但不同 instruct 之间无明显可区分性，无法用于角色绑定
-3. **Base 模型无 Custom Voice 支持**：预设音色名（Vivian/Serena 等）仅对 Custom Voice 模型有效
+| 项 | 值 |
+|----|-----|
+| 模型 | Qwen3-TTS-12Hz-0.6B-Base-bf16 |
+| 参考音频 | 无 |
+| 目标文本 | 你好，这是 MLX Voice Notes 的测试... |
+| 生成次数 | 3 |
+| voice 参数 | "中文女声，自然、清晰、适合旁白" 等不同 instruct |
+
+### 失败原因
+
+1. **bf16 模型**：instruct 可以改变音色特征，但不同 instruct 之间无明显可区分性，无法用于角色绑定
+2. **Base 模型无 Custom Voice 支持**：预设音色名（Vivian/Serena 等）仅对 Custom Voice 模型有效
 
 ### 结论
-voice instruct **不适合**作为 MVP 多音色稳定绑定方案。
+voice instruct **不适合**作为 MVP 多音色稳定绑定方案，已放弃。
 
 ---
 
@@ -49,50 +57,76 @@ generationParameters: model.defaultGenerationParameters
 ### refAudio 加载 API
 
 ```swift
-refAudioArray = try loadAudioArray(from: refAudioURL, sampleRate: model.sampleRate)
+let (sr, arr) = try loadAudioArray(from: refAudioURL, sampleRate: model.sampleRate)
+```
+
+### 输出文件
+
+| Run | 文件 | 大小 |
+|-----|------|------|
+| 1 | refAudio_run1.wav | 956 KB |
+| 2 | refAudio_run2.wav | 925 KB |
+| 3 | refAudio_run3.wav | 895 KB |
+
+---
+
+## Phase 2B 测试结论 ✅
+
+**测试通过** — 2026-05-03 11:19 GMT+8
+
+- 三次连续生成音色稳定
+- refAudio + refText 方案可作为 MVP 多音色绑定基础
+
+---
+
+## MVP 多音色路线决策（Phase 2B 完成后）
+
+### 结论
+
+1. **voice instruct 放弃**：连续生成音色不稳定，不能作为 MVP 角色音色绑定方案。
+2. **refAudio/refText 确立**：Qwen3 bf16 Base 使用 refAudio + refText 连续生成稳定，通过测试。
+3. **VoiceProfile 必须包含参考音频**：角色绑定 VoiceProfile，VoiceProfile 必须包含参考音频和参考文本。
+4. **生成链路映射**：生成时按段落角色查 `VoiceRole.defaultVoiceName`，再映射到 `VoiceProfile.refAudio / refText`。
+5. **内置音色限制**："默认清晰女声 / 自然男声"等内置音色如果要作为稳定音色，也必须有内置参考音频资产；否则只能作为 UI 占位，不应声称可稳定控制。
+6. **下一步**：进入 Phase 2C — VoiceProfile 数据结构与生成链路映射设计。**不要立刻大改正式生成流程**，先设计再评审。
+
+### VoiceProfile 结构需求（Phase 2C）
+
+每个 VoiceProfile 必须包含：
+
+| 字段 | 说明 | 来源 |
+|------|------|------|
+| `id` | 唯一标识 | SwiftData |
+| `name` | 音色名称 | 用户输入 |
+| `kind` | builtIn / reference / cloned | 类型 |
+| `referenceAudioPath` | 参考音频本地路径 | **必须** |
+| `referenceText` | 参考音频对应文本 | **必须** |
+| `language` | 语言 | 可选 |
+| `durationSeconds` | 参考音频时长 | 可选 |
+| `status` | builtIn / available / pendingReview | 状态 |
+
+### 生成链路映射设计（Phase 2C）
+
+```
+ScriptSegment.voiceRole → VoiceRole.defaultVoiceName
+    → VoiceProfile (by name or id)
+    → refAudio / refText
+    → MLXAudioService.generate(..., refAudio:, refText:, ...)
 ```
 
 ---
 
-## 结果记录（Phase 2B）
-
-### 稳定性评估
-
-| Run | 文件 | maxAbs | rms | duration (s) | 主观听感 |
-|-----|------|--------|-----|-------------|---------|
-| 1 | refAudio_run1.wav | | | | |
-| 2 | refAudio_run2.wav | | | | |
-| 3 | refAudio_run3.wav | | | | |
-
-### 评估标准
-
-**稳定性**：三次生成是否接近一致
-- ✅ 三次音色基本相同
-- ⚠️ 三次有轻微差异
-- ❌ 三次差异明显
-
-**音色匹配度**：生成音色是否接近参考音频
-- ✅ 与参考音频音色一致
-- ⚠️ 部分接近
-- ❌ 与参考音频明显不同
-
----
-
-## 后续决策树
+## 后续决策树（更新后）
 
 ```
-Phase 2B 稳定性测试结果
-├── ✅ 三次一致 + 音色匹配 → 进入 Phase 3（正式音色克隆流程）
-│                                  MVP 音色绑定基于参考音频资产
-│
-├── ⚠️ 三次基本一致 + 部分匹配 → 评估 instruct 微调
-│                                   记录为 "可用但需调整"
-│
-└── ❌ 三次差异明显或不匹配 → Qwen3 Base 不满足多音色 MVP
-                                    建议评估:
-                                    - CustomVoice 模型 (需下载)
-                                    - VoiceDesign API (需网络)
-                                    - Python CLI 路线 (需环境配置)
+Phase 2B 结果
+└── ✅ refAudio/refText 稳定 → 进入 Phase 2C
+
+Phase 2C: VoiceProfile 数据结构 + 生成链路映射设计
+├── VoiceProfile 增加 refAudio/refText 字段
+├── VoiceRole → VoiceProfile 映射关系
+├── GenerationService.generate 调用增加 refAudio/refText 参数
+└── 评审通过后 → Phase 3 正式实现
 ```
 
 ---
@@ -100,7 +134,7 @@ Phase 2B 稳定性测试结果
 ## 约束遵守
 
 - ✅ 不改正式文案生成流程
-- ✅ 不改 SwiftData schema
+- ✅ 不改 SwiftData schema（Phase 2C 设计后统一改）
 - ✅ 不接入角色绑定
 - ✅ 不下载模型
 - ✅ 使用默认 bf16 模型
