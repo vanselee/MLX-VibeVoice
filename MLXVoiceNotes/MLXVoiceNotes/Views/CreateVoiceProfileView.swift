@@ -13,6 +13,8 @@ struct CreateVoiceProfileView: View {
     @State private var showFileImporter = false
     @State private var hasTestAudio = false
     @State private var nameError = false
+    @State private var refAudioError = false
+    @State private var refTextError = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -230,21 +232,45 @@ struct CreateVoiceProfileView: View {
     }
 
     private func saveVoice() {
+        // 1. 校验
         let trimmed = voiceName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            nameError = true
+        let refAudioTrimmed = referenceAudioPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        let refTextTrimmed = referenceText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        nameError = trimmed.isEmpty
+        refAudioError = refAudioTrimmed.isEmpty
+        refTextError = refTextTrimmed.isEmpty
+
+        if nameError || refAudioError || refTextError {
             return
         }
-        nameError = false
 
+        // 2. 创建 VoiceProfile 对象（此时无 referenceAudioPath）
         let profile = VoiceProfile(
             name: trimmed,
             kind: .reference,
             source: .localAudio,
             status: .pendingReview,
-            referenceAudioPath: referenceAudioPath.isEmpty ? nil : referenceAudioPath,
-            referenceText: referenceText.isEmpty ? nil : referenceText
+            referenceAudioPath: nil,
+            referenceText: refTextTrimmed,
+            isVerifiedForGeneration: false,
+            lastTestedAt: nil
         )
+
+        // 3. 复制参考音频到 VoiceProfiles/<id>/reference.<ext>
+        let sourceURL = URL(fileURLWithPath: refAudioTrimmed)
+        do {
+            let storedURL = try VoiceProfileStorageService.shared.persistReferenceAudio(
+                sourceURL: sourceURL,
+                for: profile.id
+            )
+            profile.referenceAudioPath = VoiceProfileStorageService.shared.relativePath(from: storedURL)
+        } catch {
+            print("保存参考音频失败: \\(error)")
+            return
+        }
+
+        // 4. 写入 SwiftData
         modelContext.insert(profile)
         onDismiss()
     }
