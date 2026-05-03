@@ -85,7 +85,9 @@ refText     = profile.referenceText
 | 日期 | 步骤 | 状态 | Commit |
 |------|------|------|--------|
 | 2026-05-03 | Step 1A: VoiceProfile init 字段补全 | ✅ | ec87ada |
-| 2026-05-03 | Step 1B: VoiceProfileStorageService 新建 | ✅ | - |
+| 2026-05-03 | Step 1B: VoiceProfileStorageService 新建 | ✅ | e5b6f66 |
+| 2026-05-03 | Step 2: CreateVoiceProfileView 接入存储服务 | ✅ | 5506130 |
+| 2026-05-03 | Step 3: 参考音色测试试听（生成 + 试听 + 保存验证状态） | ✅ | 4d21ade |
 
 ### Step 1B 实施详情
 
@@ -105,3 +107,49 @@ refText     = profile.referenceText
 **Build**：✅ `** BUILD SUCCEEDED **`
 
 **下一步**：Step 1C 接入 CreateVoiceProfileView UI（参考音频导入 → 存储 → 写入 VoiceProfile.referenceAudioLocalPath）
+
+### Step 2 实施详情
+
+**改动文件**：`MLXVoiceNotes/MLXVoiceNotes/Views/CreateVoiceProfileView.swift`
+
+- 新增 `@State private var saveError: String?`、`@State private var isSaving = false`
+- `saveVoice()` 调用 `VoiceProfileStorageService.shared.persistReferenceAudio()` 保存参考音频
+- `VoiceProfileStorageService.swift` 加入 Xcode target membership
+
+**Build**：✅ `** BUILD SUCCEEDED **`
+
+### Step 3 实施详情
+
+**改动文件**：`CreateVoiceProfileView.swift`、`VoiceProfileStorageService.swift`
+
+**CreateVoiceProfileView** 新增状态和方法：
+- `@State isGeneratingTest`: 生成中禁用按钮
+- `@State testAudioError`: 失败提示
+- `@State testAudioPath`: 临时文件路径
+- `@State audioPlayer/isPlaying`: 试听播放
+- `private let mlxService`: 内部 MLX 服务实例
+
+**generateTestAudio()** 逻辑：
+1. 检查参考音频路径 + refText 非空
+2. 调用 `mlxService.generateAudio(text:refAudioURL:refText:language:)` 生成到临时目录
+3. 成功 → `hasTestAudio=true`，`testAudioPath` 记录临时 URL
+4. 失败 → `testAudioError` 显示错误文本
+
+**playTestAudio()** 逻辑：
+- 使用 `AVAudioPlayer` 播放 `testAudioPath` 对应的临时文件
+
+**saveVoice()** 保存后逻辑：
+- 若 `hasTestAudio=true`，调用 `persistTestAudio(from:for:)` 将临时文件移到 `VoiceProfiles/<id>/test.wav`
+- 设置 `profile.isVerifiedForGeneration = true`，`profile.lastTestedAt = Date()`
+
+**VoiceProfileStorageService** 新增：
+- `testAudioURL(for:)`: 返回 `<profileDir>/test.wav`
+- `persistTestAudio(from:for:)`: createDirectory → moveItem（覆盖旧文件）
+
+**约束遵守**：
+- ✅ 不改 GenerationService
+- ✅ 不改 SwiftData schema
+- ✅ 不接入正式角色生成
+- ✅ 测试音频与 GeneratedAudio 目录分离
+
+**Build**：✅ `** BUILD SUCCEEDED **`
