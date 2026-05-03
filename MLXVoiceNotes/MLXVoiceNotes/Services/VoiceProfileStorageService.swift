@@ -84,7 +84,25 @@ final class VoiceProfileStorageService {
         return fileManager.fileExists(atPath: url.path)
     }
 
-    // MARK: - Cleanup
+    // MARK: - Test Audio
+
+    /// 返回指定 VoiceProfile 的测试音频存放路径
+    func testAudioURL(for voiceProfileID: UUID) -> URL {
+        directory(for: voiceProfileID).appendingPathComponent("test.wav")
+    }
+
+    /// 移动临时测试音频到音色资产目录
+    /// - Returns: 最终存放的 URL
+    func persistTestAudio(from tempURL: URL, for voiceProfileID: UUID) throws -> URL {
+        let destURL = testAudioURL(for: voiceProfileID)
+        let destDir = directory(for: voiceProfileID)
+        try fileManager.createDirectory(at: destDir, withIntermediateDirectories: true)
+        if fileManager.fileExists(atPath: destURL.path) {
+            try fileManager.removeItem(at: destURL)
+        }
+        try fileManager.moveItem(at: tempURL, to: destURL)
+        return destURL
+    }
 
     /// 删除指定 VoiceProfile 的全部资产目录
     func deleteVoiceProfileAssets(for voiceProfileID: UUID) throws {

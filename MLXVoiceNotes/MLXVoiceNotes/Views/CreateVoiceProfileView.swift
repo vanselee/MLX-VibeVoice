@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AVFoundation
 
 struct CreateVoiceProfileView: View {
     let onDismiss: () -> Void
@@ -15,6 +16,14 @@ struct CreateVoiceProfileView: View {
     @State private var nameError = false
     @State private var refAudioError = false
     @State private var refTextError = false
+
+    // MARK: - Test audio state
+    @State private var isGeneratingTest = false
+    @State private var testAudioError: String?
+    @State private var testAudioPath: String?
+    @State private var audioPlayer: AVAudioPlayer?
+    @State private var isPlaying = false
+    private let mlxService = MLXAudioService()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -179,21 +188,36 @@ struct CreateVoiceProfileView: View {
 
                                     HStack(spacing: 8) {
                                         Button("生成测试音频") {
-                                            hasTestAudio = true
+                                            generateTestAudio()
                                         }
                                         .buttonStyle(.bordered)
                                         .controlSize(.small)
+                                        .disabled(isGeneratingTest || referenceAudioPath.isEmpty || referenceText.isEmpty)
 
-                                        Button("试听结果") { }
-                                            .buttonStyle(.bordered)
-                                            .controlSize(.small)
-                                            .disabled(!hasTestAudio)
+                                        Button("试听结果") {
+                                            playTestAudio()
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .controlSize(.small)
+                                        .disabled(!hasTestAudio || isGeneratingTest)
                                     }
 
-                                    if hasTestAudio {
-                                        Text("真实克隆能力将在 Phase 3 接入")
-                                            .font(.caption2)
-                                            .foregroundStyle(.orange)
+                                    if isGeneratingTest {
+                                        HStack(spacing: 4) {
+                                            ProgressView()
+                                                .controlSize(.small)
+                                            Text("生成中...")
+                                                .font(.caption2)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                    } else if let err = testAudioError {
+                                        Text(err)
+                                            .font(.caption)
+                                            .foregroundStyle(.red)
+                                    } else if hasTestAudio {
+                                        Text("测试音频已生成")
+                                            .font(.caption)
+                                            .foregroundStyle(.green)
                                     }
                                 }
                             }
@@ -270,9 +294,68 @@ struct CreateVoiceProfileView: View {
             return
         }
 
-        // 4. 写入 SwiftData
+        // 4. 写入 SwiftData（isVerifiedForGeneration = hasTestAudio）
         modelContext.insert(profile)
+        // 5. 生成测试音频并持久化
+        if hasTestAudio, let tempPath = testAudioPath {
+            let tempURL = URL(fileURLWithPath: tempPath)
+            do {
+                _ = try VoiceProfileStorageService.shared.persistTestAudio(from: tempURL, for: profile.id)
+                profile.isVerifiedForGeneration = true
+                profile.lastTestedAt = Date()
+            } catch {
+                print("persistTestAudio failed: \(error)")
+            }
+        }
         onDismiss()
+    }
+
+    // MARK: - Test Audio Logic
+
+    private func generateTestAudio() {
+        guard !referenceAudioPath.isEmpty, !referenceText.isEmpty else { return }
+        let refURL = URL(fileURLWithPath: referenceAudioPath)
+        guard FileManager.default.fileExists(atPath: refURL.path) else {
+            testAudioError = "参考音频文件不存在"
+            return
+        }
+        isGeneratingTest = true
+        testAudioError = nil
+        hasTestAudio = false
+        testAudioPath = nil
+
+        Task {
+            do {
+                let tempURL = try await mlxService.generateAudio(
+                    text: testSentence,
+                    refAudioURL: refURL,
+                    refText: referenceText,
+                    language: "chinese"
+                )
+                await MainActor.run {
+                    testAudioPath = tempURL.path
+                    hasTestAudio = true
+                    isGeneratingTest = false
+                }
+            } catch {
+                await MainActor.run {
+                    testAudioError = "生成失败: \(error.localizedDescription)"
+                    isGeneratingTest = false
+                }
+            }
+        }
+    }
+
+    private func playTestAudio() {
+        guard let path = testAudioPath else { return }
+        let url = URL(fileURLWithPath: path)
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.play()
+            isPlaying = true
+        } catch {
+            testAudioError = "播放失败: \(error.localizedDescription)"
+        }
     }
 
     private func formCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
