@@ -272,6 +272,7 @@ struct ScriptLibraryView: View {
             ]
         )
         modelContext.insert(script)
+        saveContext()
         openEditor(for: script)
         parseSummary = "等待解析"
     }
@@ -283,6 +284,7 @@ struct ScriptLibraryView: View {
 
     private func saveAndCollapse(_ script: Script) {
         script.updatedAt = .now
+        saveContext()
         expandedScriptID = nil
     }
 
@@ -311,6 +313,7 @@ struct ScriptLibraryView: View {
         // 清理关联的音频文件（失败不阻止删除）
         try? AudioStorageService.deleteAudioFiles(for: script.id)
         modelContext.delete(script)
+        saveContext()
         deleteCandidate = nil
     }
 
@@ -384,6 +387,7 @@ struct ScriptLibraryView: View {
         if parsedScript.unmarkedSegmentCount > 0 {
             parseSummary += "，\(parsedScript.unmarkedSegmentCount) 段旁白兜底"
         }
+        saveContext()
     }
 
     private func startPlaceholderGeneration(for script: Script) {
@@ -410,7 +414,16 @@ struct ScriptLibraryView: View {
             status: .generating
         )
         modelContext.insert(job)
+        saveContext()
         selectedScriptID = script.id
+    }
+
+    private func saveContext() {
+        do {
+            try modelContext.save()
+        } catch {
+            parseSummary = "保存失败：\(error.localizedDescription)"
+        }
     }
 
     private func defaultVoiceName(for roleName: String) -> String {

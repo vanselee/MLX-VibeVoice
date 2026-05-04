@@ -140,11 +140,21 @@ struct ContentView: View {
 
         samples.forEach(modelContext.insert)
         selectedScriptID = samples.first?.id
+        saveSeedData()
     }
 
     private func seedSampleVoiceProfilesIfNeeded() {
         guard voiceProfiles.isEmpty else { return }
         VoiceProfile.samples.forEach(modelContext.insert)
+        saveSeedData()
+    }
+
+    private func saveSeedData() {
+        do {
+            try modelContext.save()
+        } catch {
+            print("Seed data save failed: \(error.localizedDescription)")
+        }
     }
 
 }
