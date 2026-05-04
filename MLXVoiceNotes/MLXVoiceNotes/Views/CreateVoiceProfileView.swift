@@ -16,6 +16,7 @@ struct CreateVoiceProfileView: View {
     @State private var nameError = false
     @State private var refAudioError = false
     @State private var refTextError = false
+    @State private var saveError: String?
 
     // MARK: - Test audio state
     @State private var isGeneratingTest = false
@@ -31,6 +32,11 @@ struct CreateVoiceProfileView: View {
                 Text("创建音色")
                     .font(.headline)
                 Spacer()
+                if let err = saveError {
+                    Text(err)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
                 Button("取消") { onDismiss() }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
@@ -266,8 +272,10 @@ struct CreateVoiceProfileView: View {
         refTextError = refTextTrimmed.isEmpty
 
         if nameError || refAudioError || refTextError {
+            saveError = "请填写必填项"
             return
         }
+        saveError = nil
 
         // 2. 创建 VoiceProfile 对象（此时无 referenceAudioPath）
         let profile = VoiceProfile(
@@ -280,6 +288,7 @@ struct CreateVoiceProfileView: View {
             isVerifiedForGeneration: false,
             lastTestedAt: nil
         )
+        print("[saveVoice] 创建 VoiceProfile id=\(profile.id) name=\(trimmed)")
 
         // 3. 复制参考音频到 VoiceProfiles/<id>/reference.<ext>
         let sourceURL = URL(fileURLWithPath: refAudioTrimmed)
@@ -289,13 +298,17 @@ struct CreateVoiceProfileView: View {
                 for: profile.id
             )
             profile.referenceAudioPath = VoiceProfileStorageService.shared.relativePath(from: storedURL)
+            print("[saveVoice] 参考音频已存储: \(profile.referenceAudioPath ?? "nil")")
         } catch {
-            print("保存参考音频失败: \\(error)")
+            let errMsg = "保存参考音频失败: \(error.localizedDescription)"
+            print("[saveVoice] \(errMsg)")
+            saveError = errMsg
             return
         }
 
         // 4. 写入 SwiftData（isVerifiedForGeneration = hasTestAudio）
         modelContext.insert(profile)
+        
         // 5. 生成测试音频并持久化
         if hasTestAudio, let tempPath = testAudioPath {
             let tempURL = URL(fileURLWithPath: tempPath)
@@ -304,15 +317,19 @@ struct CreateVoiceProfileView: View {
                 profile.isVerifiedForGeneration = true
                 profile.lastTestedAt = Date()
             } catch {
-                print("persistTestAudio failed: \(error)")
+                print("[saveVoice] persistTestAudio failed: \(error)")
             }
         }
+        
         // 6. 必须显式保存，保存成功才关闭窗口
         do {
             try modelContext.save()
+            print("[saveVoice] 保存成功 id=\(profile.id) name=\(profile.name) refPath=\(profile.referenceAudioPath ?? "nil")")
             onDismiss()
         } catch {
-            print("保存音色失败: \(error.localizedDescription)")
+            let errMsg = "保存音色失败: \(error.localizedDescription)"
+            print("[saveVoice] \(errMsg)")
+            saveError = errMsg
             // 不调用 onDismiss()，窗口保持，用户可修改后重试
         }
     }

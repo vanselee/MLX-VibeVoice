@@ -253,18 +253,26 @@ struct ScriptLibraryView: View {
     }
 
     private func createScript() {
+        print("[createScript] 进入")
+        
         if let reusableDraft = scripts.first(where: isReusableBlankDraft) {
+            print("[createScript] 复用空白草稿 id=\(reusableDraft.id)")
             openEditor(for: reusableDraft)
             parseSummary = "继续编辑空白草稿"
             return
         }
-
+        
+        print("[createScript] 新建 Script")
+        
         let script = Script(
             title: "未命名文案",
             subtitle: "",
             bodyText: "[旁白] 在这里输入要配音的文案。",
             updatedAt: .now
         )
+        let scriptID = script.id
+        print("[createScript] 新建 Script id=\(scriptID)")
+        
         modelContext.insert(script)
 
         let role = VoiceRole(
@@ -287,9 +295,11 @@ struct ScriptLibraryView: View {
 
         do {
             try modelContext.save()
+            print("[createScript] save 成功 id=\(scriptID)")
             parseSummary = "等待解析"
             openEditor(for: script)
         } catch {
+            print("[createScript] save 失败: \(error.localizedDescription)")
             parseSummary = "新建失败：\(error.localizedDescription)"
         }
     }
