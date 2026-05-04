@@ -19,9 +19,10 @@ enum GenerationService {
     /// 开始生成（用户点击"生成音频"按钮时调用）
     /// - Parameters:
     ///   - script: 要生成的文案
+    ///   - voiceProfiles: 当前环境中所有可用音色（用于角色音色匹配）
     ///   - voiceInstruct: 可选的 voice instruct 文本（如 "中文女声，自然、清晰、适合旁白"）
     ///   - completion: 生成完成回调（成功或失败）
-    static func start(script: Script, voiceInstruct: String? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
+    static func start(script: Script, voiceProfiles: [VoiceProfile] = [], voiceInstruct: String? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
         // 防止重复启动
         guard currentlyGeneratingScriptID == nil else {
             completion?(.failure(GenerationError.alreadyGenerating))
@@ -42,9 +43,9 @@ enum GenerationService {
         // 创建后台 Task 串行生成，存入字典以便取消
         let task = Task {
             do {
-                try await generateAllSegments(script: script, voiceInstruct: voiceInstruct)
+                try await generateAllSegments(script: script, voiceProfiles: voiceProfiles, voiceInstruct: voiceInstruct)
                 await MainActor.run {
-                    script.status = .completed
+                    script.status = finalStatus(for: script)
                     script.updatedAt = .now
                     currentlyGeneratingScriptID = nil
                     activeTaskByScriptID.removeValue(forKey: script.id)
@@ -104,7 +105,7 @@ enum GenerationService {
     }
 
     /// 重试失败段落
-    static func retryFailedSegments(script: Script, voiceInstruct: String? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
+    static func retryFailedSegments(script: Script, voiceProfiles: [VoiceProfile] = [], voiceInstruct: String? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
         guard currentlyGeneratingScriptID == nil else {
             completion?(.failure(GenerationError.alreadyGenerating))
             return
@@ -121,9 +122,9 @@ enum GenerationService {
 
         let task = Task {
             do {
-                try await generateAllSegments(script: script, voiceInstruct: voiceInstruct)
+                try await generateAllSegments(script: script, voiceProfiles: voiceProfiles, voiceInstruct: voiceInstruct)
                 await MainActor.run {
-                    script.status = .completed
+                    script.status = finalStatus(for: script)
                     script.updatedAt = .now
                     currentlyGeneratingScriptID = nil
                     activeTaskByScriptID.removeValue(forKey: script.id)
@@ -148,7 +149,7 @@ enum GenerationService {
     }
 
     /// 重试单个段落
-    static func retry(segment: ScriptSegment, in script: Script, voiceInstruct: String? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
+    static func retry(segment: ScriptSegment, in script: Script, voiceProfiles: [VoiceProfile] = [], voiceInstruct: String? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
         guard currentlyGeneratingScriptID == nil else {
             completion?(.failure(GenerationError.alreadyGenerating))
             return
@@ -161,9 +162,9 @@ enum GenerationService {
 
         let task = Task {
             do {
-                try await generateAllSegments(script: script, voiceInstruct: voiceInstruct)
+                try await generateAllSegments(script: script, voiceProfiles: voiceProfiles, voiceInstruct: voiceInstruct)
                 await MainActor.run {
-                    script.status = .completed
+                    script.status = finalStatus(for: script)
                     script.updatedAt = .now
                     currentlyGeneratingScriptID = nil
                     activeTaskByScriptID.removeValue(forKey: script.id)
@@ -188,7 +189,7 @@ enum GenerationService {
     }
 
     /// 继续生成（用户点击"继续生成"按钮）
-    static func resume(script: Script, voiceInstruct: String? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
+    static func resume(script: Script, voiceProfiles: [VoiceProfile] = [], voiceInstruct: String? = nil, completion: ((Result<Void, Error>) -> Void)? = nil) {
         guard currentlyGeneratingScriptID == nil else {
             completion?(.failure(GenerationError.alreadyGenerating))
             return
@@ -210,9 +211,9 @@ enum GenerationService {
 
         let task = Task {
             do {
-                try await generateAllSegments(script: script, voiceInstruct: voiceInstruct)
+                try await generateAllSegments(script: script, voiceProfiles: voiceProfiles, voiceInstruct: voiceInstruct)
                 await MainActor.run {
-                    script.status = .completed
+                    script.status = finalStatus(for: script)
                     script.updatedAt = .now
                     currentlyGeneratingScriptID = nil
                     activeTaskByScriptID.removeValue(forKey: script.id)
@@ -261,10 +262,40 @@ enum GenerationService {
         return voiceProfiles.first { $0.name == voiceRole.defaultVoiceName }
     }
 
+    private static func referenceVoiceProfile(
+        for segment: ScriptSegment,
+        in script: Script,
+        from voiceProfiles: [VoiceProfile]
+    ) throws -> VoiceProfile {
+        guard let profile = resolveVoiceProfile(for: segment, in: script, from: voiceProfiles) else {
+            throw GenerationError.missingReferenceVoice(roleName: segment.roleName)
+        }
+        return profile
+    }
+
+    private static func referenceAudioURL(for voiceProfile: VoiceProfile) throws -> URL {
+        guard let path = voiceProfile.referenceAudioPath, !path.isEmpty else {
+            throw GenerationError.missingReferenceAudio(voiceName: voiceProfile.name)
+        }
+        guard VoiceProfileStorageService.shared.assetExists(at: path) else {
+            throw GenerationError.missingReferenceAudio(voiceName: voiceProfile.name)
+        }
+        return VoiceProfileStorageService.shared.absoluteURL(from: path)
+    }
+
+    private static func referenceText(for voiceProfile: VoiceProfile) throws -> String {
+        guard let text = voiceProfile.referenceText?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !text.isEmpty
+        else {
+            throw GenerationError.missingReferenceText(voiceName: voiceProfile.name)
+        }
+        return text
+    }
+
     // MARK: - Private Implementation
 
     /// 串行生成所有待生成段落
-    private static func generateAllSegments(script: Script, voiceInstruct: String?) async throws {
+    private static func generateAllSegments(script: Script, voiceProfiles: [VoiceProfile], voiceInstruct: String?) async throws {
         let orderedSegments = script.segments.sorted { $0.order < $1.order }
 
         for segment in orderedSegments {
@@ -284,11 +315,17 @@ enum GenerationService {
             }
 
             do {
+                let voiceProfile = try referenceVoiceProfile(for: segment, in: script, from: voiceProfiles)
+                let refAudioURL = try referenceAudioURL(for: voiceProfile)
+                let refText = try referenceText(for: voiceProfile)
+
                 // 调用 MLXAudioService 生成音频
                 let tempURL = try await mlxService.generateAudio(
                     text: segment.text,
-                    voice: voiceInstruct,
-                    language: "zh"
+                    voice: nil,
+                    refAudioURL: refAudioURL,
+                    refText: refText,
+                    language: "chinese"
                 )
 
                 // 复制到持久化目录
@@ -338,6 +375,16 @@ enum GenerationService {
             // 取消时，已完成的旧文件仍存在，但段落状态为 pending（可重新生成）
         }
     }
+
+    private static func finalStatus(for script: Script) -> ScriptStatus {
+        if script.segments.contains(where: { $0.status == .failed }) {
+            return .failed
+        }
+        if script.segments.allSatisfy({ $0.status == .completed }) {
+            return .completed
+        }
+        return .ready
+    }
 }
 
 // MARK: - Errors
@@ -346,6 +393,9 @@ enum GenerationError: Error, LocalizedError {
     case alreadyGenerating
     case noPendingSegments
     case audioGenerationFailed(Error)
+    case missingReferenceVoice(roleName: String)
+    case missingReferenceAudio(voiceName: String)
+    case missingReferenceText(voiceName: String)
 
     var errorDescription: String? {
         switch self {
@@ -355,6 +405,12 @@ enum GenerationError: Error, LocalizedError {
             return "没有待生成的段落"
         case .audioGenerationFailed(let error):
             return "音频生成失败：\(error.localizedDescription)"
+        case .missingReferenceVoice(let roleName):
+            return "角色「\(roleName)」未绑定可用参考音色"
+        case .missingReferenceAudio(let voiceName):
+            return "音色「\(voiceName)」缺少参考音频，请重新创建或测试音色"
+        case .missingReferenceText(let voiceName):
+            return "音色「\(voiceName)」缺少参考文本，请补充后重试"
         }
     }
 }

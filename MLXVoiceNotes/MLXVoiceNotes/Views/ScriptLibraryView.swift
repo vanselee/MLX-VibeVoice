@@ -394,7 +394,7 @@ struct ScriptLibraryView: View {
         guard !script.segments.isEmpty else { return }
 
         // Phase 0.5: 调用真实生成
-        GenerationService.start(script: script, voiceInstruct: nil) { result in
+        GenerationService.start(script: script, voiceProfiles: voiceProfiles, voiceInstruct: nil) { result in
             switch result {
             case .success:
                 parseSummary = "生成完成"
@@ -541,7 +541,7 @@ struct ScriptLibraryView: View {
                             .disabled(!canStartGeneration)
                     } else if failed > 0 {
                         Button("重试失败") {
-                            GenerationService.retryFailedSegments(script: script) { result in
+                            GenerationService.retryFailedSegments(script: script, voiceProfiles: voiceProfiles) { result in
                                 if case .failure(let error) = result {
                                     parseSummary = "重试失败：\(error.localizedDescription)"
                                 }
@@ -556,7 +556,7 @@ struct ScriptLibraryView: View {
                             .disabled(!canStartGeneration)
                     } else if completed > 0 {
                         Button("继续生成") {
-                            GenerationService.resume(script: script) { result in
+                            GenerationService.resume(script: script, voiceProfiles: voiceProfiles) { result in
                                 if case .failure(let error) = result {
                                     parseSummary = "继续生成失败：\(error.localizedDescription)"
                                 }

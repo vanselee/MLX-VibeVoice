@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct TaskQueueView: View {
+    @Query private var voiceProfiles: [VoiceProfile]
     let scripts: [Script]
     @Binding var selectedScriptID: UUID?
 
@@ -158,7 +159,7 @@ struct TaskQueueView: View {
             return
         }
 
-        GenerationService.resume(script: script)
+        GenerationService.resume(script: script, voiceProfiles: voiceProfiles)
     }
 
     private func pauseSelectedTask() {
@@ -173,12 +174,12 @@ struct TaskQueueView: View {
 
     private func retryFailedSegments() {
         guard let script = selectedScript else { return }
-        GenerationService.retryFailedSegments(script: script)
+        GenerationService.retryFailedSegments(script: script, voiceProfiles: voiceProfiles)
     }
 
     private func retrySegment(_ segment: ScriptSegment) {
         guard let script = selectedScript else { return }
-        GenerationService.retry(segment: segment, in: script)
+        GenerationService.retry(segment: segment, in: script, voiceProfiles: voiceProfiles)
     }
 }
 

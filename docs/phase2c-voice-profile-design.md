@@ -88,6 +88,7 @@ refText     = profile.referenceText
 | 2026-05-03 | Step 1B: VoiceProfileStorageService 新建 | ✅ | e5b6f66 |
 | 2026-05-03 | Step 2: CreateVoiceProfileView 接入存储服务 | ✅ | 5506130 |
 | 2026-05-03 | Step 3: 参考音色测试试听（生成 + 试听 + 保存验证状态） | ✅ | 4d21ade |
+| 2026-05-04 | Step 4: 正式生成按角色使用参考音色 | ✅ | 本次提交 |
 
 ### Step 1B 实施详情
 
@@ -103,6 +104,26 @@ refText     = profile.referenceText
 | `absoluteURL(from:)` | 相对路径 → 绝对 URL |
 | `assetExists(at:)` | fileExists 检查 |
 | `deleteVoiceProfileAssets(for:)` | 删除整个 `<profileID>/` 目录 |
+
+**Build**：✅ `** BUILD SUCCEEDED **`
+
+### Step 4 实施详情
+
+**改动文件**：`GenerationService.swift`、`ScriptLibraryView.swift`、`TaskQueueView.swift`
+
+- `GenerationService.start/retryFailedSegments/retry/resume` 增加 `voiceProfiles` 参数。
+- `resolveVoiceProfile(for:in:from:)` 根据 `segment.roleName` 找到 `VoiceRole.defaultVoiceName`，再映射到同名 `VoiceProfile`。
+- 每段生成时读取 `VoiceProfile.referenceAudioPath` 与 `referenceText`，通过 `VoiceProfileStorageService` 还原参考音频 URL。
+- `MLXAudioService.generateAudio` 调用改为传入 `refAudioURL/refText`，`language` 使用 `"chinese"`。
+- 找不到参考音色、参考音频或参考文本时，段落标记为失败，不再随机生成。
+- `ScriptLibraryView` 和 `TaskQueueView` 将当前 `voiceProfiles` 传入生成/重试/继续生成入口。
+- 生成结束后若存在失败段落，文案状态保持 `.failed`，不误标为 `.completed`。
+
+**约束遵守**：
+- ✅ 不改 SwiftData schema
+- ✅ 不下载模型
+- ✅ 不使用 voice instruct 作为正式音色
+- ✅ 不做 UI 大结构改动
 
 **Build**：✅ `** BUILD SUCCEEDED **`
 
