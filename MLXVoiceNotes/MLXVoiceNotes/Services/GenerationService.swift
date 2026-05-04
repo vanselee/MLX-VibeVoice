@@ -236,6 +236,31 @@ enum GenerationService {
         activeTaskByScriptID[script.id] = task
     }
 
+    /// 根据段落角色查找对应的 VoiceProfile
+    /// - 参数:
+    ///   - segment: 目标段落
+    ///   - script: 段落所属文案（含 roles 关系）
+    ///   - voiceProfiles: 当前环境中所有可用音色
+    /// - 返回: 匹配的 VoiceProfile 或 nil（未找到时返回 nil）
+    /// - 注意: 最小实现，仅做字符串匹配，不调用 MLXAudioService
+    static func resolveVoiceProfile(
+        for segment: ScriptSegment,
+        in script: Script,
+        from voiceProfiles: [VoiceProfile]
+    ) -> VoiceProfile? {
+        // 1. 用 segment.roleName 匹配 VoiceRole.name 或 normalizedName
+        let matchedRole: VoiceRole? = script.roles.first {
+            $0.name == segment.roleName || $0.normalizedName == segment.roleName
+        }
+
+        guard let voiceRole = matchedRole else {
+            return nil
+        }
+
+        // 2. 用 voiceRole.defaultVoiceName 匹配 VoiceProfile.name
+        return voiceProfiles.first { $0.name == voiceRole.defaultVoiceName }
+    }
+
     // MARK: - Private Implementation
 
     /// 串行生成所有待生成段落
