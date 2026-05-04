@@ -307,7 +307,14 @@ struct CreateVoiceProfileView: View {
                 print("persistTestAudio failed: \(error)")
             }
         }
-        onDismiss()
+        // 6. 必须显式保存，保存成功才关闭窗口
+        do {
+            try modelContext.save()
+            onDismiss()
+        } catch {
+            print("保存音色失败: \(error.localizedDescription)")
+            // 不调用 onDismiss()，窗口保持，用户可修改后重试
+        }
     }
 
     // MARK: - Test Audio Logic

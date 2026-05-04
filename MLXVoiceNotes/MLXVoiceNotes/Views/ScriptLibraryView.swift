@@ -263,18 +263,35 @@ struct ScriptLibraryView: View {
             title: "未命名文案",
             subtitle: "",
             bodyText: "[旁白] 在这里输入要配音的文案。",
-            updatedAt: .now,
-            segments: [
-                ScriptSegment(order: 1, text: "在这里输入要配音的文案。", roleName: "旁白")
-            ],
-            roles: [
-                VoiceRole(name: "旁白", normalizedName: "旁白", defaultVoiceName: "默认清晰女声")
-            ]
+            updatedAt: .now
         )
         modelContext.insert(script)
-        saveContext()
-        openEditor(for: script)
-        parseSummary = "等待解析"
+
+        let role = VoiceRole(
+            name: "旁白",
+            normalizedName: "旁白",
+            defaultVoiceName: "默认清晰女声",
+            script: script
+        )
+        modelContext.insert(role)
+        script.roles.append(role)
+
+        let segment = ScriptSegment(
+            order: 1,
+            text: "在这里输入要配音的文案。",
+            roleName: "旁白",
+            script: script
+        )
+        modelContext.insert(segment)
+        script.segments.append(segment)
+
+        do {
+            try modelContext.save()
+            parseSummary = "等待解析"
+            openEditor(for: script)
+        } catch {
+            parseSummary = "新建失败：\(error.localizedDescription)"
+        }
     }
 
     private func openEditor(for script: Script) {
