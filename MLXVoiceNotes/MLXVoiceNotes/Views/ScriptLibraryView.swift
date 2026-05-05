@@ -10,6 +10,7 @@ struct ScriptLibraryView: View {
     @State private var expandedScriptID: UUID?
     @State private var deleteCandidate: Script?
     @State private var parseSummary = "等待解析"
+    @State private var showDraftReuseTip = false
 
     private var selectedScript: Script? {
         scripts.first { $0.id == selectedScriptID } ?? scripts.first
@@ -26,6 +27,19 @@ struct ScriptLibraryView: View {
                         createScript()
                     }
                     .buttonStyle(.borderedProminent)
+                }
+
+                if showDraftReuseTip {
+                    HStack(spacing: 8) {
+                        Image(systemName: "doc.on.doc")
+                        Text("正在复用一个空白草稿")
+                        Spacer()
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.blue)
+                    .padding(8)
+                    .background(Color.blue.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
 
                 ScrollView {
@@ -271,6 +285,10 @@ struct ScriptLibraryView: View {
             print("[createScript] 复用空白草稿 id=\(reusableDraft.id)")
             openEditor(for: reusableDraft)
             parseSummary = "继续编辑空白草稿"
+            showDraftReuseTip = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                showDraftReuseTip = false
+            }
             return
         }
         
