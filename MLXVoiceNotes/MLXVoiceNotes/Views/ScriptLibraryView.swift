@@ -29,13 +29,25 @@ struct ScriptLibraryView: View {
                 }
 
                 ScrollView {
-                    LazyVStack(spacing: 10) {
-                        ForEach(scripts) { script in
-                            scriptRow(for: script)
+                    if scripts.isEmpty {
+                        VStack(spacing: 16) {
+                            ContentUnavailableView(
+                                "欢迎使用 MLX Voice Notes",
+                                systemImage: "waveform.badge.mic",
+                                description: Text("点击「新建文案」开始创建你的第一个配音项目。")
+                            )
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding(.vertical, 60)
                         }
+                    } else {
+                        LazyVStack(spacing: 10) {
+                            ForEach(scripts) { script in
+                                scriptRow(for: script)
+                            }
+                        }
+                        .padding(.vertical, 2)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .padding(.vertical, 2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             .alert("删除文案？", isPresented: deleteAlertBinding) {
