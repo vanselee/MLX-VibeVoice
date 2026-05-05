@@ -317,7 +317,9 @@ struct CreateVoiceProfileView: View {
                 profile.isVerifiedForGeneration = true
                 profile.lastTestedAt = Date()
             } catch {
-                print("[saveVoice] persistTestAudio failed: \(error)")
+                let errMsg = "保存测试音频失败: \(error.localizedDescription)"
+                print("[saveVoice] \(errMsg)")
+                saveError = errMsg
             }
         }
         
