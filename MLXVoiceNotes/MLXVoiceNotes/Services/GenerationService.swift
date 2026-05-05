@@ -320,8 +320,9 @@ enum GenerationService {
                 let refText = try referenceText(for: voiceProfile)
 
                 // 调用 MLXAudioService 生成音频
+                let cleanText = PauseTagProcessor.cleanAllPauseTags(from: segment.text)
                 let tempURL = try await mlxService.generateAudio(
-                    text: segment.text,
+                    text: cleanText,
                     voice: nil,
                     refAudioURL: refAudioURL,
                     refText: refText,

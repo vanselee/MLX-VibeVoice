@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		FA7000010000000000000002 /* SchemaMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7000010000000000000001 /* SchemaMigration.swift */; };
+		FA8000010000000000000002 /* AudioPauseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8000010000000000000001 /* AudioPauseService.swift */; };
+		FA9000010000000000000002 /* AudioFadeProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9000010000000000000001 /* AudioFadeProcessor.swift */; };
 		189D68E42FA5B77800A9486C /* MLXAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 189D68E32FA5B77800A9486C /* MLXAudio */; };
 		189D68E62FA5B77800A9486C /* MLXAudioCore in Frameworks */ = {isa = PBXBuildFile; productRef = 189D68E52FA5B77800A9486C /* MLXAudioCore */; };
 		189D68E82FA5B77800A9486C /* MLXAudioTTS in Frameworks */ = {isa = PBXBuildFile; productRef = 189D68E72FA5B77800A9486C /* MLXAudioTTS */; };
@@ -52,6 +54,8 @@
 		1A0000010000000000000021 /* Views/MLXTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/MLXTestView.swift; sourceTree = "<group>"; };
 		E11F437995C019926039FB93 /* AudioStorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioStorageService.swift; path = MLXVoiceNotes/Services/AudioStorageService.swift; sourceTree = SOURCE_ROOT; };
 		FA7000010000000000000001 /* SchemaMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SchemaMigration.swift; path = Services/SchemaMigration.swift; sourceTree = "<group>"; };
+		FA8000010000000000000001 /* AudioPauseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioPauseService.swift; path = Services/AudioPauseService.swift; sourceTree = "<group>"; };
+		FA9000010000000000000001 /* AudioFadeProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioFadeProcessor.swift; path = Services/AudioFadeProcessor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,7 +90,9 @@
 				1A0000010000000000000015 /* Services/ScriptParser.swift */,
 				1A0000010000000000000016 /* Services/GenerationService.swift */,
 				189D68EB2FA78E3100A9486C /* VoiceProfileStorageService.swift */,
-				FA7000010000000000000001 /* SchemaMigration.swift */,
+			FA7000010000000000000001 /* SchemaMigration.swift */,
+			FA8000010000000000000001 /* AudioPauseService.swift */,
+			FA9000010000000000000001 /* AudioFadeProcessor.swift */,
 				1A0000010000000000000017 /* Services/AudioExportService.swift */,
 				1A0000010000000000000018 /* Services/MLXAudioService.swift */,
 				1A0000010000000000000019 /* Views/SharedComponents.swift */,
@@ -186,6 +192,8 @@
 				1A0000010000000000000001 /* MLXVoiceNotesApp.swift in Sources */,
 				189D68EC2FA78E3100A9486C /* VoiceProfileStorageService.swift in Sources */,
 				FA7000010000000000000002 /* SchemaMigration.swift in Sources */,
+				FA8000010000000000000002 /* AudioPauseService.swift in Sources */,
+			FA9000010000000000000002 /* AudioFadeProcessor.swift in Sources */,
 				1A0000010000000000000002 /* Views/ContentView.swift in Sources */,
 				1A0000010000000000000003 /* Models/AppModels.swift in Sources */,
 				1A0000010000000000000005 /* Services/ScriptParser.swift in Sources */,

@@ -55,16 +55,44 @@ enum AudioExportService {
             }
         }
 
-        // 合并所有段落的 PCM samples
+        // 合并所有段落的 PCM samples（含停顿和淡入淡出）
         var allSamples: [Float] = []
         var sampleRate: Double = 24000  // 默认 24kHz
-
-        for segment in completedSegments {
+        
+        // 淡入淡出配置
+        let fullStartFadeMs = 60
+        let fullEndFadeMs = 80
+        let segmentFadeMs = 20
+        
+        for (index, segment) in completedSegments.enumerated() {
             let relativePath = segment.generatedAudioPath!
             let audioURL = AudioStorageService.absoluteURL(from: relativePath)
             let (samples, sr) = try readPCMSamples(from: audioURL)
-            allSamples.append(contentsOf: samples)
             sampleRate = sr
+            
+            // 1. 插入停顿（非第一段）
+            if index > 0 {
+                let prevSegment = completedSegments[index - 1]
+                if let pauseMs = PauseCalculator.calculatePause(prevSegment: prevSegment, currentSegment: segment) {
+                    let silence = AudioFadeProcessor.generateSilence(ms: pauseMs, sampleRate: sampleRate)
+                    allSamples.append(contentsOf: silence)
+                }
+            }
+            
+            // 2. 应用淡入淡出
+            let isFirst = index == 0
+            let isLast = index == completedSegments.count - 1
+            
+            let fadeInMs: Int = isFirst ? fullStartFadeMs : segmentFadeMs
+            let fadeOutMs: Int = isLast ? fullEndFadeMs : segmentFadeMs
+            
+            let fadedSamples = AudioFadeProcessor.applyFade(
+                samples: samples,
+                fadeInMs: fadeInMs,
+                fadeOutMs: fadeOutMs,
+                sampleRate: sampleRate
+            )
+            allSamples.append(contentsOf: fadedSamples)
         }
 
         guard !allSamples.isEmpty else {
