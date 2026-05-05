@@ -77,7 +77,6 @@ struct VoiceLibraryView: View {
     @State private var showError = false
     
     @State private var profileToRename: VoiceProfile?
-    @State private var showRenameSheet = false
 
     var body: some View {
         if profiles.isEmpty {
@@ -94,7 +93,6 @@ struct VoiceLibraryView: View {
                                 showDeleteConfirmation = true
                             }, onRename: {
                                 profileToRename = profile
-                                showRenameSheet = true
                             })
                             if profile.id != profiles.last?.id {
                                 Divider().padding(.leading, 12)
@@ -129,10 +127,8 @@ struct VoiceLibraryView: View {
                     Text(err)
                 }
             }
-            .sheet(isPresented: $showRenameSheet) {
-                if let profile = profileToRename {
-                    RenameVoiceProfileSheet(profile: profile)
-                }
+            .sheet(item: $profileToRename) { profile in
+                RenameVoiceProfileSheet(profile: profile)
             }
         }
     }
