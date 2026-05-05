@@ -70,6 +70,11 @@ struct ResourceCenterView: View {
 struct VoiceLibraryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \VoiceProfile.createdAt, order: .reverse) private var profiles: [VoiceProfile]
+    
+    @State private var profileToDelete: VoiceProfile?
+    @State private var showDeleteConfirmation = false
+    @State private var deleteError: String?
+    @State private var showError = false
 
     var body: some View {
         if profiles.isEmpty {
@@ -81,7 +86,10 @@ struct VoiceLibraryView: View {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         ForEach(profiles, id: \.id) { profile in
-                            VoiceRow(profile: profile)
+                            VoiceRow(profile: profile) {
+                                profileToDelete = profile
+                                showDeleteConfirmation = true
+                            }
                             if profile.id != profiles.last?.id {
                                 Divider().padding(.leading, 12)
                             }
@@ -96,6 +104,25 @@ struct VoiceLibraryView: View {
                     .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
             )
             .padding(.horizontal, 4)
+            .alert("确认删除", isPresented: $showDeleteConfirmation) {
+                Button("取消", role: .cancel) {
+                    profileToDelete = nil
+                }
+                Button("删除", role: .destructive) {
+                    deleteSelectedProfile()
+                }
+            } message: {
+                if let profile = profileToDelete {
+                    Text("确定要删除音色「\(profile.name)」吗？\n\n此操作将同时删除关联的参考音频文件，且无法恢复。")
+                }
+            }
+            .alert("删除结果", isPresented: $showError) {
+                Button("确定", role: .cancel) { }
+            } message: {
+                if let err = deleteError {
+                    Text(err)
+                }
+            }
         }
     }
 
@@ -129,11 +156,53 @@ struct VoiceLibraryView: View {
         .padding(.vertical, 7)
         .background(Color(nsColor: .textBackgroundColor).opacity(0.6))
     }
+    
+    // MARK: - Delete
+    
+    private func deleteSelectedProfile() {
+        guard let profile = profileToDelete else { return }
+        let profileID = profile.id
+        let profileName = profile.name
+        
+        // 1. 先删除音频文件（失败不阻止 VoiceProfile 删除）
+        var audioDeleteError: String?
+        do {
+            try VoiceProfileStorageService.shared.deleteVoiceProfileAssets(for: profileID)
+            print("[deleteVoiceProfile] 已删除音频资产: \(profileID)")
+        } catch {
+            audioDeleteError = error.localizedDescription
+            print("[deleteVoiceProfile] 音频资产删除失败: \(error.localizedDescription)")
+        }
+        
+        // 2. 从 SwiftData 删除 VoiceProfile
+        modelContext.delete(profile)
+        
+        // 3. 保存 context
+        do {
+            try modelContext.save()
+            print("[deleteVoiceProfile] 已删除 VoiceProfile: \(profileName) id=\(profileID)")
+        } catch {
+            let errMsg = "删除音色失败: \(error.localizedDescription)"
+            print("[deleteVoiceProfile] \(errMsg)")
+            deleteError = errMsg
+            showError = true
+            return
+        }
+        
+        // 4. 如果音频删除失败，提示用户（但音色已删除）
+        if let audioErr = audioDeleteError {
+            deleteError = "音色已删除，但音频文件清理失败: \(audioErr)"
+            showError = true
+        }
+        
+        profileToDelete = nil
+    }
 }
 
 struct VoiceRow: View {
     let profile: VoiceProfile
-
+    var onDelete: (() -> Void)?
+    
     var body: some View {
         HStack(spacing: 0) {
             HStack(spacing: 8) {
@@ -217,6 +286,7 @@ struct VoiceRow: View {
                 .help("重命名")
 
                 Button {
+                    onDelete?()
                 } label: {
                     Image(systemName: "trash")
                         .font(.body)
