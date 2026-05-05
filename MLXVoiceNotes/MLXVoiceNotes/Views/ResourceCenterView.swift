@@ -75,6 +75,9 @@ struct VoiceLibraryView: View {
     @State private var showDeleteConfirmation = false
     @State private var deleteError: String?
     @State private var showError = false
+    
+    @State private var profileToRename: VoiceProfile?
+    @State private var showRenameSheet = false
 
     var body: some View {
         if profiles.isEmpty {
@@ -86,10 +89,13 @@ struct VoiceLibraryView: View {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         ForEach(profiles, id: \.id) { profile in
-                            VoiceRow(profile: profile) {
+                            VoiceRow(profile: profile, onDelete: {
                                 profileToDelete = profile
                                 showDeleteConfirmation = true
-                            }
+                            }, onRename: {
+                                profileToRename = profile
+                                showRenameSheet = true
+                            })
                             if profile.id != profiles.last?.id {
                                 Divider().padding(.leading, 12)
                             }
@@ -121,6 +127,11 @@ struct VoiceLibraryView: View {
             } message: {
                 if let err = deleteError {
                     Text(err)
+                }
+            }
+            .sheet(isPresented: $showRenameSheet) {
+                if let profile = profileToRename {
+                    RenameVoiceProfileSheet(profile: profile)
                 }
             }
         }
@@ -202,6 +213,7 @@ struct VoiceLibraryView: View {
 struct VoiceRow: View {
     let profile: VoiceProfile
     var onDelete: (() -> Void)?
+    var onRename: (() -> Void)?
     
     var body: some View {
         HStack(spacing: 0) {
@@ -278,6 +290,7 @@ struct VoiceRow: View {
 
             if profile.kind != .preset {
                 Button {
+                    onRename?()
                 } label: {
                     Image(systemName: "pencil")
                         .font(.body)
@@ -309,4 +322,120 @@ struct VoiceRow: View {
             GenerationJob.self,
             ExportRecord.self
         ], inMemory: true)
+}
+
+// MARK: - Rename Voice Profile Sheet
+
+struct RenameVoiceProfileSheet: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    
+    let profile: VoiceProfile
+    
+    @State private var newName: String = ""
+    @State private var errorMessage: String?
+    @State private var isSaving = false
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("重命名音色")
+                    .font(.headline)
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding()
+            .background(Color(nsColor: .controlBackgroundColor))
+            
+            Divider()
+            
+            // Content
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("当前名称")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(profile.name)
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                }
+                
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("新名称")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    TextField("输入新名称", text: $newName)
+                        .textFieldStyle(.roundedBorder)
+                        .onChange(of: newName) { _, _ in
+                            errorMessage = nil
+                        }
+                }
+                
+                if let err = errorMessage {
+                    Text(err)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            }
+            .padding(20)
+            
+            Spacer()
+            
+            // Footer buttons
+            HStack {
+                Spacer()
+                Button("取消") {
+                    dismiss()
+                }
+                .keyboardShortcut(.cancelAction)
+                
+                Button("保存") {
+                    saveRename()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(newName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
+            }
+            .padding()
+            .background(Color(nsColor: .controlBackgroundColor))
+        }
+        .frame(width: 380, height: 280)
+        .onAppear {
+            newName = profile.name
+        }
+    }
+    
+    private func saveRename() {
+        let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            errorMessage = "名称不能为空"
+            return
+        }
+        
+        if trimmed == profile.name {
+            dismiss()
+            return
+        }
+        
+        isSaving = true
+        profile.name = trimmed
+        profile.modifiedAt = Date()
+        
+        do {
+            try modelContext.save()
+            print("[RenameVoiceProfile] 保存成功: \(trimmed)")
+            dismiss()
+        } catch {
+            errorMessage = "保存失败: \(error.localizedDescription)"
+            profile.name = profile.name // 还原
+            isSaving = false
+        }
+    }
 }
