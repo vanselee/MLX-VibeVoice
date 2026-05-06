@@ -183,9 +183,9 @@ struct MLXTestView: View {
                     Text("Diagnostics:").font(.caption).fontWeight(.bold)
                     Text("samples: \(diag.sampleCount), maxAbs: \(String(format: "%.6f", diag.maxAbs)), rms: \(String(format: "%.6f", diag.rms))")
                         .font(.caption).fontDesign(.monospaced)
-                    Text("sampleRate: \(diag.sampleRate) Hz, duration: \(String(format: "%.2f", diag.durationSec))s")
+                    Text("sampleRate: \(diag.sampleRate) Hz, duration: \(String(format: "%.2f", diag.durationSec))s, elapsed: \(String(format: "%.2f", diag.elapsedSec))s")
                         .font(.caption).fontDesign(.monospaced)
-                    Text("path: \(diag.filePath)")
+                    Text("realtimeFactor: \(String(format: "%.2f", diag.realtimeFactor))x, path: \(diag.filePath)")
                         .font(.caption).fontDesign(.monospaced).lineLimit(1).truncationMode(.middle)
                 }
                 .padding(8)

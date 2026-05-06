@@ -16,6 +16,8 @@ struct AudioDiagInfo {
     let sampleRate: Int
     let filePath: String
     let durationSec: Double
+    let elapsedSec: Double
+    let realtimeFactor: Double
 }
 
 // MARK: - Phase 2B: refAudio/refText Stability Test
@@ -155,9 +157,11 @@ class MLXAudioService: ObservableObject {
                 print("[MLXTTS] refAudio loaded from: \(refAudioURL.path)")
             }
 
-            // Qwen3 Base 模型
-            // 注意：generationParameters 使用传入参数或默认值，不依赖 model.defaultGenerationParameters
             let genParams = generationParams ?? GenerateParameters()
+
+            // Phase 0.5: 记录生成耗时（计时起点，在 model.generate 之前）
+            let startedAt = Date()
+
             let audioArray = try await model.generate(
                 text: text,
                 voice: voice,
@@ -167,13 +171,8 @@ class MLXAudioService: ObservableObject {
                 generationParameters: genParams
             )
 
-            await MainActor.run {
-                progress = 0.8
-            }
-
-            let samples = audioArray.asArray(Float.self)
-
             // 样本诊断（只打印，不改变音频）
+            let samples = audioArray.asArray(Float.self)
             let sampleCount = samples.count
             var maxAbs: Double = 0.0
             var rms: Double = 0.0
@@ -192,6 +191,15 @@ class MLXAudioService: ObservableObject {
                 }
             } else {
                 throw TTSError.emptyAudioOutput
+            }
+
+            // Phase 0.5: 计算生成耗时（此时 sampleCount 已确定）
+            let elapsedSec = Date().timeIntervalSince(startedAt)
+            let durationSec = Double(sampleCount) / Double(outputSampleRate)
+            let realtimeFactor = durationSec > 0 ? elapsedSec / durationSec : 0
+
+            await MainActor.run {
+                progress = 0.8
             }
 
             let tempDir = FileManager.default.temporaryDirectory
@@ -213,7 +221,9 @@ class MLXAudioService: ObservableObject {
                 rms: rms,
                 sampleRate: outputSampleRate,
                 filePath: url.path,
-                durationSec: Double(sampleCount) / Double(outputSampleRate)
+                durationSec: durationSec,
+                elapsedSec: elapsedSec,
+                realtimeFactor: realtimeFactor
             )
 
             await MainActor.run {
@@ -247,7 +257,9 @@ class MLXAudioService: ObservableObject {
             rms: 0.0,
             sampleRate: 24000,
             filePath: url.path,
-            durationSec: 1.0
+            durationSec: 1.0,
+            elapsedSec: 0,
+            realtimeFactor: 0
         )
         await MainActor.run {
             lastDiag = placeholderDiag
@@ -349,7 +361,9 @@ class MLXAudioService: ObservableObject {
                     rms: diag.rms,
                     sampleRate: diag.sampleRate,
                     filePath: destURL.path,
-                    durationSec: diag.durationSec
+                    durationSec: diag.durationSec,
+                    elapsedSec: diag.elapsedSec,
+                    realtimeFactor: diag.realtimeFactor
                 )
                 results.append((run, diag))
                 print("[Phase2B] run#\(run): maxAbs=\(String(format: "%.6f", diag.maxAbs)), rms=\(String(format: "%.6f", diag.rms)), dur=\(String(format: "%.2f", diag.durationSec))s")

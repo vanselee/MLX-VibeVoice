@@ -4,6 +4,7 @@ import SwiftData
 struct ScriptLibraryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var voiceProfiles: [VoiceProfile]
+    @StateObject private var mlxService = MLXAudioService()
     let scripts: [Script]
     @Binding var selectedScriptID: UUID?
     @Binding var selectedPage: AppPage
@@ -547,6 +548,16 @@ struct ScriptLibraryView: View {
         return VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 10) {
                 Text("生成状态").font(.headline)
+
+                if let diag = mlxService.lastDiag, diag.elapsedSec > 0 {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("生成耗时 \(String(format: "%.1f", diag.elapsedSec)) 秒").font(.caption)
+                        Text("音频时长 \(String(format: "%.1f", diag.durationSec)) 秒").font(.caption)
+                        Text("生成速度 \(String(format: "%.2f", diag.realtimeFactor)) 倍").font(.caption)
+                    }
+                    .foregroundStyle(.secondary)
+                    Divider()
+                }
 
                 if isCurrentGenerating {
                     HStack(spacing: 8) {
