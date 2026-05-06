@@ -56,13 +56,21 @@ enum PauseTagProcessor {
         var cleanText = text
         var pauseMs: Int? = nil
 
-        // 1. 先匹配精确标签 [停顿XXXms]
-        if let msMatch = cleanText.range(of: #"\[停顿(\d+)ms\]"#, options: .regularExpression) {
-            if let msValue = Int(cleanText[msMatch].dropFirst(4).dropLast(4)) {
-                // 限制上限
-                pauseMs = min(msValue, PauseConfig.Max.manualPause)
+        // 1. 先匹配精确标签 [停顿XXXms] 或 [停顿 XXXms]
+        // 使用更稳定的正则提取数字
+        let msPattern = #"\[停顿\s*(\d+)ms\]"#
+        if let regex = try? NSRegularExpression(pattern: msPattern, options: []),
+           let match = regex.firstMatch(in: cleanText, options: [], range: NSRange(cleanText.startIndex..., in: cleanText)) {
+            // 提取数字组
+            if let numberRange = Range(match.range(at: 1), in: cleanText),
+               let msValue = Int(cleanText[numberRange]) {
+                // 限制范围：0-3000ms
+                pauseMs = max(0, min(msValue, PauseConfig.Max.manualPause))
             }
-            cleanText = cleanText.replacingCharacters(in: msMatch, with: "")
+            // 删除整个匹配的标签
+            if let fullRange = Range(match.range(at: 0), in: cleanText) {
+                cleanText = cleanText.replacingCharacters(in: fullRange, with: "")
+            }
         } else {
             // 2. 再匹配预设标签
             for (pattern, value) in tagPatterns {
@@ -83,9 +91,9 @@ enum PauseTagProcessor {
     static func cleanAllPauseTags(from text: String) -> String {
         var cleanText = text
 
-        // 清理精确标签
+        // 清理精确标签 [停顿XXXms] 或 [停顿 XXXms]
         cleanText = cleanText.replacingOccurrences(
-            of: #"\[停顿\d+ms\]"#,
+            of: #"\[停顿\s*\d+ms\]"#,
             with: "",
             options: .regularExpression
         )
@@ -123,14 +131,20 @@ enum PauseCalculator {
         let prevRoleId = prev.roleName
         let currRoleId = currentSegment.roleName
 
+        // 辅助函数：判断是否为旁白角色
+        func isNarrator(_ roleName: String) -> Bool {
+            let lower = roleName.lowercased()
+            return lower == "旁白" || lower == "narrator" || roleName.isEmpty
+        }
+
         var basePauseMs: Int
         if prevRoleId == currRoleId {
             // 同一角色
             basePauseMs = PauseConfig.AutoPause.sameRole
-        } else if prevRoleId == "narrator" || prevRoleId.isEmpty {
+        } else if isNarrator(prevRoleId) {
             // 旁白 -> 角色
             basePauseMs = PauseConfig.AutoPause.narratorToRole
-        } else if currentSegment.roleName == "narrator" || currentSegment.roleName.isEmpty {
+        } else if isNarrator(currRoleId) {
             // 角色 -> 旁白
             basePauseMs = PauseConfig.AutoPause.roleToNarrator
         } else {
@@ -138,16 +152,17 @@ enum PauseCalculator {
             basePauseMs = PauseConfig.AutoPause.differentRole
         }
 
-        // 3. 结尾标点微调
+        // 3. 结尾标点微调（支持中英文标点）
         let trimmedText = cleanText.trimmingCharacters(in: .whitespacesAndNewlines)
         if let lastChar = trimmedText.last {
             switch lastChar {
-            case "?":
+            case "?", "？":
                 basePauseMs += PauseConfig.Punctuation.questionMark
-            case "!":
+            case "!", "！":
                 basePauseMs += PauseConfig.Punctuation.exclamationMark
             default:
-                if trimmedText.hasSuffix("…") {
+                // 检查省略号：…、……、...
+                if trimmedText.hasSuffix("…") || trimmedText.hasSuffix("……") || trimmedText.hasSuffix("...") {
                     basePauseMs += PauseConfig.Punctuation.ellipsis
                 }
             }

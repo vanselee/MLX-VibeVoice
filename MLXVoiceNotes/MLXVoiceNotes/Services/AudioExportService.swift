@@ -45,7 +45,8 @@ enum AudioExportService {
 
         // 严格检查：每个 completed 段落必须有音频文件
         for segment in completedSegments {
-            let segmentIndex = segment.order + 1  // 1-based 显示
+            // segment.order 已经是 1-based，直接使用
+            let segmentIndex = segment.order
             guard let relativePath = segment.generatedAudioPath else {
                 throw AudioExportError.missingGeneratedAudio(segmentIndex: segmentIndex)
             }
