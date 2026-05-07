@@ -11,8 +11,8 @@ enum GenerationService {
     /// 活跃任务句柄字典，用于真正取消/暂停 Task
     static var activeTaskByScriptID: [UUID: Task<Void, Never>] = [:]
 
-    /// MLX 音频服务实例（共享）
-    static var mlxService = MLXAudioService()
+    /// MLX 音频服务实例（共享单例）
+    static var mlxService = MLXAudioService.shared
 
     // MARK: - Public API
 

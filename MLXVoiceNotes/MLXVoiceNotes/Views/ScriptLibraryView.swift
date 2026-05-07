@@ -4,7 +4,7 @@ import SwiftData
 struct ScriptLibraryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var voiceProfiles: [VoiceProfile]
-    @StateObject private var mlxService = MLXAudioService()
+    @ObservedObject private var mlxService = MLXAudioService.shared
     let scripts: [Script]
     @Binding var selectedScriptID: UUID?
     @Binding var selectedPage: AppPage

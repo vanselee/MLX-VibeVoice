@@ -2,7 +2,7 @@ import SwiftUI
 import AVFoundation
 
 struct MLXTestView: View {
-    @StateObject private var mlxService = MLXAudioService()
+    @ObservedObject private var mlxService = MLXAudioService.shared
     @State private var testText: String = "你好，这是 MLX Voice Notes 的本地语音合成测试。"
     @State private var selectedVoice: String = "default"
     @State private var audioPlayer: AVAudioPlayer?
@@ -27,7 +27,7 @@ struct MLXTestView: View {
         .padding()
         .frame(width: 650, height: 500)
         .task {
-            await mlxService.loadModel()
+            await mlxService.ensureModelLoaded()
         }
     }
 

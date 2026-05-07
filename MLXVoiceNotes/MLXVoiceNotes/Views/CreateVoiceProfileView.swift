@@ -24,7 +24,7 @@ struct CreateVoiceProfileView: View {
     @State private var testAudioPath: String?
     @State private var audioPlayer: AVAudioPlayer?
     @State private var isPlaying = false
-    private let mlxService = MLXAudioService()
+    private let mlxService = MLXAudioService.shared
 
     var body: some View {
         VStack(spacing: 0) {
