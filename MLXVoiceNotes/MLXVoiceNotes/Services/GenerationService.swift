@@ -326,7 +326,7 @@ enum GenerationService {
                     voice: nil,
                     refAudioURL: refAudioURL,
                     refText: refText,
-                    language: "chinese"
+                    language: "auto"
                 )
 
                 // 复制到持久化目录

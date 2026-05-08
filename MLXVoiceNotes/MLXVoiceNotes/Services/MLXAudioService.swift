@@ -159,7 +159,7 @@ class MLXAudioService: ObservableObject {
         voice: String? = nil,
         refAudioURL: URL? = nil,
         refText: String? = nil,
-        language: String = "zh",
+        language: String = "auto",
         generationParams: GenerateParameters? = nil
     ) async throws -> URL {
         // 确保模型已加载（幂等，不重复加载）
@@ -375,7 +375,7 @@ class MLXAudioService: ObservableObject {
                 voice: nil,
                 refAudioURL: refAudioURL,
                 refText: phase2RefText,
-                language: "chinese",
+                language: "auto",
                 generationParams: genParams
             )
 
