@@ -294,6 +294,52 @@ enum GenerationService {
 
     // MARK: - Private Implementation
 
+    /// 带重试的单段音频生成
+    /// - 最多尝试 3 次（首次 + 2 次重试）
+    /// - 仅对质量错误重试：nearSilentAudio, excessiveLeadingSilence, excessiveInternalSilence, emptyAudioOutput, generationFailed
+    /// - 三次失败后返回错误
+    private static func generateSegmentWithRetry(
+        text: String,
+        refAudioURL: URL,
+        refText: String,
+        segmentOrder: Int
+    ) async throws -> URL {
+        let maxRetries = 2
+        var lastError: Error?
+
+        for attempt in 0...maxRetries {
+            do {
+                return try await mlxService.generateAudio(
+                    text: text,
+                    voice: nil,
+                    refAudioURL: refAudioURL,
+                    refText: refText,
+                    language: "auto"
+                )
+            } catch let error as TTSError {
+                lastError = error
+                // 只对质量错误重试
+                switch error {
+                case .nearSilentAudio, .excessiveLeadingSilence, .excessiveInternalSilence, .emptyAudioOutput, .generationFailed:
+                    if attempt < maxRetries {
+                        print("[GenerationService] Segment \(segmentOrder) quality check failed, retry \(attempt + 1)/\(maxRetries): \(error.localizedDescription)")
+                        continue
+                    }
+                case .modelNotLoaded, .audioSaveFailed, .invalidRefAudioPath, .refAudioFileNotFound, .refAudioLoadFailed:
+                    // 非质量错误，不重试
+                    throw error
+                }
+            } catch {
+                lastError = error
+                // 其他错误也不重试
+                throw error
+            }
+        }
+
+        // 三次都失败，抛出最后一个错误
+        throw lastError ?? TTSError.generationFailed
+    }
+
     /// 串行生成所有待生成段落
     private static func generateAllSegments(script: Script, voiceProfiles: [VoiceProfile], voiceInstruct: String?) async throws {
         let orderedSegments = script.segments.sorted { $0.order < $1.order }
@@ -319,14 +365,13 @@ enum GenerationService {
                 let refAudioURL = try referenceAudioURL(for: voiceProfile)
                 let refText = try referenceText(for: voiceProfile)
 
-                // 调用 MLXAudioService 生成音频
+                // 使用带重试的生成方法（最多 3 次尝试）
                 let cleanText = PauseTagProcessor.cleanAllPauseTags(from: segment.text)
-                let tempURL = try await mlxService.generateAudio(
+                let tempURL = try await generateSegmentWithRetry(
                     text: cleanText,
-                    voice: nil,
                     refAudioURL: refAudioURL,
                     refText: refText,
-                    language: "auto"
+                    segmentOrder: segment.order
                 )
 
                 // 复制到持久化目录
@@ -351,10 +396,11 @@ enum GenerationService {
             } catch {
                 await MainActor.run {
                     segment.status = .failed
+                    // 不写 generatedAudioPath，失败音频不持久化
                     script.updatedAt = .now
                 }
                 // 继续生成下一个段落（不抛出错误，允许部分失败）
-                print("[GenerationService] Segment \(segment.order) failed: \(error.localizedDescription)")
+                print("[GenerationService] Segment \(segment.order) failed after 3 attempts: \(error.localizedDescription)")
             }
         }
     }

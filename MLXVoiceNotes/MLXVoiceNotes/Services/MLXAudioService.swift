@@ -248,7 +248,7 @@ class MLXAudioService: ObservableObject {
             // 分阶段计时：总耗时起点（必须在所有操作之前记录）
             let totalStart = Date()
 
-            let genParams = generationParams ?? GenerateParameters()
+            let genParams = generationParams ?? model.defaultGenerationParameters
 
             // 分阶段计时：模型推理
             let modelGenStart = Date()
@@ -269,20 +269,65 @@ class MLXAudioService: ObservableObject {
             var maxAbs: Double = 0.0
             var rms: Double = 0.0
 
-            print("[MLXTTS] samples.count: \(sampleCount)")
-            if sampleCount > 0 {
-                let absValues = samples.map { Double(abs($0)) }
-                maxAbs = absValues.max() ?? 0.0
-                let sumOfSquares: Double = absValues.reduce(0.0) { $0 + $1 * $1 }
-                rms = sqrt(sumOfSquares / Double(sampleCount))
-                print("[MLXTTS] maxAbs: \(maxAbs), rms: \(rms), sampleRate: \(outputSampleRate)")
-
-                // 空样本或全零信号 → 抛出明确错误
-                if maxAbs == 0 {
-                    throw TTSError.emptyAudioOutput
-                }
-            } else {
+            // 样本诊断（只打印，不改变音频）
+            // 1. 空样本 → 抛出明确错误
+            if sampleCount == 0 {
                 throw TTSError.emptyAudioOutput
+            }
+
+            let absValues = samples.map { Double(abs($0)) }
+            maxAbs = absValues.max() ?? 0.0
+            let sumOfSquares: Double = absValues.reduce(0.0) { $0 + $1 * $1 }
+            rms = sqrt(sumOfSquares / Double(sampleCount))
+            print("[MLXTTS] samples.count: \(sampleCount), maxAbs: \(maxAbs), rms: \(rms), sampleRate: \(outputSampleRate)")
+
+            // 2. 全零信号 → emptyAudioOutput
+            if maxAbs == 0 {
+                throw TTSError.emptyAudioOutput
+            }
+
+            // 3. 近静音检测（maxAbs < 0.05 或 rms < 0.01）
+            if maxAbs < 0.05 || rms < 0.01 {
+                throw TTSError.nearSilentAudio(maxAbs: maxAbs, rms: rms)
+            }
+
+            // 4. 开头长静音检测（阈值 0.003，超过 1.2 秒则失败）
+            let leadingSilenceThreshold: Float = 0.003
+            var leadingSilenceFrames = 0
+            for sample in samples {
+                if abs(sample) < leadingSilenceThreshold {
+                    leadingSilenceFrames += 1
+                } else {
+                    break
+                }
+            }
+            let leadingSilenceSec = Double(leadingSilenceFrames) / Double(outputSampleRate)
+            if leadingSilenceSec > 1.2 {
+                throw TTSError.excessiveLeadingSilence(seconds: leadingSilenceSec)
+            }
+
+            // 5. 中间长静音检测（阈值 0.003，非首尾区域连续静音超过 2.0 秒则失败，暂不裁剪）
+            let internalSilenceThreshold: Float = 0.003
+            var currentSilenceFrames = 0
+            var maxInternalSilenceFrames = 0
+            for (i, sample) in samples.enumerated() {
+                if abs(sample) < internalSilenceThreshold {
+                    currentSilenceFrames += 1
+                } else {
+                    // 只在非首尾区域统计最大静音区间
+                    let silenceStart = i - currentSilenceFrames
+                    let silenceEnd = i - 1
+                    let isLeading = silenceEnd < leadingSilenceFrames
+                    let isTrailing = silenceEnd >= sampleCount - Int(2.0 * Double(outputSampleRate))
+                    if !isLeading && !isTrailing {
+                        maxInternalSilenceFrames = max(maxInternalSilenceFrames, currentSilenceFrames)
+                    }
+                    currentSilenceFrames = 0
+                }
+            }
+            let maxInternalSilenceSec = Double(maxInternalSilenceFrames) / Double(outputSampleRate)
+            if maxInternalSilenceSec > 2.0 {
+                throw TTSError.excessiveInternalSilence(seconds: maxInternalSilenceSec)
             }
 
             // 在所有操作完成后计算完整耗时
@@ -553,6 +598,9 @@ enum TTSError: Error, LocalizedError {
     case generationFailed
     case audioSaveFailed
     case emptyAudioOutput
+    case nearSilentAudio(maxAbs: Double, rms: Double)
+    case excessiveLeadingSilence(seconds: Double)
+    case excessiveInternalSilence(seconds: Double)
     case invalidRefAudioPath
     case refAudioFileNotFound
     case refAudioLoadFailed(String)
@@ -562,7 +610,10 @@ enum TTSError: Error, LocalizedError {
         case .modelNotLoaded: return "TTS model not loaded"
         case .generationFailed: return "Audio generation failed"
         case .audioSaveFailed: return "Failed to save audio file"
-        case .emptyAudioOutput: return "Model returned empty or silent audio"
+        case .emptyAudioOutput: return "Model returned empty audio (sampleCount == 0)"
+        case .nearSilentAudio(let maxAbs, let rms): return "Generated audio is nearly silent (maxAbs=\(String(format: "%.4f", maxAbs)), rms=\(String(format: "%.4f", rms)), expected maxAbs≥0.05 and rms≥0.01)"
+        case .excessiveLeadingSilence(let seconds): return "Generated audio has excessive leading silence (\(String(format: "%.2f", seconds))s > 1.2s threshold)"
+        case .excessiveInternalSilence(let seconds): return "Generated audio contains internal silence block (\(String(format: "%.2f", seconds))s > 2.0s threshold)"
         case .invalidRefAudioPath: return "Invalid refAudio path URL"
         case .refAudioFileNotFound: return "Reference audio file not found"
         case .refAudioLoadFailed(let msg): return "Failed to load reference audio: \(msg)"
