@@ -1,4 +1,6 @@
 import Foundation
+import SwiftData
+import AVFoundation
 
 /// Phase 2C 参考音色资产存储服务
 ///
@@ -110,5 +112,87 @@ final class VoiceProfileStorageService {
         if fileManager.fileExists(atPath: profileDir.path) {
             try fileManager.removeItem(at: profileDir)
         }
+    }
+
+    // MARK: - Voice Profile Readiness
+
+    /// 错误类型：音色资产准备失败
+    enum ReadinessError: LocalizedError {
+        case profileNotFound
+        case emptyName
+        case emptyReferenceAudioPath
+        case emptyReferenceText
+        case referenceAudioNotPersisted(path: String)
+        case referenceAudioNotReadable(path: String)
+        case modelContextUnavailable
+
+        var errorDescription: String? {
+            switch self {
+            case .profileNotFound:            return "音色档案未找到"
+            case .emptyName:                  return "音色名称为空"
+            case .emptyReferenceAudioPath:    return "参考音频路径为空"
+            case .emptyReferenceText:          return "参考文本为空"
+            case .referenceAudioNotPersisted(let path): return "参考音频未持久化：\(path)"
+            case .referenceAudioNotReadable(let path):  return "参考音频无法读取：\(path)"
+            case .modelContextUnavailable:    return "无法访问数据上下文"
+            }
+        }
+    }
+
+    /// 确保音色档案已完成资产准备。
+    /// 校验：名称 + referenceAudioPath + referenceText + 音频文件可读 + 可作为 MLX 输入。
+    /// 成功后自行更新 VoiceProfile.status = .available 并保存上下文。
+    /// - Parameters:
+    ///   - profileID: 目标 VoiceProfile 的 UUID
+    ///   - context: SwiftData ModelContext
+    /// - Returns: 校验通过的 VoiceProfile 实例
+    /// - Throws: ReadinessError
+    func ensureVoiceProfileReady(profileID: UUID, context: ModelContext) async throws -> VoiceProfile {
+        // 1. 获取音色档案
+        let descriptor = FetchDescriptor<VoiceProfile>(predicate: #Predicate { $0.id == profileID })
+        guard let profile = try context.fetch(descriptor).first else {
+            throw ReadinessError.profileNotFound
+        }
+
+        // 2. 音色名称
+        guard !profile.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw ReadinessError.emptyName
+        }
+
+        // 3. referenceAudioPath
+        guard let refPath = profile.referenceAudioPath, !refPath.isEmpty else {
+            throw ReadinessError.emptyReferenceAudioPath
+        }
+
+        // 4. referenceText
+        guard let refText = profile.referenceText,
+              !refText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw ReadinessError.emptyReferenceText
+        }
+
+        // 5. 确认参考音频已持久化
+        let absURL = absoluteURL(from: refPath)
+        guard fileManager.fileExists(atPath: absURL.path) else {
+            throw ReadinessError.referenceAudioNotPersisted(path: absURL.path)
+        }
+
+        // 6. 确认参考音频可读取（能加载时长即为可读）
+        let asset = AVURLAsset(url: absURL)
+        do {
+            let duration = try await asset.load(.duration)
+            let secs = CMTimeGetSeconds(duration)
+            if secs.isFinite && secs > 0 {
+                profile.durationSeconds = secs
+            }
+        } catch {
+            throw ReadinessError.referenceAudioNotReadable(path: absURL.path)
+        }
+
+        // 7. 标记可用并保存
+        profile.status = .available
+        profile.modifiedAt = Date()
+        try context.save()
+
+        return profile
     }
 }

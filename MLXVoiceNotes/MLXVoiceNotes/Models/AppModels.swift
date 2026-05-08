@@ -247,7 +247,7 @@ final class VoiceProfile {
         switch status {
         case .builtIn:       return "内置"
         case .available:     return "可用"
-        case .pendingReview: return "待验证"
+        case .pendingReview: return "创建中"
         case .failed:        return "失败"
         }
     }

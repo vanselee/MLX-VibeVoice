@@ -141,7 +141,7 @@ struct ScriptLibraryView: View {
     }
 
     private var availableVoices: [String] {
-        let allowedStatuses: Set<VoiceProfileStatus> = [.builtIn, .available, .pendingReview]
+        let allowedStatuses: Set<VoiceProfileStatus> = [.builtIn, .available]
         return voiceProfiles
             .filter { allowedStatuses.contains($0.status) }
             .map(\.name)

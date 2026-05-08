@@ -323,16 +323,31 @@ struct CreateVoiceProfileView: View {
             }
         }
         
-        // 6. 必须显式保存，保存成功才关闭窗口
+        // 6. 必须显式保存，保存成功才进行资产准备
         do {
             try modelContext.save()
-            print("[saveVoice] 保存成功 id=\(profile.id) name=\(profile.name) refPath=\(profile.referenceAudioPath ?? "nil")")
-            onDismiss()
+            print("[saveVoice] SwiftData 保存成功 id=\(profile.id) name=\(profile.name)")
+            
+            // 7. 确保音色资产准备完成（校验通过后 status → .available）
+            Task {
+                do {
+                    _ = try await VoiceProfileStorageService.shared.ensureVoiceProfileReady(profileID: profile.id, context: modelContext)
+                    print("[saveVoice] 音色资产准备完成，status = .available")
+                    await MainActor.run {
+                        self.onDismiss()
+                    }
+                } catch {
+                    let errMsg = "音色准备失败: \(error.localizedDescription)"
+                    print("[saveVoice] \(errMsg)")
+                    await MainActor.run {
+                        self.saveError = errMsg
+                    }
+                }
+            }
         } catch {
             let errMsg = "保存音色失败: \(error.localizedDescription)"
             print("[saveVoice] \(errMsg)")
             saveError = errMsg
-            // 不调用 onDismiss()，窗口保持，用户可修改后重试
         }
     }
 
