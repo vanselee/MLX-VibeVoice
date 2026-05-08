@@ -8,10 +8,7 @@ struct ContentView: View {
     @State private var selectedPage: AppPage = .scriptLibrary
     @State private var selectedScriptID: UUID?
     
-    // Debug 测试页面（仅在 DEBUG 模式启用）
-    #if DEBUG
-    @State private var showMLXTest = false
-    #endif
+
 
     var selectedScript: Script? {
         scripts.first { $0.id == selectedScriptID } ?? scripts.first
@@ -29,18 +26,6 @@ struct ContentView: View {
             detailView
                 .frame(minWidth: 860, minHeight: 620)
         }
-        #if DEBUG
-        .sheet(isPresented: $showMLXTest) {
-            MLXTestView()
-        }
-        .toolbar {
-            ToolbarItem(placement: .navigation) {
-                Button(action: { showMLXTest.toggle() }) {
-                    Image(systemName: "wand.and.stars")
-                }
-            }
-        }
-        #endif
         .onAppear {
             seedSampleScriptsIfNeeded()
             seedSampleVoiceProfilesIfNeeded()

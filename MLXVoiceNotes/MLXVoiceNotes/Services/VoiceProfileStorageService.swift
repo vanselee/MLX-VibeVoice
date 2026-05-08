@@ -147,6 +147,10 @@ final class VoiceProfileStorageService {
     ///   - context: SwiftData ModelContext
     /// - Returns: 校验通过的 VoiceProfile 实例
     /// - Throws: ReadinessError
+    /// 确保音色档案已完成资产准备并标记为可用。
+    /// 校验：名称 + referenceAudioPath + referenceText + 音频文件存在 + 音频可读取。
+    /// 成功后自行更新 VoiceProfile.status = .available 并保存上下文。
+    /// 失败时将 status 改为 .failed 并保存上下文，避免资源中心永久显示"创建中"。
     func ensureVoiceProfileReady(profileID: UUID, context: ModelContext) async throws -> VoiceProfile {
         // 1. 获取音色档案
         let descriptor = FetchDescriptor<VoiceProfile>(predicate: #Predicate { $0.id == profileID })
@@ -156,23 +160,27 @@ final class VoiceProfileStorageService {
 
         // 2. 音色名称
         guard !profile.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            await markFailed(profile: profile, context: context)
             throw ReadinessError.emptyName
         }
 
         // 3. referenceAudioPath
         guard let refPath = profile.referenceAudioPath, !refPath.isEmpty else {
+            await markFailed(profile: profile, context: context)
             throw ReadinessError.emptyReferenceAudioPath
         }
 
         // 4. referenceText
         guard let refText = profile.referenceText,
               !refText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            await markFailed(profile: profile, context: context)
             throw ReadinessError.emptyReferenceText
         }
 
         // 5. 确认参考音频已持久化
         let absURL = absoluteURL(from: refPath)
         guard fileManager.fileExists(atPath: absURL.path) else {
+            await markFailed(profile: profile, context: context)
             throw ReadinessError.referenceAudioNotPersisted(path: absURL.path)
         }
 
@@ -185,14 +193,22 @@ final class VoiceProfileStorageService {
                 profile.durationSeconds = secs
             }
         } catch {
+            await markFailed(profile: profile, context: context)
             throw ReadinessError.referenceAudioNotReadable(path: absURL.path)
         }
 
-        // 7. 标记可用并保存
+        // 7. 校验全部通过，标记可用并保存
         profile.status = .available
         profile.modifiedAt = Date()
         try context.save()
 
         return profile
+    }
+
+    /// 将音色标记为失败状态并保存，避免资源中心永久显示"创建中"
+    private func markFailed(profile: VoiceProfile, context: ModelContext) async {
+        profile.status = .failed
+        profile.modifiedAt = Date()
+        try? context.save()
     }
 }
