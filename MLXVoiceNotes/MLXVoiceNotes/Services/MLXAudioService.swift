@@ -25,6 +25,15 @@ struct AudioDiagInfo {
     let totalElapsedSec: Double
 }
 
+/// 参考音频缓存条目
+private struct CachedRefAudio {
+    let mlxArray: MLXArray
+    let sampleCount: Int
+    let createdAt: Date
+    let fileModificationDate: Date?
+    let fileSize: Int64
+}
+
 // MARK: - Phase 2B: refAudio/refText Stability Test
 let phase2RefAudioPath = "/Users/apple/Desktop/李不二聊电商/4月12日音频母带/4月22日声音母带.mp3"
 let phase2RefText = "你永远都搞不清楚这些平台它到底要什么，不要什么，有时候一条视频吧，花几个小时你把它做出来了，发到了a平台呢，正常通过，发到b平台呢，直接限流，有的还给你封号呢"
@@ -47,6 +56,27 @@ class MLXAudioService: ObservableObject {
 
     /// 防止并发加载模型
     private var loadModelTask: Task<Void, Never>?
+
+    /// 参考音频 MLXArray 缓存（key: URL.path），最多 8 条，超出时移除最旧
+    private var refAudioCache: [String: CachedRefAudio] = [:]
+    private let maxRefAudioCacheCount = 8
+
+    /// 清理过期缓存条目（最多缓存 maxRefAudioCacheCount 条，超出时移除最旧）
+    private func pruneRefAudioCache() {
+        guard refAudioCache.count >= maxRefAudioCacheCount else { return }
+        let oldest = refAudioCache.min { $0.value.createdAt < $1.value.createdAt }
+        if let key = oldest?.key {
+            refAudioCache.removeValue(forKey: key)
+        }
+    }
+
+    private func fileModificationDate(for url: URL) -> Date? {
+        (try? FileManager.default.attributesOfItem(atPath: url.path)[.modificationDate] as? Date)
+    }
+
+    private func fileSize(for url: URL) -> Int64 {
+        (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64) ?? 0
+    }
 
     private init() {}
 
@@ -191,10 +221,27 @@ class MLXAudioService: ObservableObject {
             // 分阶段计时：参考音频加载
             let refAudioLoadStart = Date()
             if let refAudioURL {
-                // loadAudioArray returns (sampleCount, MLXArray), we only need the audio array
-                let (_, refAudioArrayData) = try loadAudioArray(from: refAudioURL, sampleRate: outputSampleRate)
-                refAudioArray = refAudioArrayData
-                print("[MLXTTS] refAudio loaded from: \(refAudioURL.path)")
+                if let cached = refAudioCache[refAudioURL.path],
+                   cached.fileModificationDate == fileModificationDate(for: refAudioURL),
+                   cached.fileSize == fileSize(for: refAudioURL) {
+                    // 命中缓存，直接复用 MLXArray
+                    refAudioArray = cached.mlxArray
+                    print("[MLXTTS] refAudio cache hit: \(refAudioURL.path)")
+                } else {
+                    // 未命中，加载并缓存
+                    let (sampleCount, loadedArray) = try loadAudioArray(from: refAudioURL, sampleRate: outputSampleRate)
+                    refAudioArray = loadedArray
+                    print("[MLXTTS] refAudio loaded from: \(refAudioURL.path)")
+                    // 写入缓存
+                    pruneRefAudioCache()
+                    refAudioCache[refAudioURL.path] = CachedRefAudio(
+                        mlxArray: loadedArray,
+                        sampleCount: sampleCount,
+                        createdAt: Date(),
+                        fileModificationDate: fileModificationDate(for: refAudioURL),
+                        fileSize: fileSize(for: refAudioURL)
+                    )
+                }
             }
             let refAudioLoadElapsed = Date().timeIntervalSince(refAudioLoadStart)
 
