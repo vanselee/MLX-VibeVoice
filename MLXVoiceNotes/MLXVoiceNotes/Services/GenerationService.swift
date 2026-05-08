@@ -367,13 +367,11 @@ enum GenerationService {
     }
 
     /// 重置段落状态用于全部重新生成
-    /// 全部重置为 pending，保留 generatedAudioPath 直到被新生成覆盖
-    /// 注意：如果用户在重新生成过程中取消，已重新生成的段落保留新音频
+    /// 全部重置为 pending，并清空 generatedAudioPath，避免旧音频路径在导出时错配
     private static func resetSegmentsForFullRegenerate(for script: Script) {
         for segment in script.segments {
             segment.status = .pending
-            // 保留 generatedAudioPath — 重新生成成功后会覆盖
-            // 取消时，已完成的旧文件仍存在，但段落状态为 pending（可重新生成）
+            segment.generatedAudioPath = nil
         }
     }
 

@@ -449,11 +449,12 @@ struct ScriptLibraryView: View {
     }
 
     private func startPlaceholderGeneration(for script: Script) {
-        if script.segments.isEmpty || script.roles.isEmpty {
-            parseRolesAndSegments(for: script)
-        }
-
+        // 必须先基于当前 bodyText 重新解析角色和段落，避免使用旧 segments 生成错误音频
+        parseRolesAndSegments(for: script)
         guard !script.segments.isEmpty else { return }
+
+        // 全量重新生成前清理旧音频文件，避免旧 generatedAudioPath 继续参与导出
+        try? AudioStorageService.deleteAudioFiles(for: script.id)
 
         // Phase 0.5: 调用真实生成
         GenerationService.start(script: script, voiceProfiles: voiceProfiles, voiceInstruct: nil) { result in
