@@ -18,6 +18,11 @@ struct AudioDiagInfo {
     let durationSec: Double
     let elapsedSec: Double
     let realtimeFactor: Double
+    // 分阶段耗时
+    let referenceAudioLoadElapsedSec: Double
+    let modelGenerateElapsedSec: Double
+    let wavWriteElapsedSec: Double
+    let totalElapsedSec: Double
 }
 
 // MARK: - Phase 2B: refAudio/refText Stability Test
@@ -183,17 +188,21 @@ class MLXAudioService: ObservableObject {
             let outputSampleRate = model.sampleRate
 
             var refAudioArray: MLXArray? = nil
+            // 分阶段计时：参考音频加载
+            let refAudioLoadStart = Date()
             if let refAudioURL {
                 // loadAudioArray returns (sampleCount, MLXArray), we only need the audio array
                 let (_, refAudioArrayData) = try loadAudioArray(from: refAudioURL, sampleRate: outputSampleRate)
                 refAudioArray = refAudioArrayData
                 print("[MLXTTS] refAudio loaded from: \(refAudioURL.path)")
             }
+            let refAudioLoadElapsed = Date().timeIntervalSince(refAudioLoadStart)
 
             let genParams = generationParams ?? GenerateParameters()
 
-            // Phase 0.5: 记录生成耗时（计时起点，在 model.generate 之前）
+            // 分阶段计时：模型推理
             let startedAt = Date()
+            let modelGenStart = Date()
 
             let audioArray = try await model.generate(
                 text: text,
@@ -203,6 +212,7 @@ class MLXAudioService: ObservableObject {
                 language: language,
                 generationParameters: genParams
             )
+            let modelGenElapsed = Date().timeIntervalSince(modelGenStart)
 
             // 样本诊断（只打印，不改变音频）
             let samples = audioArray.asArray(Float.self)
@@ -226,8 +236,9 @@ class MLXAudioService: ObservableObject {
                 throw TTSError.emptyAudioOutput
             }
 
-            // Phase 0.5: 计算生成耗时（此时 sampleCount 已确定）
+            // 分阶段计时：总耗时
             let elapsedSec = Date().timeIntervalSince(startedAt)
+            let totalElapsedSec = elapsedSec
             let durationSec = Double(sampleCount) / Double(outputSampleRate)
             let realtimeFactor = durationSec > 0 ? elapsedSec / durationSec : 0
 
@@ -240,12 +251,14 @@ class MLXAudioService: ObservableObject {
             let url = tempDir.appendingPathComponent(fileName)
             print("[MLXTTS] output path: \(url.path)")
 
-            // 使用官方 AudioUtils，不做强制归一化
+            // 分阶段计时：WAV 写入
+            let wavWriteStart = Date()
             try AudioUtils.writeWavFile(
                 samples: samples,
                 sampleRate: outputSampleRate,
                 fileURL: url
             )
+            let wavWriteElapsed = Date().timeIntervalSince(wavWriteStart)
 
             let diag = AudioDiagInfo(
                 fileName: fileName,
@@ -256,7 +269,11 @@ class MLXAudioService: ObservableObject {
                 filePath: url.path,
                 durationSec: durationSec,
                 elapsedSec: elapsedSec,
-                realtimeFactor: realtimeFactor
+                realtimeFactor: realtimeFactor,
+                referenceAudioLoadElapsedSec: refAudioLoadElapsed,
+                modelGenerateElapsedSec: modelGenElapsed,
+                wavWriteElapsedSec: wavWriteElapsed,
+                totalElapsedSec: totalElapsedSec
             )
 
             await MainActor.run {
@@ -292,7 +309,11 @@ class MLXAudioService: ObservableObject {
             filePath: url.path,
             durationSec: 1.0,
             elapsedSec: 0,
-            realtimeFactor: 0
+            realtimeFactor: 0,
+            referenceAudioLoadElapsedSec: 0,
+            modelGenerateElapsedSec: 0,
+            wavWriteElapsedSec: 0,
+            totalElapsedSec: 0
         )
         await MainActor.run {
             lastDiag = placeholderDiag
@@ -396,7 +417,11 @@ class MLXAudioService: ObservableObject {
                     filePath: destURL.path,
                     durationSec: diag.durationSec,
                     elapsedSec: diag.elapsedSec,
-                    realtimeFactor: diag.realtimeFactor
+                    realtimeFactor: diag.realtimeFactor,
+                    referenceAudioLoadElapsedSec: diag.referenceAudioLoadElapsedSec,
+                    modelGenerateElapsedSec: diag.modelGenerateElapsedSec,
+                    wavWriteElapsedSec: diag.wavWriteElapsedSec,
+                    totalElapsedSec: diag.totalElapsedSec
                 )
                 results.append((run, diag))
                 print("[Phase2B] run#\(run): maxAbs=\(String(format: "%.6f", diag.maxAbs)), rms=\(String(format: "%.6f", diag.rms)), dur=\(String(format: "%.2f", diag.durationSec))s")
