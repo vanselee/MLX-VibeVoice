@@ -198,10 +198,12 @@ class MLXAudioService: ObservableObject {
             }
             let refAudioLoadElapsed = Date().timeIntervalSince(refAudioLoadStart)
 
+            // 分阶段计时：总耗时起点（必须在所有操作之前记录）
+            let totalStart = Date()
+
             let genParams = generationParams ?? GenerateParameters()
 
             // 分阶段计时：模型推理
-            let startedAt = Date()
             let modelGenStart = Date()
 
             let audioArray = try await model.generate(
@@ -236,11 +238,8 @@ class MLXAudioService: ObservableObject {
                 throw TTSError.emptyAudioOutput
             }
 
-            // 分阶段计时：总耗时
-            let elapsedSec = Date().timeIntervalSince(startedAt)
-            let totalElapsedSec = elapsedSec
+            // 在所有操作完成后计算完整耗时
             let durationSec = Double(sampleCount) / Double(outputSampleRate)
-            let realtimeFactor = durationSec > 0 ? elapsedSec / durationSec : 0
 
             await MainActor.run {
                 progress = 0.8
@@ -259,6 +258,11 @@ class MLXAudioService: ObservableObject {
                 fileURL: url
             )
             let wavWriteElapsed = Date().timeIntervalSince(wavWriteStart)
+
+            // 完整耗时（包含参考音频加载 + 推理 + WAV 写入）
+            let elapsedSec = Date().timeIntervalSince(totalStart)
+            let totalElapsedSec = elapsedSec
+            let realtimeFactor = durationSec > 0 ? totalElapsedSec / durationSec : 0
 
             let diag = AudioDiagInfo(
                 fileName: fileName,
