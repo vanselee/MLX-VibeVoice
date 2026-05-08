@@ -1,6 +1,14 @@
 import SwiftUI
 import SwiftData
 
+/// 角色音色绑定快照（用于解析后恢复绑定）
+struct VoiceRoleBinding {
+    let defaultVoiceName: String
+    let speed: Double
+    let volumeDB: Double
+    let pitch: Double
+}
+
 struct ScriptLibraryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var voiceProfiles: [VoiceProfile]
@@ -393,6 +401,22 @@ struct ScriptLibraryView: View {
         }
     }
 
+    /// 获取角色默认音色名称（优先使用可用参考音色，其次内置音色）
+    private func defaultVoiceName(for roleName: String) -> String {
+        // 优先查找可用参考音色
+        if let refVoice = findAvailableReferenceVoice() {
+            return refVoice
+        }
+        // 无可用参考音色时使用内置音色
+        if roleName == "旁白" {
+            return "默认清晰女声"
+        }
+        if roleName.contains("男") || roleName.contains("博主") || roleName.contains("老板") {
+            return "自然男声"
+        }
+        return "默认清晰女声"
+    }
+
     private func pasteClipboard(into script: Script) {
         #if os(macOS)
         guard let clipboardText = NSPasteboard.general.string(forType: .string),
@@ -410,6 +434,17 @@ struct ScriptLibraryView: View {
     private func parseRolesAndSegments(for script: Script) {
         let parsedScript = ScriptParser.parse(script.bodyText)
 
+        // Step 1: 保存旧角色的音色绑定（按 normalizedName 索引）
+        var oldVoiceBindings: [String: VoiceRoleBinding] = [:]
+        for oldRole in script.roles {
+            oldVoiceBindings[oldRole.normalizedName] = VoiceRoleBinding(
+                defaultVoiceName: oldRole.defaultVoiceName,
+                speed: oldRole.speed,
+                volumeDB: oldRole.volumeDB,
+                pitch: oldRole.pitch
+            )
+        }
+
         let oldSegments = script.segments
         let oldRoles = script.roles
         script.segments.removeAll()
@@ -417,11 +452,19 @@ struct ScriptLibraryView: View {
         oldSegments.forEach(modelContext.delete)
         oldRoles.forEach(modelContext.delete)
 
+        // Step 2: 重新创建角色，尝试恢复旧绑定
         for parsedRole in parsedScript.roles {
+            // 尝试匹配旧绑定
+            let binding = oldVoiceBindings[parsedRole.normalizedName]
+            let voiceName = binding?.defaultVoiceName ?? defaultVoiceName(for: parsedRole.normalizedName)
+            
             let role = VoiceRole(
                 name: parsedRole.name,
                 normalizedName: parsedRole.normalizedName,
-                defaultVoiceName: defaultVoiceName(for: parsedRole.normalizedName),
+                defaultVoiceName: voiceName,
+                speed: binding?.speed ?? 1.0,
+                volumeDB: binding?.volumeDB ?? 0.0,
+                pitch: binding?.pitch ?? 0,
                 script: script
             )
             modelContext.insert(role)
@@ -452,6 +495,12 @@ struct ScriptLibraryView: View {
         // 必须先基于当前 bodyText 重新解析角色和段落，避免使用旧 segments 生成错误音频
         parseRolesAndSegments(for: script)
         guard !script.segments.isEmpty else { return }
+
+        // 校验角色绑定的音色是否可用于生成
+        if let errorMessage = validateRolesForGeneration(for: script) {
+            parseSummary = errorMessage
+            return
+        }
 
         // 全量重新生成前清理旧音频文件，避免旧 generatedAudioPath 继续参与导出
         try? AudioStorageService.deleteAudioFiles(for: script.id)
@@ -485,14 +534,42 @@ struct ScriptLibraryView: View {
         }
     }
 
-    private func defaultVoiceName(for roleName: String) -> String {
-        if roleName == "旁白" {
-            return "默认清晰女声"
+    /// 查找可用的参考音色作为默认（优先 status==available 且有 referenceAudioPath）
+    private func findAvailableReferenceVoice() -> String? {
+        let available = voiceProfiles.first {
+            $0.status == .available &&
+            $0.referenceAudioPath != nil &&
+            !$0.referenceAudioPath!.isEmpty &&
+            $0.referenceText != nil &&
+            !$0.referenceText!.isEmpty
         }
-        if roleName.contains("男") || roleName.contains("博主") || roleName.contains("老板") {
-            return "自然男声"
+        return available?.name
+    }
+
+    /// 校验角色绑定的音色是否可用于生成
+    /// - Returns: nil if all roles valid, otherwise error message
+    private func validateRolesForGeneration(for script: Script) -> String? {
+        for role in script.roles {
+            guard let profile = voiceProfiles.first(where: { $0.name == role.defaultVoiceName }) else {
+                return "角色「\(role.name)」未绑定音色，请在角色音色绑定中选择可用参考音色。"
+            }
+            // 检查是否可用（status==available 且有完整的 referenceAudioPath 和 referenceText）
+            let hasValidReference = profile.status == .available || profile.status == .builtIn
+            let hasAudio = profile.referenceAudioPath != nil && !profile.referenceAudioPath!.isEmpty
+            let hasText = profile.referenceText != nil && !profile.referenceText!.isEmpty
+            
+            if profile.status == .builtIn {
+                // 内置音色可以生成（使用模型内置音色）
+                continue
+            }
+            if profile.status != .available {
+                return "角色「\(role.name)」绑定的音色「\(profile.name)」状态为「\(profile.statusLabel)」，请选择其他可用音色。"
+            }
+            if !hasAudio || !hasText {
+                return "角色「\(role.name)」绑定的音色「\(profile.name)」缺少参考音频或参考文案，请在角色音色绑定中选择其他可用参考音色。"
+            }
         }
-        return "默认清晰女声"
+        return nil
     }
 
     private var exportDisplayPath: String {
