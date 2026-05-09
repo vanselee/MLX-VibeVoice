@@ -50,6 +50,19 @@ class MLXAudioService: ObservableObject {
     @Published var currentModelName: String = "Simulated"
     @Published var lastDiag: AudioDiagInfo?  // 最近一次生成的诊断信息
 
+    /// 当前已加载模型的 repo（公开只读，供 UI 判断当前选中模型）
+    public var currentLoadedRepo: String? { loadedModelRepo }
+
+    /// 当前选择的模型 repo（UserDefaults 持久化）
+    @Published var selectedModelRepo: String {
+        didSet {
+            UserDefaults.standard.set(selectedModelRepo, forKey: "selectedTTSModelRepo")
+        }
+    }
+
+    /// 当前已加载的模型 repo（用于判断是否需要重新加载）
+    private var loadedModelRepo: String?
+
 #if canImport(MLXAudioTTS)
     private var ttsModel: (any SpeechGenerationModel)?
 #endif
@@ -78,7 +91,11 @@ class MLXAudioService: ObservableObject {
         (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64) ?? 0
     }
 
-    private init() {}
+    private init() {
+        let saved = UserDefaults.standard.string(forKey: "selectedTTSModelRepo")
+        ?? "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16"
+        selectedModelRepo = saved
+    }
 
     /// 幂等加载模型：已加载则直接返回，正在加载则等待完成，否则启动加载
     func ensureModelLoaded() async {
@@ -106,8 +123,8 @@ class MLXAudioService: ObservableObject {
 
     func loadModel() async {
 #if canImport(MLXAudioTTS)
-        // 防重复加载守卫
-        if ttsModel != nil && isModelLoaded { return }
+        // 防重复加载守卫（同一 repo 不重复加载）
+        if ttsModel != nil && isModelLoaded && loadedModelRepo == selectedModelRepo { return }
 #endif
 
         await MainActor.run {
@@ -116,53 +133,36 @@ class MLXAudioService: ObservableObject {
         }
 
 #if canImport(MLXAudioTTS)
-        // Phase 0 结论：bf16 通过，8bit 输出杂音
-        // 默认使用 bf16 本地模型
-        let modelRepo = "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16"
-        let cacheDir = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".cache/huggingface/hub/mlx-audio/mlx-community_Qwen3-TTS-12Hz-0.6B-Base-bf16")
+        let modelRepo = selectedModelRepo
 
-        let requiredFiles = [
-            "config.json",
-            "model.safetensors",
-            "tokenizer_config.json",
-            "generation_config.json",
-            "vocab.json",
-            "merges.txt"
-        ]
-
-        var cacheValid = true
-        var missingFiles: [String] = []
-
-        for file in requiredFiles {
-            let filePath = cacheDir.appendingPathComponent(file)
-            if !FileManager.default.fileExists(atPath: filePath.path) {
-                cacheValid = false
-                missingFiles.append(file)
-                break
-            }
-            if let attrs = try? FileManager.default.attributesOfItem(atPath: filePath.path),
-               let size = attrs[.size] as? Int, size == 0 {
-                cacheValid = false
-                missingFiles.append("\(file) (empty)")
-                break
-            }
-        }
-
-        // 检查 speech_tokenizer/config.json
-        let speechTokenizerConfig = cacheDir.appendingPathComponent("speech_tokenizer/config.json")
-        if !FileManager.default.fileExists(atPath: speechTokenizerConfig.path) {
-            cacheValid = false
-            missingFiles.append("speech_tokenizer/config.json")
-        }
-
-        if !cacheValid {
+        // 验证模型是否已安装且完整
+        guard let catalogModel = ModelCatalog.find(byRepo: modelRepo) else {
             await MainActor.run {
-                self.errorMessage = "bf16 本地模型不完整，缺少: \(missingFiles.joined(separator: ", "))。已阻止自动下载。"
+                self.errorMessage = "当前模型不在支持列表中，请到资源中心切换模型"
                 self.isModelLoaded = true
-                self.currentModelName = "Missing bf16 Model"
+                self.currentModelName = "Unknown Model"
             }
             return
+        }
+
+        let status = ModelDownloadService.shared.checkStatus(for: catalogModel)
+        switch status {
+        case .notDownloaded:
+            await MainActor.run {
+                self.errorMessage = "当前模型未安装，请先到资源中心下载或切换模型"
+                self.isModelLoaded = true
+                self.currentModelName = "Model Not Installed"
+            }
+            return
+        case .incomplete(let missingFiles):
+            await MainActor.run {
+                self.errorMessage = "当前模型文件不完整，缺少: \(missingFiles.prefix(3).joined(separator: ", "))。请到资源中心下载或切换模型"
+                self.isModelLoaded = true
+                self.currentModelName = "Model Incomplete"
+            }
+            return
+        case .installed:
+            break // 继续加载
         }
 
         do {
@@ -171,11 +171,12 @@ class MLXAudioService: ObservableObject {
             await MainActor.run {
                 self.ttsModel = model
                 self.isModelLoaded = true
-                self.currentModelName = "Qwen3 0.6B Base bf16"
+                self.loadedModelRepo = modelRepo
+                self.currentModelName = catalogModel.displayName + " (\(catalogModel.precision))"
             }
         } catch {
             await MainActor.run {
-                self.errorMessage = "Failed to load bf16 model: \(error.localizedDescription)"
+                self.errorMessage = "Failed to load model: \(error.localizedDescription)"
                 self.isModelLoaded = true
                 self.currentModelName = "Simulated"
             }
@@ -197,6 +198,23 @@ class MLXAudioService: ObservableObject {
         language: String = "auto",
         generationParams: GenerateParameters? = nil
     ) async throws -> URL {
+        // 检查当前选择的模型是否已安装且完整
+        let selectedRepo = selectedModelRepo
+        if let catalogModel = ModelCatalog.find(byRepo: selectedRepo) {
+            let status = ModelDownloadService.shared.checkStatus(for: catalogModel)
+            if !status.isInstalled {
+                await MainActor.run {
+                    self.errorMessage = "当前模型未安装，请先到资源中心下载或切换模型"
+                }
+                throw TTSError.modelNotInstalled
+            }
+        } else {
+            await MainActor.run {
+                self.errorMessage = "当前模型不在支持列表中，请到资源中心切换模型"
+            }
+            throw TTSError.modelNotInstalled
+        }
+
         // 确保模型已加载（幂等，不重复加载）
         await ensureModelLoaded()
 
@@ -419,40 +437,31 @@ class MLXAudioService: ObservableObject {
     }
 
 #if canImport(MLXAudioTTS)
-    func switchModel(_ modelName: String, modelRepo: String) async {
+    /// 切换到指定模型
+    /// - 清空当前已加载模型
+    /// - 清空参考音频缓存
+    /// - 下一次 generate 时自动加载新模型
+    func switchToModel(repo: String) async {
+        // 同一 repo 不需要切换
+        guard repo != loadedModelRepo else { return }
+
         await MainActor.run {
-            isModelLoaded = false
-            errorMessage = nil
+            // 清空已加载模型
+            self.ttsModel = nil
+            self.isModelLoaded = false
+            self.loadedModelRepo = nil
+            self.currentModelName = "Switching..."
+            self.errorMessage = nil
+
+            // 清空参考音频缓存
+            self.refAudioCache.removeAll()
+
+            // 更新选择
+            self.selectedModelRepo = repo
         }
 
-        do {
-            let model = try await TTS.loadModel(modelRepo: modelRepo)
-
-            await MainActor.run {
-                self.ttsModel = model
-                self.isModelLoaded = true
-                self.currentModelName = modelName
-            }
-        } catch {
-            await MainActor.run {
-                self.errorMessage = "Failed to load model: \(error.localizedDescription)"
-            }
-        }
-    }
-
-    func availableModels() -> [(name: String, repo: String)] {
-        // Phase 0 结论：bf16 通过，8bit 输出杂音
-        // MVP 阶段仅保留 bf16
-        let bf16CacheDir = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".cache/huggingface/hub/mlx-audio/mlx-community_Qwen3-TTS-12Hz-0.6B-Base-bf16")
-        let bf16ConfigExists = FileManager.default.fileExists(atPath: bf16CacheDir.appendingPathComponent("config.json").path)
-
-        if bf16ConfigExists {
-            return [("Qwen3 0.6B Base bf16", "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16")]
-        } else {
-            // bf16 不存在时返回空，触发错误提示
-            return []
-        }
+        // 加载新模型
+        await loadModel()
     }
 
     /// Phase 2B refAudio 稳定性测试：同一目标文本 × 3 次生成
@@ -595,6 +604,7 @@ class MLXAudioService: ObservableObject {
 
 enum TTSError: Error, LocalizedError {
     case modelNotLoaded
+    case modelNotInstalled
     case generationFailed
     case audioSaveFailed
     case emptyAudioOutput
@@ -608,6 +618,7 @@ enum TTSError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .modelNotLoaded: return "TTS model not loaded"
+        case .modelNotInstalled: return "当前模型未安装，请先到资源中心下载或切换模型"
         case .generationFailed: return "Audio generation failed"
         case .audioSaveFailed: return "Failed to save audio file"
         case .emptyAudioOutput: return "Model returned empty audio (sampleCount == 0)"

@@ -69,7 +69,6 @@ struct ResourceCenterView: View {
                             model: item.model,
                             status: item.status,
                             missingFiles: ModelDownloadService.shared.missingFiles(for: item.model),
-                            isCurrentBaseline: item.model.isBaseline,
                             onRefresh: {
                                 refreshAllModelStatuses()
                             }

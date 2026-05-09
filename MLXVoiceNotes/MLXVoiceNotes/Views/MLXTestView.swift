@@ -70,17 +70,17 @@ struct MLXTestView: View {
     private var modelPickerPopover: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Select Model").font(.headline)
-            ForEach(mlxService.availableModels(), id: \.name) { model in
+            ForEach(ModelCatalog.allModels, id: \.repo) { model in
                 Button(action: {
                     Task {
-                        await mlxService.switchModel(model.name, modelRepo: model.repo)
+                        await mlxService.switchToModel(repo: model.repo)
                     }
                     showModelPicker = false
                 }) {
                     HStack {
-                        Text(model.name)
+                        Text(model.displayName)
                         Spacer()
-                        if mlxService.currentModelName == model.name {
+                        if mlxService.currentLoadedRepo == model.repo {
                             Image(systemName: "checkmark")
                         }
                     }

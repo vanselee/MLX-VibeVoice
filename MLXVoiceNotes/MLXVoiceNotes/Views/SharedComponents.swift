@@ -112,8 +112,17 @@ struct ModelRow: View {
     let model: QwenTTSModel
     let status: ModelInstallStatus
     let missingFiles: [String]
-    let isCurrentBaseline: Bool
     let onRefresh: () -> Void
+    @AppStorage("selectedTTSModelRepo") private var selectedModelRepo: String = "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16"
+
+    private var isCurrentlySelected: Bool {
+        status.isInstalled && model.repo == selectedModelRepo
+    }
+
+    private var isInstalledAndNotSelected: Bool {
+        if case .installed = status { return model.repo != selectedModelRepo }
+        return false
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -168,8 +177,8 @@ struct ModelRow: View {
                 HStack(spacing: 8) {
                     statusBadge
 
-                    if isCurrentBaseline && status.isInstalled {
-                        Text("当前基准模型")
+                    if isCurrentlySelected {
+                        Text("当前使用中")
                             .font(.caption)
                             .foregroundStyle(.green)
                     }
@@ -254,18 +263,26 @@ struct ModelRow: View {
     }
 
     private var actionButton: some View {
-        switch status {
-        case .incomplete:
+        if isCurrentlySelected {
+            return Button("当前使用中") {}
+                .controlSize(.small)
+                .disabled(true)
+                .eraseToAnyView()
+        } else if isInstalledAndNotSelected {
+            return Button("设为当前模型") {
+                Task {
+                    await MLXAudioService.shared.switchToModel(repo: model.repo)
+                }
+            }
+            .controlSize(.small)
+            .eraseToAnyView()
+        } else if case .incomplete = status {
             return Button("重新检测") {
                 onRefresh()
             }
             .controlSize(.small)
             .eraseToAnyView()
-        case .installed:
-            return Text("-")
-                .foregroundStyle(.secondary)
-                .eraseToAnyView()
-        case .notDownloaded:
+        } else {
             return Text("-")
                 .foregroundStyle(.secondary)
                 .eraseToAnyView()

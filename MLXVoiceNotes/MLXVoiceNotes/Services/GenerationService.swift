@@ -325,7 +325,7 @@ enum GenerationService {
                         print("[GenerationService] Segment \(segmentOrder) quality check failed, retry \(attempt + 1)/\(maxRetries): \(error.localizedDescription)")
                         continue
                     }
-                case .modelNotLoaded, .audioSaveFailed, .invalidRefAudioPath, .refAudioFileNotFound, .refAudioLoadFailed:
+                case .modelNotLoaded, .modelNotInstalled, .audioSaveFailed, .invalidRefAudioPath, .refAudioFileNotFound, .refAudioLoadFailed:
                     // 非质量错误，不重试
                     throw error
                 }
