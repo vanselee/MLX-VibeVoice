@@ -4,6 +4,8 @@ import SwiftData
 struct ResourceCenterView: View {
     @State private var selectedTab: ResourceTab = .model
     @State private var showCreateVoice = false
+    @State private var modelStatus: ModelDownloadService.ModelStatus = .notDownloaded
+    @State private var missingFiles: [String] = []
 
     enum ResourceTab: String, CaseIterable {
         case model = "模型"
@@ -42,6 +44,9 @@ struct ResourceCenterView: View {
                 switch selectedTab {
                 case .model:
                     modelContent
+                        .task {
+                            refreshModelStatus()
+                        }
                 case .voice:
                     voiceContent
                 }
@@ -55,10 +60,18 @@ struct ResourceCenterView: View {
     @ViewBuilder
     private var modelContent: some View {
         VStack(spacing: 10) {
-            ResourceRow(name: "Qwen3-TTS 0.6B Base bf16", status: "已安装 · 推荐 8GB 以上统一内存")
-            ResourceRow(name: "Qwen3-TTS 0.6B Base 8bit", status: "下载中 · 42%")
-            ResourceRow(name: "Qwen3-TTS 1.7B Base", status: "下载失败 · 可重试")
+            ModelStatusRow(
+                status: modelStatus,
+                missingFiles: missingFiles,
+                onRefresh: refreshModelStatus
+            )
         }
+    }
+
+    private func refreshModelStatus() {
+        let svc = ModelDownloadService.shared
+        modelStatus = svc.checkModelStatus()
+        missingFiles = svc.missingFiles()
     }
 
     @ViewBuilder

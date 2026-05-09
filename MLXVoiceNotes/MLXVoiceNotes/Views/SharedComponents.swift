@@ -107,6 +107,50 @@ struct ResourceRow: View {
     }
 }
 
+/// 模型状态展示行（资源中心-模型 Tab）
+struct ModelStatusRow: View {
+    let status: ModelDownloadService.ModelStatus
+    let missingFiles: [String]
+    let onRefresh: () -> Void
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Qwen3-TTS 0.6B Base bf16")
+                    .fontWeight(.semibold)
+                    .font(.body)
+
+                Text(status.statusSummary)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                if case .incomplete = status {
+                    let names = missingFiles.prefix(3).joined(separator: ", ")
+                    let extra = missingFiles.count > 3 ? " 等" : ""
+                    Text("缺失文件: \(names)\(extra)")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+            }
+
+            Spacer()
+
+            if case .incomplete = status {
+                Button("重新检测") {
+                    onRefresh()
+                }
+                .controlSize(.small)
+            } else {
+                Text("-")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding()
+        .background(Color(nsColor: .controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+}
+
 struct QueueCard: View {
     let title: String
     let detail: String
