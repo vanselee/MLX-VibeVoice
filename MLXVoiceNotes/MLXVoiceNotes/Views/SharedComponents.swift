@@ -107,9 +107,183 @@ struct ResourceRow: View {
     }
 }
 
-/// 模型状态展示行（资源中心-模型 Tab）
+/// 模型列表行（资源中心-模型 Tab）
+struct ModelRow: View {
+    let model: QwenTTSModel
+    let status: ModelInstallStatus
+    let missingFiles: [String]
+    let isCurrentBaseline: Bool
+    let onRefresh: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // 左侧：模型信息
+            VStack(alignment: .leading, spacing: 6) {
+                // 第一行：名称 + 标签
+                HStack(spacing: 8) {
+                    Text(model.displayName)
+                        .fontWeight(.semibold)
+                        .font(.body)
+
+                    // 精度标签
+                    precisionBadge
+
+                    // 大小标签
+                    sizeBadge
+
+                    // 推荐标签
+                    if model.isRecommended {
+                        Text("推荐")
+                            .font(.caption2)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
+                            .background(Color.blue.opacity(0.15))
+                            .foregroundStyle(.blue)
+                            .clipShape(RoundedRectangle(cornerRadius: 3))
+                    }
+
+                    // 实验标签
+                    if model.isExperimental {
+                        Text("实验")
+                            .font(.caption2)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
+                            .background(Color.orange.opacity(0.15))
+                            .foregroundStyle(.orange)
+                            .clipShape(RoundedRectangle(cornerRadius: 3))
+                    }
+                }
+
+                // 第二行：分类 + 内存建议
+                HStack(spacing: 16) {
+                    Text(model.category)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(model.memoryHint)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                // 第三行：安装状态
+                HStack(spacing: 8) {
+                    statusBadge
+
+                    if isCurrentBaseline && status.isInstalled {
+                        Text("当前基准模型")
+                            .font(.caption)
+                            .foregroundStyle(.green)
+                    }
+
+                    if case .installed(let bytes) = status {
+                        Text(ModelDownloadService.formatBytes(bytes))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(model.expectedSizeText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                // 第四行：缺失文件（仅 incomplete 时显示）
+                if case .incomplete = status {
+                    let names = missingFiles.prefix(3).joined(separator: ", ")
+                    let extra = missingFiles.count > 3 ? " 等" : ""
+                    Text("缺失文件: \(names)\(extra)")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+            }
+
+            Spacer()
+
+            // 右侧：操作按钮占位
+            actionButton
+        }
+        .padding(12)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    // MARK: - 子组件
+
+    private var precisionBadge: some View {
+        let color: Color = {
+            switch model.precision {
+            case "bf16": return .purple
+            case "8bit": return .blue
+            case "4bit": return .cyan
+            default: return .secondary
+            }
+        }()
+        return Text(model.precision)
+            .font(.caption2)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.15))
+            .foregroundStyle(color)
+            .clipShape(RoundedRectangle(cornerRadius: 3))
+    }
+
+    private var sizeBadge: some View {
+        let color: Color = model.modelSizeLevel == "1.7B" ? .orange : .green
+        return Text(model.modelSizeLevel)
+            .font(.caption2)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.15))
+            .foregroundStyle(color)
+            .clipShape(RoundedRectangle(cornerRadius: 3))
+    }
+
+    private var statusBadge: some View {
+        let (text, color): (String, Color) = {
+            switch status {
+            case .installed: return ("已安装", .green)
+            case .notDownloaded: return ("未下载", .secondary)
+            case .incomplete: return ("文件不完整", .orange)
+            }
+        }()
+        return Text(text)
+            .font(.caption)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.15))
+            .foregroundStyle(color)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+    }
+
+    private var actionButton: some View {
+        switch status {
+        case .incomplete:
+            return Button("重新检测") {
+                onRefresh()
+            }
+            .controlSize(.small)
+            .eraseToAnyView()
+        case .installed:
+            return Text("-")
+                .foregroundStyle(.secondary)
+                .eraseToAnyView()
+        case .notDownloaded:
+            return Text("-")
+                .foregroundStyle(.secondary)
+                .eraseToAnyView()
+        }
+    }
+}
+
+// MARK: - AnyView 辅助
+
+extension View {
+    func eraseToAnyView() -> AnyView {
+        AnyView(self)
+    }
+}
+
+/// 旧版模型状态行（兼容旧代码）
 struct ModelStatusRow: View {
-    let status: ModelDownloadService.ModelStatus
+    let status: LegacyModelStatus
     let missingFiles: [String]
     let onRefresh: () -> Void
 

@@ -4,8 +4,7 @@ import SwiftData
 struct ResourceCenterView: View {
     @State private var selectedTab: ResourceTab = .model
     @State private var showCreateVoice = false
-    @State private var modelStatus: ModelDownloadService.ModelStatus = .notDownloaded
-    @State private var missingFiles: [String] = []
+    @State private var modelStatuses: [(model: QwenTTSModel, status: ModelInstallStatus)] = []
 
     enum ResourceTab: String, CaseIterable {
         case model = "模型"
@@ -45,7 +44,7 @@ struct ResourceCenterView: View {
                 case .model:
                     modelContent
                         .task {
-                            refreshModelStatus()
+                            refreshAllModelStatuses()
                         }
                 case .voice:
                     voiceContent
@@ -59,19 +58,31 @@ struct ResourceCenterView: View {
 
     @ViewBuilder
     private var modelContent: some View {
-        VStack(spacing: 10) {
-            ModelStatusRow(
-                status: modelStatus,
-                missingFiles: missingFiles,
-                onRefresh: refreshModelStatus
-            )
+        if modelStatuses.isEmpty {
+            ProgressView("检测模型...")
+                .frame(maxWidth: .infinity)
+        } else {
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(modelStatuses, id: \.model.id) { item in
+                        ModelRow(
+                            model: item.model,
+                            status: item.status,
+                            missingFiles: ModelDownloadService.shared.missingFiles(for: item.model),
+                            isCurrentBaseline: item.model.isBaseline,
+                            onRefresh: {
+                                refreshAllModelStatuses()
+                            }
+                        )
+                    }
+                }
+                .padding(.vertical, 4)
+            }
         }
     }
 
-    private func refreshModelStatus() {
-        let svc = ModelDownloadService.shared
-        modelStatus = svc.checkModelStatus()
-        missingFiles = svc.missingFiles()
+    private func refreshAllModelStatuses() {
+        modelStatuses = ModelDownloadService.shared.checkAllModels()
     }
 
     @ViewBuilder
