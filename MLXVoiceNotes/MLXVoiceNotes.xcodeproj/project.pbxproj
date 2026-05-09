@@ -10,6 +10,7 @@
 		FA7000010000000000000002 /* SchemaMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7000010000000000000001 /* SchemaMigration.swift */; };
 		FA8000010000000000000002 /* AudioPauseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8000010000000000000001 /* AudioPauseService.swift */; };
 		FA9000010000000000000002 /* AudioFadeProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9000010000000000000001 /* AudioFadeProcessor.swift */; };
+		FB0000020000000000000001 /* HTTPRangeFileDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0000010000000000000001 /* HTTPRangeFileDownloader.swift */; };
 		189D68E42FA5B77800A9486C /* MLXAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 189D68E32FA5B77800A9486C /* MLXAudio */; };
 		189D68E62FA5B77800A9486C /* MLXAudioCore in Frameworks */ = {isa = PBXBuildFile; productRef = 189D68E52FA5B77800A9486C /* MLXAudioCore */; };
 		189D68E82FA5B77800A9486C /* MLXAudioTTS in Frameworks */ = {isa = PBXBuildFile; productRef = 189D68E72FA5B77800A9486C /* MLXAudioTTS */; };
@@ -58,6 +59,7 @@
 		FA7000010000000000000001 /* SchemaMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SchemaMigration.swift; path = Services/SchemaMigration.swift; sourceTree = "<group>"; };
 		FA8000010000000000000001 /* AudioPauseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioPauseService.swift; path = Services/AudioPauseService.swift; sourceTree = "<group>"; };
 		FA9000010000000000000001 /* AudioFadeProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioFadeProcessor.swift; path = Services/AudioFadeProcessor.swift; sourceTree = "<group>"; };
+		FB0000010000000000000001 /* HTTPRangeFileDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HTTPRangeFileDownloader.swift; path = Services/HTTPRangeFileDownloader.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,6 +98,7 @@
 			FA7000010000000000000001 /* SchemaMigration.swift */,
 			FA8000010000000000000001 /* AudioPauseService.swift */,
 			FA9000010000000000000001 /* AudioFadeProcessor.swift */,
+			FB0000010000000000000001 /* HTTPRangeFileDownloader.swift */,
 				1A0000010000000000000017 /* Services/AudioExportService.swift */,
 				1A0000010000000000000018 /* Services/MLXAudioService.swift */,
 				1A0000010000000000000019 /* Views/SharedComponents.swift */,
@@ -213,6 +216,7 @@
 				1A0000010000000000000111 /* Views/MLXTestView.swift in Sources */,
 				4F8542AB8AF47E7DCC7F01CD /* AudioStorageService.swift in Sources */,
 				FA0000020000000000000001 /* ModelDownloadService.swift in Sources */,
+				FB0000020000000000000001 /* HTTPRangeFileDownloader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
