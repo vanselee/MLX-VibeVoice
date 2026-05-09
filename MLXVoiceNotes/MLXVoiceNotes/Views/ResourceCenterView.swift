@@ -5,6 +5,7 @@ struct ResourceCenterView: View {
     @State private var selectedTab: ResourceTab = .model
     @State private var showCreateVoice = false
     @State private var modelStatuses: [(model: QwenTTSModel, status: ModelInstallStatus)] = []
+    @ObservedObject private var downloadManager = ModelDownloadManager.shared
 
     enum ResourceTab: String, CaseIterable {
         case model = "模型"
@@ -65,14 +66,25 @@ struct ResourceCenterView: View {
             ScrollView {
                 LazyVStack(spacing: 12) {
                     ForEach(modelStatuses, id: \.model.id) { item in
-                        ModelRow(
-                            model: item.model,
-                            status: item.status,
-                            missingFiles: ModelDownloadService.shared.missingFiles(for: item.model),
-                            onRefresh: {
-                                refreshAllModelStatuses()
+                        let downloadTask = downloadManager.task(for: item.model)
+                        VStack(spacing: 8) {
+                            ModelRow(
+                                model: item.model,
+                                status: item.status,
+                                missingFiles: ModelDownloadManager.shared.missingFiles(for: item.model),
+                                onRefresh: {
+                                    refreshAllModelStatuses()
+                                },
+                                downloadTask: downloadTask
+                            )
+
+                            // 下载进度面板（非 idle 状态时显示）
+                            if let task = downloadTask, task.state != .idle {
+                                ModelDownloadPanel(downloadTask: task, onRefresh: {
+                                    refreshAllModelStatuses()
+                                })
                             }
-                        )
+                        }
                     }
                 }
                 .padding(.vertical, 4)
@@ -81,7 +93,8 @@ struct ResourceCenterView: View {
     }
 
     private func refreshAllModelStatuses() {
-        modelStatuses = ModelDownloadService.shared.checkAllModels()
+        modelStatuses = ModelDownloadManager.shared.checkAllModels()
+        downloadManager.removeCompletedTasks()
     }
 
     @ViewBuilder

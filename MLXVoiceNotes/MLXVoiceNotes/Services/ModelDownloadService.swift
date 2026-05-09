@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 // MARK: - 模型定义
 
@@ -418,16 +419,32 @@ final class ModelDownloadManager: ObservableObject {
 
     /// 所有活跃下载任务（repo -> task）
     @Published private(set) var activeTasks: [String: ModelDownloadTask] = [:]
+    /// Combine 订阅（转发 task 状态变更到 manager，驱动 SwiftUI 刷新）
+    private var cancellables: [String: AnyCancellable] = [:]
 
     private init() {}
 
-    /// 获取或创建指定模型的下载任务
-    func task(for model: QwenTTSModel) -> ModelDownloadTask {
+    /// 获取已有的下载任务（不创建新任务）
+    func task(for model: QwenTTSModel) -> ModelDownloadTask? {
+        activeTasks[model.repo]
+    }
+
+    /// 开始下载指定模型（创建并启动下载任务）
+    @discardableResult
+    func startDownload(for model: QwenTTSModel) -> ModelDownloadTask {
         if let existing = activeTasks[model.repo] {
+            existing.start()
             return existing
         }
         let task = ModelDownloadTask(model: model)
+        // 转发 task 的 objectWillChange → manager → SwiftUI 自动刷新
+        cancellables[model.repo] = task.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
         activeTasks[model.repo] = task
+        task.start()
         return task
     }
 
@@ -490,5 +507,26 @@ final class ModelDownloadManager: ObservableObject {
         } else {
             return .incomplete(missingFiles: missing)
         }
+    }
+
+    /// 清理已完成的下载任务
+    func removeCompletedTasks() {
+        for (repo, task) in activeTasks {
+            if case .completed = task.state {
+                activeTasks.removeValue(forKey: repo)
+                cancellables.removeValue(forKey: repo)
+            }
+        }
+    }
+
+    /// 删除已安装的模型（删除整个模型目录 + 清理下载任务）
+    func deleteModel(_ model: QwenTTSModel) throws {
+        let dir = model.localPath
+        if FileManager.default.fileExists(atPath: dir.path) {
+            try FileManager.default.removeItem(at: dir)
+        }
+        activeTasks.removeValue(forKey: model.repo)
+        cancellables.removeValue(forKey: model.repo)
+        objectWillChange.send()
     }
 }

@@ -115,6 +115,16 @@ struct ModelRow: View {
     let onRefresh: () -> Void
     @AppStorage("selectedTTSModelRepo") private var selectedModelRepo: String = "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16"
 
+    /// 可选的下载任务观察者（传入时启用下载控制）
+    var downloadTask: ModelDownloadTask?
+
+    @ObservedObject private var downloadManager = ModelDownloadManager.shared
+    @State private var showDeleteConfirmation = false
+
+    private var effectiveDownloadTask: ModelDownloadTask? {
+        downloadTask ?? downloadManager.task(for: model)
+    }
+
     private var isCurrentlySelected: Bool {
         status.isInstalled && model.repo == selectedModelRepo
     }
@@ -184,7 +194,7 @@ struct ModelRow: View {
                     }
 
                     if case .installed(let bytes) = status {
-                        Text(ModelDownloadService.formatBytes(bytes))
+                        Text(ModelDownloadManager.formatBytes(bytes))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     } else {
@@ -212,6 +222,15 @@ struct ModelRow: View {
         .padding(12)
         .background(Color(nsColor: .controlBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+        .alert("确认删除模型", isPresented: $showDeleteConfirmation) {
+            Button("取消", role: .cancel) { }
+            Button("删除", role: .destructive) {
+                try? ModelDownloadManager.shared.deleteModel(model)
+                onRefresh()
+            }
+        } message: {
+            Text("确定要删除「\(model.displayName)」吗？\n此操作将删除所有模型文件，且无法恢复。")
+        }
     }
 
     // MARK: - 子组件
@@ -251,6 +270,8 @@ struct ModelRow: View {
             case .installed: return ("已安装", .green)
             case .notDownloaded: return ("未下载", .secondary)
             case .incomplete: return ("文件不完整", .orange)
+            case .installing: return ("下载中", .blue)
+            case .failed: return ("失败", .red)
             }
         }()
         return Text(text)
@@ -263,30 +284,349 @@ struct ModelRow: View {
     }
 
     private var actionButton: some View {
-        if isCurrentlySelected {
-            return Button("当前使用中") {}
-                .controlSize(.small)
-                .disabled(true)
+        let task = effectiveDownloadTask
+        let downloadState = task?.state ?? .idle
+
+        // 下载进行中/暂停/失败/完成时，操作按钮在面板中显示
+        switch downloadState {
+        case .preparing, .downloading, .paused, .failed, .completed:
+            return EmptyView().eraseToAnyView()
+
+        case .idle:
+            // 已安装模型
+            if isCurrentlySelected {
+                return HStack(spacing: 4) {
+                    Text("当前使用中")
+                        .font(.caption)
+                        .foregroundStyle(.green)
+                    Button {
+                        onRefresh()
+                    } label: {
+                        Label("重新校验", systemImage: "checkmark.shield")
+                    }
+                    .controlSize(.small)
+                    Button {
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("删除", systemImage: "trash")
+                    }
+                    .controlSize(.small)
+                    .foregroundStyle(.red)
+                }
                 .eraseToAnyView()
-        } else if isInstalledAndNotSelected {
-            return Button("设为当前模型") {
-                Task {
-                    await MLXAudioService.shared.switchToModel(repo: model.repo)
+            } else if isInstalledAndNotSelected {
+                return HStack(spacing: 4) {
+                    Button {
+                        onRefresh()
+                    } label: {
+                        Label("重新校验", systemImage: "checkmark.shield")
+                    }
+                    .controlSize(.small)
+                    Button {
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("删除", systemImage: "trash")
+                    }
+                    .controlSize(.small)
+                    .foregroundStyle(.red)
+                    Button {
+                        Task {
+                            await MLXAudioService.shared.switchToModel(repo: model.repo)
+                        }
+                    } label: {
+                        Label("设为当前", systemImage: "checkmark.circle")
+                    }
+                    .controlSize(.small)
+                }
+                .eraseToAnyView()
+            } else if case .incomplete = status {
+                return Button {
+                    downloadManager.startDownload(for: model)
+                } label: {
+                    Label("下载模型", systemImage: "arrow.down.circle")
+                }
+                .controlSize(.small)
+                .eraseToAnyView()
+            } else if case .notDownloaded = status {
+                return Button {
+                    downloadManager.startDownload(for: model)
+                } label: {
+                    Label("下载模型", systemImage: "arrow.down.circle")
+                }
+                .controlSize(.small)
+                .eraseToAnyView()
+            } else {
+                return Button {
+                    onRefresh()
+                } label: {
+                    Label("检测", systemImage: "arrow.clockwise")
+                }
+                .controlSize(.small)
+                .eraseToAnyView()
+            }
+        }
+    }
+}
+
+// MARK: - 模型下载面板
+
+/// 显示详细下载进度的面板（含操作按钮）
+struct ModelDownloadPanel: View {
+    @ObservedObject var downloadTask: ModelDownloadTask
+    var onRefresh: () -> Void = {}
+
+    var body: some View {
+        if case .idle = downloadTask.state {
+            EmptyView()
+        } else {
+            VStack(alignment: .leading, spacing: 10) {
+                // 标题行 + 状态标签
+                HStack {
+                    Text("下载进度")
+                        .font(.caption.bold())
+                    Spacer()
+                    stateLabel
+                }
+
+                switch downloadTask.state {
+                case .preparing:
+                    ProgressView("正在获取文件信息...")
+                        .controlSize(.small)
+
+                case .downloading(let progress, let downloadedBytes, let totalBytes, let speedBps, let currentFile, let isResuming):
+                    downloadingContent(
+                        progress: progress,
+                        downloadedBytes: downloadedBytes,
+                        totalBytes: totalBytes,
+                        speedBps: speedBps,
+                        currentFile: currentFile,
+                        isResuming: isResuming
+                    )
+
+                case .paused(let partialBytes, let totalBytes):
+                    pausedContent(partialBytes: partialBytes, totalBytes: totalBytes)
+
+                case .failed(let error):
+                    failedContent(error: error)
+
+                case .completed:
+                    completedContent
+
+                case .idle:
+                    EmptyView()
+                }
+
+                // 操作按钮
+                actionButtons
+            }
+            .padding(10)
+            .background(Color(nsColor: .controlBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
+            )
+        }
+    }
+
+    // MARK: - 下载中内容
+
+    @ViewBuilder
+    private func downloadingContent(progress: Double, downloadedBytes: Int64, totalBytes: Int64, speedBps: Double, currentFile: String, isResuming: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // 总进度条
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color(nsColor: .controlBackgroundColor))
+                        .frame(height: 8)
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.accentColor)
+                        .frame(width: geometry.size.width * CGFloat(progress), height: 8)
                 }
             }
-            .controlSize(.small)
-            .eraseToAnyView()
-        } else if case .incomplete = status {
-            return Button("重新检测") {
-                onRefresh()
+            .frame(height: 8)
+
+            // 详情行
+            HStack {
+                Text(String(format: "%.1f%%", progress * 100))
+                    .font(.caption.monospacedDigit())
+                    .frame(width: 44, alignment: .leading)
+                Text(formatBytes(downloadedBytes) + " / " + formatBytes(totalBytes))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(formatSpeed(speedBps))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
             }
-            .controlSize(.small)
-            .eraseToAnyView()
-        } else {
-            return Text("-")
-                .foregroundStyle(.secondary)
-                .eraseToAnyView()
+
+            // 当前文件 + 续传标签
+            HStack(spacing: 6) {
+                if isResuming {
+                    Text("续传")
+                        .font(.caption2)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                        .background(Color.green.opacity(0.15))
+                        .foregroundStyle(.green)
+                        .clipShape(RoundedRectangle(cornerRadius: 3))
+                }
+                Text(truncateFileName(currentFile))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
         }
+    }
+
+    // MARK: - 已暂停内容
+
+    @ViewBuilder
+    private func pausedContent(partialBytes: Int64, totalBytes: Int64) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("已暂停，可继续下载")
+                .font(.caption)
+                .foregroundStyle(.orange)
+            Text("已下载: " + formatBytes(partialBytes) + " / " + formatBytes(totalBytes))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - 失败内容
+
+    @ViewBuilder
+    private func failedContent(error: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("下载失败")
+                .font(.caption)
+                .foregroundStyle(.red)
+            Text(error)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+        }
+    }
+
+    // MARK: - 完成内容
+
+    @ViewBuilder
+    private var completedContent: some View {
+        Text("下载完成")
+            .font(.caption)
+            .foregroundStyle(.green)
+    }
+
+    // MARK: - 操作按钮
+
+    @ViewBuilder
+    private var actionButtons: some View {
+        HStack(spacing: 8) {
+            switch downloadTask.state {
+            case .downloading:
+                Button {
+                    downloadTask.cancel()
+                } label: {
+                    Label("取消", systemImage: "xmark.circle")
+                }
+                .controlSize(.small)
+                .foregroundStyle(.red)
+
+            case .paused:
+                Button {
+                    downloadTask.start()
+                } label: {
+                    Label("继续下载", systemImage: "arrow.clockwise")
+                }
+                .controlSize(.small)
+
+                Button {
+                    downloadTask.cleanupPartials()
+                } label: {
+                    Label("清理临时文件", systemImage: "trash")
+                }
+                .controlSize(.small)
+                .foregroundStyle(.orange)
+
+            case .failed:
+                Button {
+                    downloadTask.start()
+                } label: {
+                    Label("重试", systemImage: "arrow.clockwise")
+                }
+                .controlSize(.small)
+
+                Button {
+                    downloadTask.cleanupPartials()
+                } label: {
+                    Label("清理", systemImage: "trash")
+                }
+                .controlSize(.small)
+                .foregroundStyle(.orange)
+
+            case .completed:
+                Button {
+                    onRefresh()
+                } label: {
+                    Label("刷新", systemImage: "arrow.clockwise")
+                }
+                .controlSize(.small)
+
+            default:
+                EmptyView()
+            }
+        }
+    }
+
+    // MARK: - 状态标签
+
+    @ViewBuilder
+    private var stateLabel: some View {
+        let (text, color): (String, Color) = {
+            switch downloadTask.state {
+            case .idle: return ("空闲", .secondary)
+            case .preparing: return ("准备中", .blue)
+            case .downloading: return ("下载中", .blue)
+            case .paused: return ("已暂停", .orange)
+            case .failed: return ("失败", .red)
+            case .completed: return ("完成", .green)
+            }
+        }()
+        Text(text)
+            .font(.caption2)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.15))
+            .foregroundStyle(color)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+    }
+
+    // MARK: - 格式化工具
+
+    private func formatBytes(_ bytes: Int64) -> String {
+        let gb = Double(bytes) / 1_073_741_824
+        if gb >= 1.0 { return String(format: "%.2fGB", gb) }
+        let mb = Double(bytes) / 1_048_576
+        if mb >= 1.0 { return String(format: "%.1fMB", mb) }
+        let kb = Double(bytes) / 1_024
+        return String(format: "%.0fKB", kb)
+    }
+
+    private func formatSpeed(_ bps: Double) -> String {
+        if bps <= 0 { return "" }
+        let mbps = bps / 1_048_576
+        if mbps >= 1.0 { return String(format: "%.1f MB/s", mbps) }
+        let kbps = bps / 1_024
+        return String(format: "%.0f KB/s", kbps)
+    }
+
+    private func truncateFileName(_ path: String) -> String {
+        let components = path.split(separator: "/")
+        if components.count > 2 {
+            return ".../" + components.suffix(2).joined(separator: "/")
+        }
+        return path
     }
 }
 
@@ -295,6 +635,27 @@ struct ModelRow: View {
 extension View {
     func eraseToAnyView() -> AnyView {
         AnyView(self)
+    }
+}
+
+/// 旧版模型状态（兼容旧代码）
+enum LegacyModelStatus: Equatable {
+    case available
+    case missing
+    case error
+    case incomplete
+
+    var statusSummary: String {
+        switch self {
+        case .available:
+            return "已安装"
+        case .missing:
+            return "模型文件下载目录不存在"
+        case .error:
+            return "未知错误"
+        case .incomplete:
+            return "不完整 / 缺少文件"
+        }
     }
 }
 
