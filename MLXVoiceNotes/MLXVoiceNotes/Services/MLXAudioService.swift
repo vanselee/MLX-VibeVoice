@@ -136,7 +136,7 @@ class MLXAudioService: ObservableObject {
         let modelRepo = selectedModelRepo
 
         // 验证模型是否已安装且完整
-        guard let catalogModel = ModelCatalog.find(byRepo: modelRepo) else {
+        guard let catalogModel = ModelCatalog.model(for: modelRepo) else {
             await MainActor.run {
                 self.errorMessage = "当前模型不在支持列表中，请到资源中心切换模型"
                 self.isModelLoaded = true
@@ -145,7 +145,7 @@ class MLXAudioService: ObservableObject {
             return
         }
 
-        let status = ModelDownloadService.shared.checkStatus(for: catalogModel)
+        let status = ModelDownloadManager.shared.checkStatus(for: catalogModel)
         switch status {
         case .notDownloaded:
             await MainActor.run {
@@ -159,6 +159,13 @@ class MLXAudioService: ObservableObject {
                 self.errorMessage = "当前模型文件不完整，缺少: \(missingFiles.prefix(3).joined(separator: ", "))。请到资源中心下载或切换模型"
                 self.isModelLoaded = true
                 self.currentModelName = "Model Incomplete"
+            }
+            return
+        case .installing, .failed:
+            await MainActor.run {
+                self.errorMessage = "当前模型状态异常，请到资源中心检查"
+                self.isModelLoaded = true
+                self.currentModelName = "Model Unavailable"
             }
             return
         case .installed:
@@ -200,8 +207,8 @@ class MLXAudioService: ObservableObject {
     ) async throws -> URL {
         // 检查当前选择的模型是否已安装且完整
         let selectedRepo = selectedModelRepo
-        if let catalogModel = ModelCatalog.find(byRepo: selectedRepo) {
-            let status = ModelDownloadService.shared.checkStatus(for: catalogModel)
+        if let catalogModel = ModelCatalog.model(for: selectedRepo) {
+            let status = ModelDownloadManager.shared.checkStatus(for: catalogModel)
             if !status.isInstalled {
                 await MainActor.run {
                     self.errorMessage = "当前模型未安装，请先到资源中心下载或切换模型"

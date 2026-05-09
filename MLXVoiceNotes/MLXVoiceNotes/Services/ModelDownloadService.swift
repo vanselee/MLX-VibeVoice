@@ -26,11 +26,16 @@ struct QwenTTSModel: Identifiable, Equatable, Hashable {
     }
 
     var modelSizeLevel: String {
-        sizeLabel
+        if displayName.contains("1.7B") {
+            return "1.7B"
+        } else if displayName.contains("0.6B") {
+            return "0.6B"
+        }
+        return sizeLabel
     }
 
     var expectedSizeText: String {
-        "\(sizeLabel) \(precision)"
+        sizeLabel
     }
 
     /// 标准必需文件清单（所有 Qwen TTS 模型通用）
@@ -259,12 +264,16 @@ final class ModelDownloadTask: ObservableObject, @unchecked Sendable {
         let dir = model.localPath
         var remaining: [(path: String, remote: URL, totalSize: Int64)] = []
 
-        // 跳过已完整存在的文件
+        // 缓存远端大小到 manager
+        ModelDownloadManager.shared.cacheRemoteSizes(for: model.repo, sizes: Dictionary(uniqueKeysWithValues: fileInfos.map { ($0.path, $0.totalSize) }))
+
+        // 跳过已完整存在的文件：有远端大小时严格校验；HEAD 失败时退化为 size > 0。
         for info in fileInfos {
             let local = dir.appendingPathComponent(info.path)
             if fm.fileExists(atPath: local.path),
                let attrs = try? fm.attributesOfItem(atPath: local.path),
-               let size = attrs[.size] as? Int64, size > 0 {
+               let size = attrs[.size] as? Int64,
+               (info.totalSize > 0 ? size == info.totalSize : size > 0) {
                 DispatchQueue.main.async { self.files[info.path] = .completed }
                 completedBytes += size
             } else {
@@ -421,6 +430,10 @@ final class ModelDownloadManager: ObservableObject {
     @Published private(set) var activeTasks: [String: ModelDownloadTask] = [:]
     /// Combine 订阅（转发 task 状态变更到 manager，驱动 SwiftUI 刷新）
     private var cancellables: [String: AnyCancellable] = [:]
+    /// 其他 Combine 订阅
+    private var otherCancellables = Set<AnyCancellable>()
+    /// 缓存远端文件大小（repo -> [path: Int64]）
+    private var remoteSizeCache: [String: [String: Int64]] = [:]
 
     private init() {}
 
@@ -444,8 +457,21 @@ final class ModelDownloadManager: ObservableObject {
                 self?.objectWillChange.send()
             }
         activeTasks[model.repo] = task
+        // 下载完成后刷新远端缓存
+        task.$state
+            .filter { if case .completed = $0 { true } else { false } }
+            .first()
+            .sink { [weak self] _ in
+                self?.remoteSizeCache.removeValue(forKey: model.repo)
+            }
+            .store(in: &otherCancellables)
         task.start()
         return task
+    }
+
+    /// 缓存远端文件大小（由 ModelDownloadTask.fetchAllFileSizes 调用）
+    func cacheRemoteSizes(for repo: String, sizes: [String: Int64]) {
+        remoteSizeCache[repo] = sizes
     }
 
     /// 获取模型当前状态（下载状态优先级最高）
@@ -472,15 +498,23 @@ final class ModelDownloadManager: ObservableObject {
     }
 
     /// 检测并返回模型缺失的文件列表
+    /// 如果有远端大小缓存，则本地文件大小必须等于远端大小才算完整
+    /// 如果远端大小未知，退化为 size > 0
     func missingFiles(for model: QwenTTSModel) -> [String] {
         let dir = model.localPath
+        let cached = remoteSizeCache[model.repo]
         return model.requiredFiles.filter { file in
             let src = dir.appendingPathComponent(file)
             guard let attrs = try? FileManager.default.attributesOfItem(atPath: src.path),
-                  let size = attrs[.size] as? Int64 else {
-                return true
+                  let size = attrs[.size] as? Int64, size > 0 else {
+                return true // 文件不存在或大小为 0
             }
-            return size == 0
+            // 如果有远端大小缓存，严格校验
+            if let remoteSize = cached?[file], remoteSize > 0 {
+                return size != remoteSize
+            }
+            // 无远端大小，退化为 size > 0（已通过上 guard）
+            return false
         }
     }
 

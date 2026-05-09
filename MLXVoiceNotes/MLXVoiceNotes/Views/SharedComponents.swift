@@ -119,7 +119,8 @@ struct ModelRow: View {
     var downloadTask: ModelDownloadTask?
 
     @ObservedObject private var downloadManager = ModelDownloadManager.shared
-    @State private var showDeleteConfirmation = false
+    // showDeleteConfirmation 暂时移除（删除功能禁用）
+    // @State private var showDeleteConfirmation = false
 
     private var effectiveDownloadTask: ModelDownloadTask? {
         downloadTask ?? downloadManager.task(for: model)
@@ -222,15 +223,7 @@ struct ModelRow: View {
         .padding(12)
         .background(Color(nsColor: .controlBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .alert("确认删除模型", isPresented: $showDeleteConfirmation) {
-            Button("取消", role: .cancel) { }
-            Button("删除", role: .destructive) {
-                try? ModelDownloadManager.shared.deleteModel(model)
-                onRefresh()
-            }
-        } message: {
-            Text("确定要删除「\(model.displayName)」吗？\n此操作将删除所有模型文件，且无法恢复。")
-        }
+        // 删除确认弹窗暂时禁用（删除功能待保护逻辑完善后启用）
     }
 
     // MARK: - 子组件
@@ -305,13 +298,7 @@ struct ModelRow: View {
                         Label("重新校验", systemImage: "checkmark.shield")
                     }
                     .controlSize(.small)
-                    Button {
-                        showDeleteConfirmation = true
-                    } label: {
-                        Label("删除", systemImage: "trash")
-                    }
-                    .controlSize(.small)
-                    .foregroundStyle(.red)
+                    // 删除功能暂时禁用，等待保护逻辑完善
                 }
                 .eraseToAnyView()
             } else if isInstalledAndNotSelected {
@@ -322,13 +309,7 @@ struct ModelRow: View {
                         Label("重新校验", systemImage: "checkmark.shield")
                     }
                     .controlSize(.small)
-                    Button {
-                        showDeleteConfirmation = true
-                    } label: {
-                        Label("删除", systemImage: "trash")
-                    }
-                    .controlSize(.small)
-                    .foregroundStyle(.red)
+                    // 删除功能暂时禁用，等待保护逻辑完善
                     Button {
                         Task {
                             await MLXAudioService.shared.switchToModel(repo: model.repo)
