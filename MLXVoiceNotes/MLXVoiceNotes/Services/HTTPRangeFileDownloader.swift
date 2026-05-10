@@ -113,6 +113,7 @@ final class HTTPRangeFileDownloader: NSObject {
     private var fileHandle: FileHandle?
     private var resumeOffset: Int64 = 0
     private var pendingError: Error?
+    private var didStartDownload = false
 
     private var speedTimer: Timer?
     private var lastSpeedCheckBytes: Int64 = 0
@@ -139,6 +140,8 @@ final class HTTPRangeFileDownloader: NSObject {
             if case .failed = state { return true }
             return false
         }() else { return }
+
+        didStartDownload = false
 
         // Determine resume offset from existing .partial file
         if let attrs = try? FileManager.default.attributesOfItem(atPath: partialURL.path),
@@ -244,7 +247,6 @@ final class HTTPRangeFileDownloader: NSObject {
         task = session?.dataTask(with: request)
 
         state = .downloading
-        onDownloadStarted?()
 
         // Speed tracking timer (fires every second)
         lastSpeedCheckBytes = downloadedBytes
@@ -254,6 +256,12 @@ final class HTTPRangeFileDownloader: NSObject {
         }
 
         task?.resume()
+    }
+
+    private func notifyDownloadStartedIfNeeded() {
+        guard !didStartDownload else { return }
+        didStartDownload = true
+        onDownloadStarted?()
     }
 
     // MARK: - Speed Calculation
@@ -353,10 +361,12 @@ extension HTTPRangeFileDownloader: URLSessionDataDelegate {
             if totalBytes == 0 {
                 totalBytes = Int64(httpResponse.expectedContentLength)
             }
+            notifyDownloadStartedIfNeeded()
             completionHandler(.allow)
 
         case 206:
             // Partial Content — correct resume behavior. Append to .partial.
+            notifyDownloadStartedIfNeeded()
             completionHandler(.allow)
 
         default:
