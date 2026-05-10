@@ -627,6 +627,11 @@ struct ScriptLibraryView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("生成状态").font(.headline)
 
+                // 当前模型
+                Text("当前模型 \(mlxService.currentModelName)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
                 if let diag = mlxService.lastDiag, diag.elapsedSec > 0 {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("生成耗时 \(String(format: "%.1f", diag.elapsedSec)) 秒").font(.caption)

@@ -336,6 +336,8 @@ struct ModelRow: View {
                         Label("设为当前", systemImage: "checkmark.circle")
                     }
                     .controlSize(.small)
+                    .disabled(GenerationService.currentlyGeneratingScriptID != nil)
+                    .help(GenerationService.currentlyGeneratingScriptID != nil ? "生成中不可切换模型" : "")
                 }
                 .eraseToAnyView()
             } else if case .incomplete = status {

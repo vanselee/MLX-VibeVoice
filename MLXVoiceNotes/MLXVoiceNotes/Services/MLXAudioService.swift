@@ -99,9 +99,9 @@ class MLXAudioService: ObservableObject {
 
     /// 幂等加载模型：已加载则直接返回，正在加载则等待完成，否则启动加载
     func ensureModelLoaded() async {
-        // 已加载 → 直接返回
+        // 已加载且 repo 一致 → 直接返回
 #if canImport(MLXAudioTTS)
-        if ttsModel != nil && isModelLoaded { return }
+        if ttsModel != nil && isModelLoaded && loadedModelRepo == selectedModelRepo { return }
 #else
         if isModelLoaded { return }
 #endif
@@ -451,6 +451,14 @@ class MLXAudioService: ObservableObject {
     func switchToModel(repo: String) async {
         // 同一 repo 不需要切换
         guard repo != loadedModelRepo else { return }
+
+        // 生成中禁止切换模型
+        if GenerationService.currentlyGeneratingScriptID != nil {
+            await MainActor.run {
+                self.errorMessage = "生成中不可切换模型，请等待生成完成或先取消生成。"
+            }
+            return
+        }
 
         await MainActor.run {
             // 清空已加载模型
