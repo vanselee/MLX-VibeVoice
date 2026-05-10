@@ -55,7 +55,7 @@ struct ScriptLibraryView: View {
                     if scripts.isEmpty {
                         VStack(spacing: 16) {
                             ContentUnavailableView(
-                                "欢迎使用 MLX Voice Notes",
+                                "欢迎使用 MLX VibeVoice",
                                 systemImage: "waveform.badge.mic",
                                 description: Text("点击「新建文案」开始创建你的第一个配音项目。")
                             )
@@ -579,7 +579,7 @@ struct ScriptLibraryView: View {
         if path.hasPrefix(home) {
             let relative = String(path.dropFirst(home.count))
             return relative
-                .replacingOccurrences(of: "/Downloads/MLX Voice Notes Exports", with: "Downloads / MLX Voice Notes Exports")
+                .replacingOccurrences(of: "/Downloads/MLX VibeVoice Exports", with: "Downloads / MLX VibeVoice Exports")
         }
         return path
     }

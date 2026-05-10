@@ -3,7 +3,7 @@ import AVFoundation
 
 struct MLXTestView: View {
     @ObservedObject private var mlxService = MLXAudioService.shared
-    @State private var testText: String = "你好，这是 MLX Voice Notes 的本地语音合成测试。"
+    @State private var testText: String = "你好，这是 MLX VibeVoice 的本地语音合成测试。"
     @State private var selectedVoice: String = "default"
     @State private var audioPlayer: AVAudioPlayer?
     @State private var isPlaying: Bool = false

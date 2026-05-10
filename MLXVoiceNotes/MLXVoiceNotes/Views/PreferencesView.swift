@@ -13,13 +13,13 @@ struct PreferencesView: View {
 
     private var currentExportDisplayPath: String {
         if defaultExportDirectory.isEmpty {
-            return "Downloads / MLX Voice Notes Exports"
+            return "Downloads / MLX VibeVoice Exports"
         } else {
             let home = FileManager.default.homeDirectoryForCurrentUser.path
             let path = defaultExportDirectory
             if path.hasPrefix(home) {
                 return String(path.dropFirst(home.count))
-                    .replacingOccurrences(of: "/Downloads/MLX Voice Notes Exports", with: "Downloads / MLX Voice Notes Exports")
+                    .replacingOccurrences(of: "/Downloads/MLX VibeVoice Exports", with: "Downloads / MLX VibeVoice Exports")
             }
             return path
         }

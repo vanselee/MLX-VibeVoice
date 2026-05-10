@@ -20,7 +20,7 @@ struct ContentView: View {
                 Label(page.title, systemImage: page.systemImage)
                     .tag(page)
             }
-            .navigationTitle("MLX Voice Notes")
+            .navigationTitle("MLX VibeVoice")
             .frame(minWidth: 220)
         } detail: {
             detailView

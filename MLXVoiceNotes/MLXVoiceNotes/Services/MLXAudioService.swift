@@ -37,7 +37,7 @@ private struct CachedRefAudio {
 // MARK: - Phase 2B: refAudio/refText Stability Test
 let phase2RefAudioPath = "/Users/apple/Desktop/李不二聊电商/4月12日音频母带/4月22日声音母带.mp3"
 let phase2RefText = "你永远都搞不清楚这些平台它到底要什么，不要什么，有时候一条视频吧，花几个小时你把它做出来了，发到了a平台呢，正常通过，发到b平台呢，直接限流，有的还给你封号呢"
-let phase2TargetText = "你好，这是 MLX Voice Notes 的参考音色稳定性测试。如果三次声音接近一致，说明参考音色可以用于角色绑定。"
+let phase2TargetText = "你好，这是 MLX VibeVoice 的参考音色稳定性测试。如果三次声音接近一致，说明参考音色可以用于角色绑定。"
 
 class MLXAudioService: ObservableObject {
     static let shared = MLXAudioService()

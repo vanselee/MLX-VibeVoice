@@ -16,13 +16,13 @@ enum AudioExportService {
         }
         return FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Downloads", isDirectory: true)
-            .appendingPathComponent("MLX Voice Notes Exports", isDirectory: true)
+            .appendingPathComponent("MLX VibeVoice Exports", isDirectory: true)
     }
 
     /// 默认导出目录
     static let defaultExportDirectory = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Downloads", isDirectory: true)
-        .appendingPathComponent("MLX Voice Notes Exports", isDirectory: true)
+        .appendingPathComponent("MLX VibeVoice Exports", isDirectory: true)
 
     /// 导出真实 WAV（合并所有段落音频）
     /// - Parameters:
