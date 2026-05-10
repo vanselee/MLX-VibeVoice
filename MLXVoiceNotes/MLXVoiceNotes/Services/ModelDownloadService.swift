@@ -183,6 +183,7 @@ enum FileDownloadState: Equatable {
 enum ModelDownloadState: Equatable {
     case idle                    // 未开始
     case preparing               // 准备中（获取文件清单）
+    case connecting(currentFile: String, currentURL: String)  // 正在连接（HEAD/等待响应）
     case downloading(progress: Double, downloadedBytes: Int64, totalBytes: Int64, speedBps: Double, currentFile: String, currentURL: String, isResuming: Bool)
     case paused(partialBytes: Int64, totalBytes: Int64)
     case failed(error: String)
@@ -190,7 +191,7 @@ enum ModelDownloadState: Equatable {
 
     var isActive: Bool {
         switch self {
-        case .downloading: return true
+        case .connecting, .downloading: return true
         default: return false
         }
     }
@@ -347,17 +348,28 @@ final class ModelDownloadTask: ObservableObject, @unchecked Sendable {
         try? FileManager.default.createDirectory(at: local.deletingLastPathComponent(), withIntermediateDirectories: true)
 
         DispatchQueue.main.async {
-            self.files[info.path] = .downloading(progress: 0, downloadedBytes: 0)
-            self.state = .downloading(
-                progress: self.totalBytes > 0 ? Double(self.completedBytes) / Double(self.totalBytes) : 0,
-                downloadedBytes: self.completedBytes,
-                totalBytes: self.totalBytes, speedBps: 0,
-                currentFile: info.path, currentURL: info.remote.absoluteString, isResuming: isResuming
+            self.files[info.path] = .pending
+            self.state = .connecting(
+                currentFile: info.path,
+                currentURL: info.remote.absoluteString
             )
         }
 
         let downloader = HTTPRangeFileDownloader(url: info.remote, destination: local)
         currentDownloader = downloader
+
+        downloader.onDownloadStarted = { [weak self] in
+            guard let self = self else { return }
+            DispatchQueue.main.async {
+                self.files[info.path] = .downloading(progress: 0, downloadedBytes: 0)
+                self.state = .downloading(
+                    progress: self.totalBytes > 0 ? Double(self.completedBytes) / Double(self.totalBytes) : 0,
+                    downloadedBytes: self.completedBytes,
+                    totalBytes: self.totalBytes, speedBps: 0,
+                    currentFile: info.path, currentURL: info.remote.absoluteString, isResuming: isResuming
+                )
+            }
+        }
 
         downloader.onProgress = { [weak self] progress in
             guard let self = self else { return }

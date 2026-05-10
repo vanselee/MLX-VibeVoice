@@ -88,6 +88,10 @@ final class HTTPRangeFileDownloader: NSObject {
     /// State change callback
     var onStateChange: ((State) -> Void)?
 
+    /// Callback fired when the GET request starts receiving data (after HEAD succeeds and server responds 200/206).
+    /// NOT fired during HEAD phase.
+    var onDownloadStarted: (() -> Void)?
+
     /// Current state
     private(set) var state: State = .idle {
         didSet { onStateChange?(state) }
@@ -240,6 +244,7 @@ final class HTTPRangeFileDownloader: NSObject {
         task = session?.dataTask(with: request)
 
         state = .downloading
+        onDownloadStarted?()
 
         // Speed tracking timer (fires every second)
         lastSpeedCheckBytes = downloadedBytes

@@ -295,7 +295,7 @@ struct ModelRow: View {
 
         // 下载进行中/暂停/失败/完成时，操作按钮在面板中显示
         switch downloadState {
-        case .preparing, .downloading, .paused, .failed, .completed:
+        case .preparing, .connecting, .downloading, .paused, .failed, .completed:
             return EmptyView().eraseToAnyView()
 
         case .idle:
@@ -414,6 +414,9 @@ struct ModelDownloadPanel: View {
                     ProgressView("正在获取文件信息...")
                         .controlSize(.small)
 
+                case .connecting(let currentFile, let currentURL):
+                    connectingContent(currentFile: currentFile, currentURL: currentURL)
+
                 case .downloading(let progress, let downloadedBytes, let totalBytes, let speedBps, let currentFile, let currentURL, let isResuming):
                     downloadingContent(
                         progress: progress,
@@ -448,6 +451,36 @@ struct ModelDownloadPanel: View {
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
             )
+        }
+    }
+
+    // MARK: - 下载中内容
+
+    // MARK: - 连接中内容
+
+    @ViewBuilder
+    private func connectingContent(currentFile: String, currentURL: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ProgressView()
+                .controlSize(.small)
+
+            Text("正在连接...")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 6) {
+                Text(truncateFileName(currentFile))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            Text("下载地址: \(currentURL)")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .help(currentURL)
         }
     }
 
@@ -554,6 +587,15 @@ struct ModelDownloadPanel: View {
     private var actionButtons: some View {
         HStack(spacing: 8) {
             switch downloadTask.state {
+            case .connecting:
+                Button {
+                    downloadTask.cancel()
+                } label: {
+                    Label("暂停", systemImage: "pause.circle")
+                }
+                .controlSize(.small)
+                .foregroundStyle(.orange)
+
             case .downloading:
                 Button {
                     downloadTask.cancel()
@@ -617,6 +659,7 @@ struct ModelDownloadPanel: View {
             switch downloadTask.state {
             case .idle: return ("空闲", .secondary)
             case .preparing: return ("准备中", .blue)
+            case .connecting: return ("连接中", .blue)
             case .downloading: return ("下载中", .blue)
             case .paused: return ("已暂停", .orange)
             case .failed: return ("失败", .red)
