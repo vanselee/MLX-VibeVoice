@@ -34,10 +34,9 @@ enum AppLanguage: String, CaseIterable, Codable, Identifiable {
 // MARK: - 缓存限制
 
 enum CacheLimit: String, CaseIterable, Codable, Identifiable {
-    case gb1 = "1GB"
-    case gb2 = "2GB"
     case gb5 = "5GB"
     case gb10 = "10GB"
+    case gb20 = "20GB"
     case gb50 = "50GB"
     case unlimited = "unlimited"
 
@@ -52,10 +51,9 @@ enum CacheLimit: String, CaseIterable, Codable, Identifiable {
 
     var bytes: Int64? {
         switch self {
-        case .gb1: return 1_073_741_824
-        case .gb2: return 2_147_483_648
         case .gb5: return 5_368_709_120
         case .gb10: return 10_737_418_240
+        case .gb20: return 21_474_836_480
         case .gb50: return 53_687_091_200
         case .unlimited: return nil
         }
@@ -80,23 +78,35 @@ struct AppPageScaffold<Content, Sidebar>: View where Content: View, Sidebar: Vie
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            if !hideSidebar {
-                sidebar
-                    .frame(width: 260)
-                    .background(Color(nsColor: .controlBackgroundColor))
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(titleKey).font(.largeTitle.bold())
+                Text(subtitleKey).foregroundStyle(.secondary)
             }
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    Text(titleKey).font(.title2.bold())
-                    Text(subtitleKey).font(.subheadline).foregroundStyle(.secondary)
+            
+            HStack(alignment: .top, spacing: 16) {
+                ScrollView {
+                    content
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
                 }
-                Divider()
-                content
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                
+                if !hideSidebar {
+                    ScrollView {
+                        sidebar
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
+                    }
+                    .frame(minWidth: 220, idealWidth: 280, maxWidth: 300, alignment: .topLeading)
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(24)
         }
+        .padding(20)
     }
 }
 

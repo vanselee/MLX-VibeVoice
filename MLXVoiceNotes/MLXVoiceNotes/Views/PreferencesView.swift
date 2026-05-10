@@ -2,7 +2,7 @@ import SwiftUI
 
 struct PreferencesView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .system
-    @AppStorage("cacheLimit") private var cacheLimit: CacheLimit = .gb5
+    @AppStorage("cacheLimit") private var cacheLimit: CacheLimit = .gb20
     @AppStorage("defaultExportDirectory") private var defaultExportDirectory: String = ""
     @State private var isCalculatingCache: Bool = true
 
