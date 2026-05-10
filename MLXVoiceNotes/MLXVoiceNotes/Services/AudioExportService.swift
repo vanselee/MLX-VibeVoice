@@ -211,25 +211,25 @@ enum AudioExportError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noCompletedSegments:
-            return "没有可导出的已生成音频"
+            return AppLocalizer.string("export.error.noCompletedSegments")
         case .incompleteSegments(let orders):
-            return "第 \(Self.formatSegmentOrders(orders)) 段尚未生成完成，请生成完成后再导出"
+            return AppLocalizer.format("export.error.incompleteSegments", Self.formatSegmentOrders(orders))
         case .failedSegments(let orders):
-            return "第 \(Self.formatSegmentOrders(orders)) 段生成失败，请重新生成后再导出"
+            return AppLocalizer.format("export.error.failedSegments", Self.formatSegmentOrders(orders))
         case .missingGeneratedAudio(let idx):
-            return "第 \(idx) 段缺少生成音频，请重新生成"
+            return AppLocalizer.format("export.error.missingGeneratedAudio", idx)
         case .missingAudioFile(let idx):
-            return "第 \(idx) 段音频文件丢失，请重新生成"
+            return AppLocalizer.format("export.error.missingAudioFile", idx)
         case .emptyAudioData:
-            return "音频数据为空"
+            return AppLocalizer.string("export.error.emptyAudioData")
         case .failedToReadAudioFile:
-            return "无法读取音频文件"
+            return AppLocalizer.string("export.error.failedToReadAudioFile")
         case .failedToCreateBuffer:
-            return "无法创建音频缓冲区"
+            return AppLocalizer.string("export.error.failedToCreateBuffer")
         case .noChannelData:
-            return "音频无通道数据"
+            return AppLocalizer.string("export.error.noChannelData")
         case .failedToWriteAudioFile:
-            return "无法写入音频文件"
+            return AppLocalizer.string("export.error.failedToWriteAudioFile")
         }
     }
 

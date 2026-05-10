@@ -138,7 +138,7 @@ class MLXAudioService: ObservableObject {
         // 验证模型是否已安装且完整
         guard let catalogModel = ModelCatalog.model(for: modelRepo) else {
             await MainActor.run {
-                self.errorMessage = "当前模型不在支持列表中，请到资源中心切换模型"
+                self.errorMessage = AppLocalizer.string("model.error.notInCatalog")
                 self.isModelLoaded = true
                 self.currentModelName = "Unknown Model"
             }
@@ -149,21 +149,21 @@ class MLXAudioService: ObservableObject {
         switch status {
         case .notDownloaded:
             await MainActor.run {
-                self.errorMessage = "当前模型未安装，请先到资源中心下载或切换模型"
+                self.errorMessage = AppLocalizer.string("model.error.notInstalled")
                 self.isModelLoaded = true
                 self.currentModelName = "Model Not Installed"
             }
             return
         case .incomplete(let missingFiles):
             await MainActor.run {
-                self.errorMessage = "当前模型文件不完整，缺少: \(missingFiles.prefix(3).joined(separator: ", "))。请到资源中心下载或切换模型"
+                self.errorMessage = AppLocalizer.format("model.error.incompleteFiles", missingFiles.prefix(3).joined(separator: ", "))
                 self.isModelLoaded = true
                 self.currentModelName = "Model Incomplete"
             }
             return
         case .installing, .failed:
             await MainActor.run {
-                self.errorMessage = "当前模型状态异常，请到资源中心检查"
+                self.errorMessage = AppLocalizer.string("model.error.abnormalState")
                 self.isModelLoaded = true
                 self.currentModelName = "Model Unavailable"
             }
@@ -211,13 +211,13 @@ class MLXAudioService: ObservableObject {
             let status = ModelDownloadManager.shared.checkStatus(for: catalogModel)
             if !status.isInstalled {
                 await MainActor.run {
-                    self.errorMessage = "当前模型未安装，请先到资源中心下载或切换模型"
+                    self.errorMessage = AppLocalizer.string("model.error.notInstalled")
                 }
                 throw TTSError.modelNotInstalled
             }
         } else {
             await MainActor.run {
-                self.errorMessage = "当前模型不在支持列表中，请到资源中心切换模型"
+                self.errorMessage = AppLocalizer.string("model.error.notInCatalog")
             }
             throw TTSError.modelNotInstalled
         }
@@ -464,7 +464,7 @@ class MLXAudioService: ObservableObject {
         // 生成中禁止切换模型
         if GenerationService.currentlyGeneratingScriptID != nil {
             await MainActor.run {
-                self.errorMessage = "生成中不可切换模型，请等待生成完成或先取消生成。"
+                self.errorMessage = AppLocalizer.string("model.error.switchWhileGenerating")
             }
             return
         }
@@ -643,7 +643,7 @@ enum TTSError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .modelNotLoaded: return "TTS model not loaded"
-        case .modelNotInstalled: return "当前模型未安装，请先到资源中心下载或切换模型"
+        case .modelNotInstalled: return AppLocalizer.string("model.error.notInstalled")
         case .generationFailed: return "Audio generation failed"
         case .audioSaveFailed: return "Failed to save audio file"
         case .emptyAudioOutput: return "Model returned empty audio (sampleCount == 0)"

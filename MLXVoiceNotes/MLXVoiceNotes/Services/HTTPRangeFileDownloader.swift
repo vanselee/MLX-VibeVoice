@@ -53,19 +53,21 @@ final class HTTPRangeFileDownloader: NSObject {
         var errorDescription: String? {
             switch self {
             case .invalidURL:
-                return "无效的 URL"
+                return AppLocalizer.string("download.error.invalidURL")
             case .httpError(let code):
-                return "HTTP 错误 \(code)"
+                return AppLocalizer.format("download.error.httpError", code)
             case .remoteFileUnavailable(let message):
                 return message
             case .fileWriteFailed:
-                return "文件写入失败"
+                return AppLocalizer.string("download.error.fileWriteFailed")
             case .fileMoveFailed(let path):
-                return "文件移动失败: \(path)"
+                return AppLocalizer.format("download.error.fileMoveFailed", path)
             case .cancelled:
-                return "下载已取消"
+                return AppLocalizer.string("download.error.cancelled")
             case .sizeMismatch(let expected, let actual):
-                return "文件大小不匹配: 期望 \(ByteCountFormatter.string(fromByteCount: expected, countStyle: .file)), 实际 \(ByteCountFormatter.string(fromByteCount: actual, countStyle: .file))"
+                return AppLocalizer.format("download.error.sizeMismatch",
+                    ByteCountFormatter.string(fromByteCount: expected, countStyle: .file),
+                    ByteCountFormatter.string(fromByteCount: actual, countStyle: .file))
             }
         }
     }
@@ -159,7 +161,7 @@ final class HTTPRangeFileDownloader: NSObject {
     func cancel() {
         task?.cancel()
         tearDown()
-        state = .failed(DownloadError.cancelled.errorDescription ?? "已取消")
+        state = .failed(DownloadError.cancelled.errorDescription ?? AppLocalizer.string("download.error.cancelled"))
     }
 
     // MARK: - Private: HEAD Request
@@ -179,14 +181,14 @@ final class HTTPRangeFileDownloader: NSObject {
             }
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                let error = DownloadError.remoteFileUnavailable("HEAD 请求失败: 无效响应")
+                let error = DownloadError.remoteFileUnavailable(AppLocalizer.string("download.error.headFailedInvalidResponse"))
                 self.state = .failed(error.localizedDescription)
                 self.onComplete?(error)
                 return
             }
 
             guard httpResponse.statusCode == 200 else {
-                let error = DownloadError.remoteFileUnavailable("远程文件不存在或无法访问：HTTP \(httpResponse.statusCode)")
+                let error = DownloadError.remoteFileUnavailable(AppLocalizer.format("download.error.remoteFileUnavailable", httpResponse.statusCode))
                 self.state = .failed(error.localizedDescription)
                 self.onComplete?(error)
                 return
@@ -293,14 +295,14 @@ final class HTTPRangeFileDownloader: NSObject {
 
         // Verify partial file exists and has correct size
         guard let partialSize = try? fm.attributesOfItem(atPath: partialURL.path)[.size] as? Int64 else {
-            state = .failed("下载完成但 .partial 文件不可读")
+            state = .failed(AppLocalizer.string("download.error.partialFileUnreadable"))
             onComplete?(DownloadError.fileWriteFailed)
             return
         }
 
         // Size validation (skip if totalBytes is unknown / 0)
         if totalBytes > 0 && partialSize != totalBytes {
-            state = .failed(DownloadError.sizeMismatch(expected: totalBytes, actual: partialSize).errorDescription ?? "大小不匹配")
+            state = .failed(DownloadError.sizeMismatch(expected: totalBytes, actual: partialSize).errorDescription ?? AppLocalizer.string("download.error.sizeMismatchShort"))
             onComplete?(DownloadError.sizeMismatch(expected: totalBytes, actual: partialSize))
             return
         }
@@ -313,7 +315,7 @@ final class HTTPRangeFileDownloader: NSObject {
             state = .completed
             onComplete?(nil)
         } catch {
-            state = .failed(DownloadError.fileMoveFailed(error.localizedDescription).errorDescription ?? "移动失败")
+            state = .failed(DownloadError.fileMoveFailed(error.localizedDescription).errorDescription ?? AppLocalizer.string("download.error.moveFailedShort"))
             onComplete?(error)
         }
     }
@@ -340,7 +342,7 @@ extension HTTPRangeFileDownloader: URLSessionDataDelegate {
                     completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
 
         guard let httpResponse = response as? HTTPURLResponse else {
-            let error = DownloadError.remoteFileUnavailable("无效的 HTTP 响应")
+            let error = DownloadError.remoteFileUnavailable(AppLocalizer.string("download.error.invalidHTTPResponse"))
             pendingError = error
             state = .failed(error.localizedDescription)
             completionHandler(.cancel)
@@ -384,7 +386,7 @@ extension HTTPRangeFileDownloader: URLSessionDataDelegate {
         guard let fh = fileHandle else {
             let error = DownloadError.fileWriteFailed
             pendingError = error
-            state = .failed("文件句柄丢失")
+            state = .failed(AppLocalizer.string("download.error.fileHandleLost"))
             task?.cancel()
             return
         }
@@ -403,7 +405,7 @@ extension HTTPRangeFileDownloader: URLSessionDataDelegate {
             onProgress?(progress)
         } catch {
             pendingError = error
-            state = .failed("写入 .partial 失败: \(error.localizedDescription)")
+            state = .failed(AppLocalizer.format("download.error.writePartialFailed", error.localizedDescription))
             task?.cancel()
         }
     }

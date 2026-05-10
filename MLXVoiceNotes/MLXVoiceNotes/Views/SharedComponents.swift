@@ -1021,10 +1021,10 @@ extension Date {
     var relativeLabel: String {
         let time = Self.timeFormatter.string(from: self)
         if Calendar.current.isDateInToday(self) {
-            return String(localized: "date.today") + " " + time
+            return AppLocalizer.string("date.today") + " " + time
         }
         if Calendar.current.isDateInYesterday(self) {
-            return String(localized: "date.yesterday") + " " + time
+            return AppLocalizer.string("date.yesterday") + " " + time
         }
         return Self.dateFormatter.string(from: self)
     }

@@ -445,17 +445,17 @@ enum GenerationError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .alreadyGenerating:
-            return "已有文案正在生成中"
+            return AppLocalizer.string("generation.error.alreadyGenerating")
         case .noPendingSegments:
-            return "没有待生成的段落"
+            return AppLocalizer.string("generation.error.noPendingSegments")
         case .audioGenerationFailed(let error):
-            return "音频生成失败：\(error.localizedDescription)"
+            return AppLocalizer.format("generation.error.audioGenerationFailed", error.localizedDescription)
         case .missingReferenceVoice(let roleName):
-            return "角色「\(roleName)」未绑定可用参考音色"
+            return AppLocalizer.format("generation.error.missingReferenceVoice", roleName)
         case .missingReferenceAudio(let voiceName):
-            return "音色「\(voiceName)」缺少参考音频，请重新创建或测试音色"
+            return AppLocalizer.format("generation.error.missingReferenceAudio", voiceName)
         case .missingReferenceText(let voiceName):
-            return "音色「\(voiceName)」缺少参考文本，请补充后重试"
+            return AppLocalizer.format("generation.error.missingReferenceText", voiceName)
         }
     }
 }

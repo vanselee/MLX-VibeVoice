@@ -23,6 +23,7 @@
 		FA0000A0000000000000002 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = FA0000A0000000000000001 /* Localizable.xcstrings */; };
 		1A0000010000000000000005 /* Services/ScriptParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000015 /* Services/ScriptParser.swift */; };
 		1A0000010000000000000006 /* Services/GenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000016 /* Services/GenerationService.swift */; };
+		1A00000100000000000000A6 /* Services/AppLocalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000100000000000000B6 /* Services/AppLocalizer.swift */; };
 		1A0000010000000000000007 /* Services/AudioExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000017 /* Services/AudioExportService.swift */; };
 		1A0000010000000000000108 /* Services/MLXAudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000018 /* Services/MLXAudioService.swift */; };
 		1A0000010000000000000109 /* Views/SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000010000000000000019 /* Views/SharedComponents.swift */; };
@@ -47,6 +48,7 @@
 		FA0000A0000000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		1A0000010000000000000015 /* Services/ScriptParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ScriptParser.swift; sourceTree = "<group>"; };
 		1A0000010000000000000016 /* Services/GenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/GenerationService.swift; sourceTree = "<group>"; };
+		1A00000100000000000000B6 /* Services/AppLocalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AppLocalizer.swift; sourceTree = "<group>"; };
 		1A0000010000000000000017 /* Services/AudioExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AudioExportService.swift; sourceTree = "<group>"; };
 		1A0000010000000000000018 /* Services/MLXAudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/MLXAudioService.swift; sourceTree = "<group>"; };
 		1A0000010000000000000019 /* Views/SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SharedComponents.swift; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 				1A0000010000000000000013 /* Models/AppModels.swift */,
 				1A0000010000000000000015 /* Services/ScriptParser.swift */,
 				1A0000010000000000000016 /* Services/GenerationService.swift */,
+				1A00000100000000000000B6 /* Services/AppLocalizer.swift */,
 				189D68EB2FA78E3100A9486C /* VoiceProfileStorageService.swift */,
 			FA7000010000000000000001 /* SchemaMigration.swift */,
 			FA8000010000000000000001 /* AudioPauseService.swift */,
@@ -211,6 +214,7 @@
 				1A0000010000000000000003 /* Models/AppModels.swift in Sources */,
 				1A0000010000000000000005 /* Services/ScriptParser.swift in Sources */,
 				1A0000010000000000000006 /* Services/GenerationService.swift in Sources */,
+				1A00000100000000000000A6 /* Services/AppLocalizer.swift in Sources */,
 				1A0000010000000000000007 /* Services/AudioExportService.swift in Sources */,
 				1A0000010000000000000108 /* Services/MLXAudioService.swift in Sources */,
 				1A0000010000000000000109 /* Views/SharedComponents.swift in Sources */,

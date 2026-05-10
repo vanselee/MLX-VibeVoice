@@ -303,7 +303,7 @@ struct ScriptLibraryView: View {
         print("[createScript] 新建 Script")
         
         let script = Script(
-            title: "未命名文案",
+            title: AppLocalizer.string("script.untitled", defaultValue: "未命名文案"),
             subtitle: "",
             bodyText: "[旁白] 在这里输入要配音的文案。",
             updatedAt: .now
@@ -383,7 +383,7 @@ struct ScriptLibraryView: View {
     private func isReusableBlankDraft(_ script: Script) -> Bool {
         let trimmedBody = script.bodyText.trimmingCharacters(in: .whitespacesAndNewlines)
         return script.status == .draft &&
-            script.title == "未命名文案" &&
+            script.title == AppLocalizer.string("script.untitled", defaultValue: "未命名文案") &&
             (trimmedBody.isEmpty || trimmedBody == "[旁白] 在这里输入要配音的文案。") &&
             script.lastExportedAt == nil
     }

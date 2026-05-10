@@ -128,13 +128,13 @@ final class VoiceProfileStorageService {
 
         var errorDescription: String? {
             switch self {
-            case .profileNotFound:            return "音色档案未找到"
-            case .emptyName:                  return "音色名称为空"
-            case .emptyReferenceAudioPath:    return "参考音频路径为空"
-            case .emptyReferenceText:          return "参考文本为空"
-            case .referenceAudioNotPersisted(let path): return "参考音频未持久化：\(path)"
-            case .referenceAudioNotReadable(let path):  return "参考音频无法读取：\(path)"
-            case .modelContextUnavailable:    return "无法访问数据上下文"
+            case .profileNotFound:            return AppLocalizer.string("voice.error.profileNotFound")
+            case .emptyName:                  return AppLocalizer.string("voice.error.emptyName")
+            case .emptyReferenceAudioPath:    return AppLocalizer.string("voice.error.emptyReferenceAudioPath")
+            case .emptyReferenceText:          return AppLocalizer.string("voice.error.emptyReferenceText")
+            case .referenceAudioNotPersisted(let path): return AppLocalizer.format("voice.error.referenceAudioNotPersisted", path)
+            case .referenceAudioNotReadable(let path):  return AppLocalizer.format("voice.error.referenceAudioNotReadable", path)
+            case .modelContextUnavailable:    return AppLocalizer.string("voice.error.modelContextUnavailable")
             }
         }
     }
