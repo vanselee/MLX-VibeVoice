@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - App Language Settings
 
-enum AppLanguage: String, CaseIterable, Identifiable {
+enum AppLanguage: String, CaseIterable, Identifiable, Codable {
     case system
     case zhHans
     case en
@@ -18,7 +18,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     }
 
     var displayName: String {
-        String(localized: LocalizedStringKey(localizationKey))
+        NSLocalizedString(localizationKey, comment: "")
     }
 
     var effectiveLocaleIdentifier: String {
@@ -57,7 +57,7 @@ enum CacheLimit: String, CaseIterable, Identifiable {
 
     var displayName: String {
         if localizationKey.hasPrefix("preferences") {
-            return String(localized: LocalizedStringKey(localizationKey))
+            return NSLocalizedString(localizationKey, comment: "")
         }
         return localizationKey
     }
@@ -958,7 +958,7 @@ extension ScriptStatus {
     }
 
     var displayName: String {
-        String(localized: LocalizedStringKey(localizationKey))
+        NSLocalizedString(localizationKey, comment: "")
     }
 
     var foregroundColor: Color {
@@ -992,7 +992,7 @@ extension SegmentStatus {
     }
 
     var displayName: String {
-        String(localized: LocalizedStringKey(localizationKey))
+        NSLocalizedString(localizationKey, comment: "")
     }
 }
 

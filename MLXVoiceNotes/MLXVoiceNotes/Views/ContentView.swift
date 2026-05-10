@@ -34,6 +34,10 @@ struct ContentView: View {
         }
     }
 
+    private var selectedScript: Script? {
+        scripts.first { $0.id == selectedScriptID } ?? scripts.first
+    }
+
     private var allPages: [AppPage] {
         AppPage.allCases
     }

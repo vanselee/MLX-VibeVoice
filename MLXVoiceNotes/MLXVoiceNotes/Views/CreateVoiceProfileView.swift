@@ -31,7 +31,7 @@ struct CreateVoiceProfileView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text(String(localized: LocalizedStringKey("createVoice.title")))
+                Text(String(localized: "createVoice.title"))
                     .font(.headline)
                 Spacer()
                 if let err = saveError {
@@ -39,10 +39,10 @@ struct CreateVoiceProfileView: View {
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
-                Button(String(localized: LocalizedStringKey("createVoice.cancel"))) { onDismiss() }
+                Button(String(localized: "createVoice.cancel")) { onDismiss() }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                Button(String(localized: LocalizedStringKey("createVoice.saveVoice"))) { saveVoice() }
+                Button(String(localized: "createVoice.saveVoice")) { saveVoice() }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
             }
@@ -55,7 +55,7 @@ struct CreateVoiceProfileView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(alignment: .top) {
-                        Text(String(localized: LocalizedStringKey("createVoice.description")))
+                        Text(String(localized: "createVoice.description"))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         Spacer()
@@ -72,16 +72,16 @@ struct CreateVoiceProfileView: View {
                         .popover(isPresented: $showHelp, arrowEdge: .top) {
                             VStack(alignment: .leading, spacing: 8) {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(String(localized: LocalizedStringKey("createVoice.step1Import"))).font(.caption.bold())
-                                    Text(String(localized: LocalizedStringKey("createVoice.step1Hint"))).font(.caption2).foregroundStyle(.secondary)
+                                    Text(String(localized: "createVoice.step1Import")).font(.caption.bold())
+                                    Text(String(localized: "createVoice.step1Hint")).font(.caption2).foregroundStyle(.secondary)
                                 }
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(String(localized: LocalizedStringKey("createVoice.step2Verify"))).font(.caption.bold())
-                                    Text(String(localized: LocalizedStringKey("createVoice.step2Hint"))).font(.caption2).foregroundStyle(.secondary)
+                                    Text(String(localized: "createVoice.step2Verify")).font(.caption.bold())
+                                    Text(String(localized: "createVoice.step2Hint")).font(.caption2).foregroundStyle(.secondary)
                                 }
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(String(localized: LocalizedStringKey("createVoice.step3Test"))).font(.caption.bold())
-                                    Text(String(localized: LocalizedStringKey("createVoice.step3Hint"))).font(.caption2).foregroundStyle(.secondary)
+                                    Text(String(localized: "createVoice.step3Test")).font(.caption.bold())
+                                    Text(String(localized: "createVoice.step3Hint")).font(.caption2).foregroundStyle(.secondary)
                                 }
                             }
                             .padding(12)
@@ -92,26 +92,26 @@ struct CreateVoiceProfileView: View {
                     HStack(alignment: .top, spacing: 16) {
                         VStack(alignment: .leading, spacing: 14) {
                             formCard {
-                                Text(String(localized: LocalizedStringKey("createVoice.voiceName"))).font(.subheadline.bold())
-                                TextField(String(localized: LocalizedStringKey("createVoice.enterVoiceName")), text: $voiceName)
+                                Text(String(localized: "createVoice.voiceName")).font(.subheadline.bold())
+                                TextField(String(localized: "createVoice.enterVoiceName"), text: $voiceName)
                                     .textFieldStyle(.roundedBorder)
                                     .border(nameError ? Color.red : Color.clear)
                                     .onChange(of: voiceName) { nameError = false }
                                 if nameError {
-                                    Text(String(localized: LocalizedStringKey("createVoice.pleaseEnterName")))
+                                    Text(String(localized: "createVoice.pleaseEnterName"))
                                         .font(.caption)
                                         .foregroundStyle(.red)
                                 }
                             }
 
                             formCard {
-                                Text(String(localized: LocalizedStringKey("createVoice.referenceAudio"))).font(.subheadline.bold())
+                                Text(String(localized: "createVoice.referenceAudio")).font(.subheadline.bold())
                                 if referenceAudioPath.isEmpty {
                                     HStack {
-                                        TextField(String(localized: LocalizedStringKey("createVoice.noAudioSelected")), text: .constant(""))
+                                        TextField(String(localized: "createVoice.noAudioSelected"), text: .constant(""))
                                             .textFieldStyle(.roundedBorder)
                                             .disabled(true)
-                                        Button(String(localized: LocalizedStringKey("createVoice.selectFile"))) { showFileImporter = true }
+                                        Button(String(localized: "createVoice.selectFile")) { showFileImporter = true }
                                             .buttonStyle(.bordered)
                                             .controlSize(.small)
                                     }
@@ -120,10 +120,10 @@ struct CreateVoiceProfileView: View {
                                         Text(URL(fileURLWithPath: referenceAudioPath).lastPathComponent)
                                             .font(.subheadline)
                                         HStack(spacing: 8) {
-                                            Button(String(localized: LocalizedStringKey("createVoice.replaceAudio"))) { showFileImporter = true }
+                                            Button(String(localized: "createVoice.replaceAudio")) { showFileImporter = true }
                                                 .buttonStyle(.bordered)
                                                 .controlSize(.small)
-                                            Button(String(localized: LocalizedStringKey("createVoice.previewOriginal"))) { }
+                                            Button(String(localized: "createVoice.previewOriginal")) { }
                                                 .buttonStyle(.bordered)
                                                 .controlSize(.small)
                                         }
@@ -136,9 +136,9 @@ struct CreateVoiceProfileView: View {
 
                             formCard {
                                 HStack {
-                                    Text(String(localized: LocalizedStringKey("createVoice.referenceText"))).font(.subheadline.bold())
+                                    Text(String(localized: "createVoice.referenceText")).font(.subheadline.bold())
                                     Spacer()
-                                    Button(String(localized: LocalizedStringKey("createVoice.autoTranscribe"))) { }
+                                    Button(String(localized: "createVoice.autoTranscribe")) { }
                                         .buttonStyle(.bordered)
                                         .controlSize(.small)
                                         .disabled(true)
@@ -152,7 +152,7 @@ struct CreateVoiceProfileView: View {
                                     )
                                     .overlay(alignment: .topLeading) {
                                         if referenceText.isEmpty {
-                                            Text(String(localized: LocalizedStringKey("createVoice.enterReferenceText")))
+                                            Text(String(localized: "createVoice.enterReferenceText"))
                                                 .font(.body)
                                                 .foregroundStyle(.tertiary)
                                                 .padding(.horizontal, 6)
@@ -166,26 +166,26 @@ struct CreateVoiceProfileView: View {
                         VStack(alignment: .leading, spacing: 12) {
                             formCard {
                                 VStack(alignment: .leading, spacing: 10) {
-                                    Text(String(localized: LocalizedStringKey("createVoice.testAndSave"))).font(.subheadline.bold())
+                                    Text(String(localized: "createVoice.testAndSave")).font(.subheadline.bold())
 
                                     HStack {
-                                        Text(String(localized: LocalizedStringKey("createVoice.cloneMode")))
+                                        Text(String(localized: "createVoice.cloneMode"))
                                             .font(.caption).foregroundStyle(.secondary)
                                         Spacer()
-                                        Text(String(localized: LocalizedStringKey("createVoice.localFirst")))
+                                        Text(String(localized: "createVoice.localFirst"))
                                             .font(.caption)
                                     }
                                     Divider()
                                     HStack {
-                                        Text(String(localized: LocalizedStringKey("createVoice.modelStatus")))
+                                        Text(String(localized: "createVoice.modelStatus"))
                                             .font(.caption).foregroundStyle(.secondary)
                                         Spacer()
-                                        Text(String(localized: LocalizedStringKey("createVoice.toBeVerified")))
+                                        Text(String(localized: "createVoice.toBeVerified"))
                                             .font(.caption)
                                     }
                                     Divider()
 
-                                    Text(String(localized: LocalizedStringKey("createVoice.testSentence"))).font(.caption.bold())
+                                    Text(String(localized: "createVoice.testSentence")).font(.caption.bold())
                                     TextEditor(text: $testSentence)
                                         .font(.caption)
                                         .frame(minHeight: 56, maxHeight: 80)
@@ -195,14 +195,14 @@ struct CreateVoiceProfileView: View {
                                         )
 
                                     HStack(spacing: 8) {
-                                        Button(String(localized: LocalizedStringKey("createVoice.generateTestAudio"))) {
+                                        Button(String(localized: "createVoice.generateTestAudio")) {
                                             generateTestAudio()
                                         }
                                         .buttonStyle(.bordered)
                                         .controlSize(.small)
                                         .disabled(isGeneratingTest || referenceAudioPath.isEmpty || referenceText.isEmpty)
 
-                                        Button(String(localized: LocalizedStringKey("createVoice.previewResult"))) {
+                                        Button(String(localized: "createVoice.previewResult")) {
                                             playTestAudio()
                                         }
                                         .buttonStyle(.bordered)
@@ -214,7 +214,7 @@ struct CreateVoiceProfileView: View {
                                         HStack(spacing: 4) {
                                             ProgressView()
                                                 .controlSize(.small)
-                                            Text(String(localized: LocalizedStringKey("createVoice.generating")))
+                                            Text(String(localized: "createVoice.generating"))
                                                 .font(.caption2)
                                                 .foregroundStyle(.secondary)
                                         }
@@ -223,7 +223,7 @@ struct CreateVoiceProfileView: View {
                                             .font(.caption)
                                             .foregroundStyle(.red)
                                     } else if hasTestAudio {
-                                        Text(String(localized: LocalizedStringKey("createVoice.testAudioGenerated")))
+                                        Text(String(localized: "createVoice.testAudioGenerated"))
                                             .font(.caption)
                                             .foregroundStyle(.green)
                                     }
@@ -232,9 +232,9 @@ struct CreateVoiceProfileView: View {
 
                             formCard {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(String(localized: LocalizedStringKey("createVoice.afterSave")))
+                                    Text(String(localized: "createVoice.afterSave"))
                                         .font(.caption.bold())
-                                    Text(String(localized: LocalizedStringKey("createVoice.afterSaveHint")))
+                                    Text(String(localized: "createVoice.afterSaveHint"))
                                         .font(.caption2)
                                         .foregroundStyle(.secondary)
                                 }
@@ -274,7 +274,7 @@ struct CreateVoiceProfileView: View {
         refTextError = refTextTrimmed.isEmpty
 
         if nameError || refAudioError || refTextError {
-            saveError = String(localized: LocalizedStringKey("createVoice.pleaseFillRequired"))
+            saveError = String(localized: "createVoice.pleaseFillRequired")
             return
         }
         saveError = nil
@@ -296,7 +296,7 @@ struct CreateVoiceProfileView: View {
                     }
                 } catch {
                     await MainActor.run {
-                        self.saveError = String(localized: LocalizedStringKey("createVoice.saveFailed"), defaultValue: "保存失败: %@", interpolations: [error.localizedDescription])
+                        self.saveError = String(format: String(localized: "createVoice.saveFailed"), error.localizedDescription)
                     }
                 }
             }
@@ -310,7 +310,7 @@ struct CreateVoiceProfileView: View {
                     }
                 } catch {
                     await MainActor.run {
-                        self.saveError = String(localized: LocalizedStringKey("createVoice.saveFailed"), defaultValue: "保存失败: %@", interpolations: [error.localizedDescription])
+                        self.saveError = String(format: String(localized: "createVoice.saveFailed"), error.localizedDescription)
                     }
                 }
             }
@@ -351,7 +351,7 @@ struct CreateVoiceProfileView: View {
                 }
             } catch {
                 await MainActor.run {
-                    testAudioError = String(localized: LocalizedStringKey("createVoice.generationFailed"), defaultValue: "生成失败: %@", interpolations: [error.localizedDescription])
+                    testAudioError = String(format: String(localized: "createVoice.generationFailed"), error.localizedDescription)
                     isGeneratingTest = false
                 }
             }
@@ -366,7 +366,7 @@ struct CreateVoiceProfileView: View {
             audioPlayer?.play()
             isPlaying = true
         } catch {
-            testAudioError = String(localized: LocalizedStringKey("createVoice.playbackFailed"), defaultValue: "播放失败: %@", interpolations: [error.localizedDescription])
+            testAudioError = String(format: String(localized: "createVoice.playbackFailed"), error.localizedDescription)
         }
     }
 

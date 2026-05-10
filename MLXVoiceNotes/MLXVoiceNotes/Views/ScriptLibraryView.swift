@@ -25,13 +25,13 @@ struct ScriptLibraryView: View {
     }
 
     var body: some View {
-        AppPageScaffold(title: String(localized: LocalizedStringKey("scriptLibrary.title")), subtitle: String(localized: LocalizedStringKey("scriptLibrary.subtitle"))) {
+        AppPageScaffold(title: String(localized: "scriptLibrary.title"), subtitle: String(localized: "scriptLibrary.subtitle")) {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     Text(LocalizedStringKey("scriptLibrary.sortedByCreated"))
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button(String(localized: LocalizedStringKey("scriptLibrary.newScript"))) {
+                    Button(String(localized: "scriptLibrary.newScript")) {
                         createScript()
                     }
                     .buttonStyle(.borderedProminent)
@@ -54,7 +54,7 @@ struct ScriptLibraryView: View {
                     if scripts.isEmpty {
                         VStack(spacing: 16) {
                             ContentUnavailableView(
-                                String(localized: LocalizedStringKey("scriptLibrary.welcomeTitle")),
+                                String(localized: "scriptLibrary.welcomeTitle"),
                                 systemImage: "waveform.badge.mic",
                                 description: Text(LocalizedStringKey("scriptLibrary.welcomeHint"))
                             )
@@ -72,9 +72,9 @@ struct ScriptLibraryView: View {
                     }
                 }
             }
-            .alert(String(localized: LocalizedStringKey("scriptLibrary.deleteConfirmTitle")), isPresented: deleteAlertBinding) {
-                Button(String(localized: LocalizedStringKey("button.cancel")), role: .cancel) {}
-                Button(String(localized: LocalizedStringKey("button.delete")), role: .destructive) {
+            .alert(String(localized: "scriptLibrary.deleteConfirmTitle"), isPresented: deleteAlertBinding) {
+                Button(String(localized: "button.cancel"), role: .cancel) {}
+                Button(String(localized: "button.delete"), role: .destructive) {
                     deleteSelectedCandidate()
                 }
             } message: {
@@ -84,7 +84,7 @@ struct ScriptLibraryView: View {
             if let selectedScript {
                 scriptDetailPanel(for: selectedScript)
             } else {
-                ContentUnavailableView(String(localized: LocalizedStringKey("scriptLibrary.noScript")), systemImage: "doc.text")
+                ContentUnavailableView(String(localized: "scriptLibrary.noScript"), systemImage: "doc.text")
             }
         }
     }
@@ -99,11 +99,7 @@ struct ScriptLibraryView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(script.title)
                             .fontWeight(.semibold)
-                        Text(String(localized: "scriptLibrary.scriptMeta", defaultValue: "Modified %@ · %d roles / %d segments", table: nil, bundle: nil, comment: nil, interpolations: [
-                            .string(script.updatedAt.relativeLabel),
-                            .int(script.roles.count),
-                            .int(script.segments.count)
-                        ]))
+                        Text(String(format: String(localized: "scriptLibrary.scriptMeta"), script.updatedAt.relativeLabel, script.roles.count, script.segments.count))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     }
@@ -120,12 +116,12 @@ struct ScriptLibraryView: View {
             }
 
             HStack(spacing: 8) {
-                Button(String(localized: LocalizedStringKey("button.edit"))) {
+                Button(String(localized: "button.edit")) {
                     openEditor(for: script)
                 }
                 .disabled(script.status == .generating)
 
-                Button(String(localized: LocalizedStringKey("button.delete")), role: .destructive) {
+                Button(String(localized: "button.delete"), role: .destructive) {
                     deleteCandidate = script
                 }
                 .disabled(script.status == .generating)
@@ -170,26 +166,26 @@ struct ScriptLibraryView: View {
                         .frame(width: 160)
                 }
                 Spacer()
-                Button(String(localized: LocalizedStringKey("button.save"))) {
+                Button(String(localized: "button.save")) {
                     saveAndCollapse(script)
                 }
             }
 
-            TextField(String(localized: LocalizedStringKey("label.title")), text: binding(for: script, keyPath: \.title))
+            TextField(String(localized: "label.title"), text: binding(for: script, keyPath: \.title))
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: .infinity)
 
             HStack {
-                Button(String(localized: LocalizedStringKey("button.pasteOneClick"))) {
+                Button(String(localized: "button.pasteOneClick")) {
                     pasteClipboard(into: script)
                 }
-                Button(String(localized: LocalizedStringKey("button.aiPrompt"))) {}
-                Button(String(localized: LocalizedStringKey("button.parseRoles"))) {
+                Button(String(localized: "button.aiPrompt")) {}
+                Button(String(localized: "button.parseRoles")) {
                     parseRolesAndSegments(for: script)
                 }
                 Spacer()
                 if script.status == .generating {
-                    Button(String(localized: LocalizedStringKey("button.viewTaskQueue"))) {
+                    Button(String(localized: "button.viewTaskQueue")) {
                         selectedPage = .taskQueue
                     }
                 }
@@ -207,7 +203,7 @@ struct ScriptLibraryView: View {
                                 Text(role.name)
                                     .fontWeight(.medium)
                                     .frame(width: 70, alignment: .leading)
-                                Picker(String(localized: LocalizedStringKey("label.voice")), selection: Binding(
+                                Picker(String(localized: "label.voice"), selection: Binding(
                                     get: { role.defaultVoiceName },
                                     set: { role.defaultVoiceName = $0; script.updatedAt = .now }
                                 )) {
@@ -231,7 +227,7 @@ struct ScriptLibraryView: View {
                                 Text("\(role.speed.formatted(.number.precision(.fractionLength(2))))x")
                                     .font(.caption)
                                     .frame(width: 36)
-                                Button(String(localized: LocalizedStringKey("button.preview"))) {}
+                                Button(String(localized: "button.preview")) {}
                                     .font(.caption)
                                     .buttonStyle(.bordered)
                                 Spacer(minLength: 0)
@@ -247,7 +243,7 @@ struct ScriptLibraryView: View {
 
             if script.status == .completed {
                 HStack {
-                    Label(String(localized: LocalizedStringKey("message.generationCompleted")), systemImage: "checkmark.circle.fill")
+                    Label(String(localized: "message.generationCompleted"), systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                     Text(progressLabel(for: script))
                         .foregroundStyle(.secondary)
@@ -255,12 +251,12 @@ struct ScriptLibraryView: View {
                 }
             } else if script.status == .generating {
                 HStack {
-                    Label(String(localized: LocalizedStringKey("status.generating")), systemImage: "waveform")
+                    Label(String(localized: "status.generating"), systemImage: "waveform")
                         .foregroundStyle(.blue)
                     Text(progressLabel(for: script))
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button(String(localized: LocalizedStringKey("button.viewTaskQueue"))) {
+                    Button(String(localized: "button.viewTaskQueue")) {
                         selectedPage = .taskQueue
                     }
                 }
@@ -281,8 +277,8 @@ struct ScriptLibraryView: View {
 
             HStack(spacing: 12) {
                 Label(parseSummary, systemImage: "text.badge.checkmark")
-                Text(String(localized: "message.roles", defaultValue: "%d roles", table: nil, bundle: nil, comment: nil, interpolations: [.int(script.roles.count)]))
-                Text(String(localized: "message.segments", defaultValue: "%d segments", table: nil, bundle: nil, comment: nil, interpolations: [.int(script.segments.count)]))
+                Text(String(format: String(localized: "message.roles"), script.roles.count))
+                Text(String(format: String(localized: "message.segments"), script.segments.count))
                 Spacer()
             }
             .font(.caption)
@@ -296,7 +292,7 @@ struct ScriptLibraryView: View {
         if let reusableDraft = scripts.first(where: isReusableBlankDraft) {
             print("[createScript] 复用空白草稿 id=\(reusableDraft.id)")
             openEditor(for: reusableDraft)
-            parseSummary = String(localized: LocalizedStringKey("message.continueBlankDraft"))
+            parseSummary = String(localized: "message.continueBlankDraft")
             showDraftReuseTip = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                 showDraftReuseTip = false
@@ -338,11 +334,11 @@ struct ScriptLibraryView: View {
         do {
             try modelContext.save()
             print("[createScript] save 成功 id=\(scriptID)")
-            parseSummary = String(localized: LocalizedStringKey("message.waitingParse"))
+            parseSummary = String(localized: "message.waitingParse")
             openEditor(for: script)
         } catch {
             print("[createScript] save 失败: \(error.localizedDescription)")
-            parseSummary = String(localized: "message.createFailed", defaultValue: "Create failed: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(error.localizedDescription)])
+            parseSummary = String(format: String(localized: "message.createFailed"), error.localizedDescription)
         }
     }
 
@@ -425,7 +421,7 @@ struct ScriptLibraryView: View {
         script.bodyText = clipboardText
         script.updatedAt = .now
         script.status = .draft
-        parseSummary = String(localized: LocalizedStringKey("message.pastedWaitingParse"))
+        parseSummary = String(localized: "message.pastedWaitingParse")
         #endif
     }
 
@@ -481,12 +477,9 @@ struct ScriptLibraryView: View {
         script.updatedAt = .now
         
         var resultParts: [String] = []
-        resultParts.append(String(localized: "message.parseResult", defaultValue: "%d roles / %d segments", table: nil, bundle: nil, comment: nil, interpolations: [
-            .int(parsedScript.roles.count),
-            .int(parsedScript.segments.count)
-        ]))
+        resultParts.append(String(format: String(localized: "message.parseResult"), parsedScript.roles.count, parsedScript.segments.count))
         if parsedScript.unmarkedSegmentCount > 0 {
-            resultParts.append(String(localized: "message.unmarkedFallback", defaultValue: ", %d narrator segments fallback", table: nil, bundle: nil, comment: nil, interpolations: [.int(parsedScript.unmarkedSegmentCount)]))
+            resultParts.append(String(format: String(localized: "message.unmarkedFallback"), parsedScript.unmarkedSegmentCount))
         }
         parseSummary = resultParts.joined()
         saveContext()
@@ -506,12 +499,12 @@ struct ScriptLibraryView: View {
         GenerationService.start(script: script, voiceProfiles: voiceProfiles, voiceInstruct: nil) { result in
             switch result {
             case .success:
-                parseSummary = String(localized: LocalizedStringKey("message.generationCompleted"))
+                parseSummary = String(localized: "message.generationCompleted")
             case .failure(let error):
-                parseSummary = String(localized: "message.generationFailed", defaultValue: "Generation failed: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(error.localizedDescription)])
+                parseSummary = String(format: String(localized: "message.generationFailed"), error.localizedDescription)
             }
         }
-        parseSummary = String(localized: LocalizedStringKey("message.generationStarted"))
+        parseSummary = String(localized: "message.generationStarted")
 
         let job = GenerationJob(
             scriptTitle: script.title,
@@ -527,7 +520,7 @@ struct ScriptLibraryView: View {
         do {
             try modelContext.save()
         } catch {
-            parseSummary = String(localized: "message.saveFailed", defaultValue: "Save failed: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(error.localizedDescription)])
+            parseSummary = String(format: String(localized: "message.saveFailed"), error.localizedDescription)
         }
     }
 
@@ -545,7 +538,7 @@ struct ScriptLibraryView: View {
     private func validateRolesForGeneration(for script: Script) -> String? {
         for role in script.roles {
             guard let profile = voiceProfiles.first(where: { $0.name == role.defaultVoiceName }) else {
-                return String(localized: "message.roleNotBound", defaultValue: "Role \"%@\" has no voice bound. Please select a reference voice in Role-Voice Binding.", table: nil, bundle: nil, comment: nil, interpolations: [.string(role.name)])
+                return String(format: String(localized: "message.roleNotBound"), role.name)
             }
             let hasValidReference = profile.status == .available || profile.status == .builtIn
             let hasAudio = profile.referenceAudioPath != nil && !profile.referenceAudioPath!.isEmpty
@@ -555,17 +548,10 @@ struct ScriptLibraryView: View {
                 continue
             }
             if profile.status != .available {
-                return String(localized: "message.voiceStatusInvalid", defaultValue: "Voice \"%@\" bound to role \"%@\" has status \"%@\". Please select another available voice.", table: nil, bundle: nil, comment: nil, interpolations: [
-                    .string(role.name),
-                    .string(profile.name),
-                    .string(profile.statusLabel)
-                ])
+                return String(format: String(localized: "message.voiceStatusInvalid"), role.name, profile.name, profile.statusLabel)
             }
             if !hasAudio || !hasText {
-                return String(localized: "message.voiceMissing", defaultValue: "Voice \"%@\" bound to role \"%@\" is missing reference audio or text. Please select another reference voice.", table: nil, bundle: nil, comment: nil, interpolations: [
-                    .string(role.name),
-                    .string(profile.name)
-                ])
+                return String(format: String(localized: "message.voiceMissing"), role.name, profile.name)
             }
         }
         return nil
@@ -590,9 +576,9 @@ struct ScriptLibraryView: View {
         do {
             _ = try AudioExportService.exportRealWAV(for: script, fileName: fileName)
             script.lastExportedAt = .now
-            parseSummary = String(localized: LocalizedStringKey("message.exported"))
+            parseSummary = String(localized: "message.exported")
         } catch {
-            parseSummary = String(localized: "message.exportFailed", defaultValue: "Export failed: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(error.localizedDescription)])
+            parseSummary = String(format: String(localized: "message.exportFailed"), error.localizedDescription)
         }
     }
 
@@ -602,10 +588,7 @@ struct ScriptLibraryView: View {
     }
 
     private func progressLabel(for script: Script) -> String {
-        return String(localized: "message.progress", defaultValue: "%d / %d segments", table: nil, bundle: nil, comment: nil, interpolations: [
-            .int(completedCount(for: script)),
-            .int(script.segments.count)
-        ])
+        return String(format: String(localized: "message.progress"), completedCount(for: script), script.segments.count)
     }
 
     private func completedCount(for script: Script) -> Int {
@@ -629,15 +612,15 @@ struct ScriptLibraryView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(LocalizedStringKey("sidebar.generationStatus")).font(.headline)
 
-                Text(String(localized: "message.currentModel", defaultValue: "Current model: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(mlxService.currentModelName)]))
+                Text(String(format: String(localized: "message.currentModel"), mlxService.currentModelName))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                 if let diag = mlxService.lastDiag, diag.elapsedSec > 0 {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(String(localized: "message.generationTime", defaultValue: "Generation time: %.1f seconds", table: nil, bundle: nil, comment: nil, interpolations: [.double(diag.elapsedSec)])).font(.caption)
-                        Text(String(localized: "message.audioDuration", defaultValue: "Audio duration: %.1f seconds", table: nil, bundle: nil, comment: nil, interpolations: [.double(diag.durationSec)])).font(.caption)
-                        Text(String(localized: "message.generationSpeed", defaultValue: "Generation speed: %.2fx", table: nil, bundle: nil, comment: nil, interpolations: [.double(diag.realtimeFactor)])).font(.caption)
+                        Text(String(format: String(localized: "message.generationTime"), diag.elapsedSec)).font(.caption)
+                        Text(String(format: String(localized: "message.audioDuration"), diag.durationSec)).font(.caption)
+                        Text(String(format: String(localized: "message.generationSpeed"), diag.realtimeFactor)).font(.caption)
                     }
                     .foregroundStyle(.secondary)
                     Divider()
@@ -651,43 +634,36 @@ struct ScriptLibraryView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    Text(String(localized: "message.pendingSegments", defaultValue: "Generating · %d pending", table: nil, bundle: nil, comment: nil, interpolations: [.int(pending)]))
+                    Text(String(format: String(localized: "message.pendingSegments"), pending))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else if completed == total && total > 0 {
                     HStack(spacing: 6) {
                         Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                        Text(String(localized: "message.completedSegments", defaultValue: "Completed · %d segments", table: nil, bundle: nil, comment: nil, interpolations: [.int(total)])).foregroundStyle(.secondary)
+                        Text(String(format: String(localized: "message.completedSegments"), total)).foregroundStyle(.secondary)
                     }
                     .font(.caption)
                 } else if failed > 0 {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 6) {
                             Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-                            Text(String(localized: "message.failedSegments", defaultValue: "%d segments failed", table: nil, bundle: nil, comment: nil, interpolations: [.int(failed)])).foregroundStyle(.orange)
+                            Text(String(format: String(localized: "message.failedSegments"), failed)).foregroundStyle(.orange)
                         }
                         .font(.caption)
-                        Text(String(localized: "message.completedFailedPending", defaultValue: "%d/%d completed · %d pending", table: nil, bundle: nil, comment: nil, interpolations: [
-                            .int(completed),
-                            .int(total),
-                            .int(pending)
-                        ]))
+                        Text(String(format: String(localized: "message.completedFailedPending"), completed, total, pending))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 } else if completed > 0 {
                     HStack(spacing: 6) {
                         Image(systemName: "circle.lefthalf.filled").foregroundStyle(.blue)
-                        Text(String(localized: "message.partiallyCompleted", defaultValue: "Partially completed · %d/%d segments", table: nil, bundle: nil, comment: nil, interpolations: [
-                            .int(completed),
-                            .int(total)
-                        ])).foregroundStyle(.secondary)
+                        Text(String(format: String(localized: "message.partiallyCompleted"), completed, total)).foregroundStyle(.secondary)
                     }
                     .font(.caption)
                 } else {
                     HStack(spacing: 6) {
                         Image(systemName: "circle").foregroundStyle(.secondary)
-                        Text(String(localized: "message.notGenerated", defaultValue: "Not generated · %d segments pending", table: nil, bundle: nil, comment: nil, interpolations: [.int(total)])).foregroundStyle(.secondary)
+                        Text(String(format: String(localized: "message.notGenerated"), total)).foregroundStyle(.secondary)
                     }
                     .font(.caption)
                 }
@@ -700,37 +676,37 @@ struct ScriptLibraryView: View {
 
                 HStack(spacing: 8) {
                     if isCurrentGenerating {
-                        Button(String(localized: LocalizedStringKey("button.pause"))) { GenerationService.pause(script: script) }
+                        Button(String(localized: "button.pause")) { GenerationService.pause(script: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
-                        Button(String(localized: LocalizedStringKey("button.cancel"))) { GenerationService.cancel(script: script) }
+                        Button(String(localized: "button.cancel")) { GenerationService.cancel(script: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
                     } else if completed == total && total > 0 {
-                        Button(String(localized: LocalizedStringKey("button.regenerate"))) { startPlaceholderGeneration(for: script) }
+                        Button(String(localized: "button.regenerate")) { startPlaceholderGeneration(for: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.regular)
                             .disabled(!canStartGeneration)
                     } else if failed > 0 {
-                        Button(String(localized: LocalizedStringKey("button.retryFailed"))) {
+                        Button(String(localized: "button.retryFailed")) {
                             GenerationService.retryFailedSegments(script: script, voiceProfiles: voiceProfiles) { result in
                                 if case .failure(let error) = result {
-                                    parseSummary = String(localized: "message.retryFailed", defaultValue: "Retry failed: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(error.localizedDescription)])
+                                    parseSummary = String(format: String(localized: "message.retryFailed"), error.localizedDescription)
                                 }
                             }
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.regular)
                         .disabled(!canStartGeneration)
-                        Button(String(localized: LocalizedStringKey("button.regenerateAll"))) { startPlaceholderGeneration(for: script) }
+                        Button(String(localized: "button.regenerateAll")) { startPlaceholderGeneration(for: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
                             .disabled(!canStartGeneration)
                     } else if completed > 0 {
-                        Button(String(localized: LocalizedStringKey("button.continueGenerate"))) {
+                        Button(String(localized: "button.continueGenerate")) {
                             GenerationService.resume(script: script, voiceProfiles: voiceProfiles) { result in
                                 if case .failure(let error) = result {
-                                    parseSummary = String(localized: "message.continueFailed", defaultValue: "Continue generation failed: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(error.localizedDescription)])
+                                    parseSummary = String(format: String(localized: "message.continueFailed"), error.localizedDescription)
                                 }
                             }
                         }
@@ -738,7 +714,7 @@ struct ScriptLibraryView: View {
                             .controlSize(.small)
                             .disabled(!canStartGeneration)
                     } else {
-                        Button(String(localized: LocalizedStringKey("button.generateAudio"))) { startPlaceholderGeneration(for: script) }
+                        Button(String(localized: "button.generateAudio")) { startPlaceholderGeneration(for: script) }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.regular)
                             .disabled(!canStartGeneration)
@@ -770,20 +746,20 @@ struct ScriptLibraryView: View {
                 .foregroundStyle(.secondary)
 
                 if script.lastExportedAt != nil {
-                    Text(String(localized: "message.recentExport", defaultValue: "Recent export: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(script.lastExportedAt!.relativeLabel)]))
+                    Text(String(format: String(localized: "message.recentExport"), script.lastExportedAt!.relativeLabel))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
                 let isCompleted = completed == total && total > 0
                 HStack(spacing: 8) {
-                    Button(String(localized: LocalizedStringKey("button.exportWav"))) {
+                    Button(String(localized: "button.exportWav")) {
                         exportWAV(for: script)
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(!isCompleted || isCurrentGenerating)
 
-                    Button(String(localized: LocalizedStringKey("button.openFolder"))) {
+                    Button(String(localized: "button.openFolder")) {
                         #if os(macOS)
                         NSWorkspace.shared.open(AudioExportService.exportDirectory)
                         #endif
@@ -838,7 +814,7 @@ struct ScriptLibraryView: View {
                     HStack {
                         Text(LocalizedStringKey("sidebar.charCount")).foregroundStyle(.secondary)
                         Spacer()
-                        Text(String(localized: "message.chars", defaultValue: "%d chars", table: nil, bundle: nil, comment: nil, interpolations: [.int(script.bodyText.count)]))
+                        Text(String(format: String(localized: "message.chars"), script.bodyText.count))
                     }
                     HStack {
                         Text(LocalizedStringKey("sidebar.rolesSegments")).foregroundStyle(.secondary)
@@ -848,7 +824,7 @@ struct ScriptLibraryView: View {
                     HStack {
                         Text(LocalizedStringKey("sidebar.lastExport")).foregroundStyle(.secondary)
                         Spacer()
-                        Text(script.lastExportedAt?.relativeLabel ?? String(localized: LocalizedStringKey("status.notExported")))
+                        Text(script.lastExportedAt?.relativeLabel ?? String(localized: "status.notExported"))
                     }
                 }
                 .font(.caption)

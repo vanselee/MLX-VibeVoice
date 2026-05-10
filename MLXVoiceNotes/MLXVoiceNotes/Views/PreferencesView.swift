@@ -32,7 +32,7 @@ struct PreferencesView: View {
     }
 
     var body: some View {
-        AppPageScaffold(title: String(localized: LocalizedStringKey("preferences.title")), subtitle: String(localized: LocalizedStringKey("preferences.subtitle"))) {
+        AppPageScaffold(title: String(localized: "preferences.title"), subtitle: String(localized: "preferences.subtitle")) {
             VStack(alignment: .leading, spacing: 14) {
                 settingsCard {
                     preferenceRow(titleKey: "preferences.language") {
@@ -61,13 +61,13 @@ struct PreferencesView: View {
                                 .truncationMode(.middle)
                                 .frame(width: Self.trailingColumnWidth, alignment: .trailing)
                             HStack(spacing: 8) {
-                                Button(String(localized: LocalizedStringKey("preferences.exportLocation.reset"))) {
+                                Button(String(localized: "preferences.exportLocation.reset")) {
                                     defaultExportDirectory = ""
                                 }
                                 .buttonStyle(.bordered)
                                 .controlSize(.regular)
                                 .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
-                                Button(String(localized: LocalizedStringKey("preferences.exportLocation.change"))) {
+                                Button(String(localized: "preferences.exportLocation.change")) {
                                     changeExportDirectory()
                                 }
                                 .buttonStyle(.bordered)
@@ -85,7 +85,7 @@ struct PreferencesView: View {
                             HStack {
                                 Spacer()
                                 if isCalculatingCache {
-                                    Text(String(localized: LocalizedStringKey("preferences.cache.calculating")))
+                                    Text(String(localized: "preferences.cache.calculating"))
                                         .font(.body)
                                         .foregroundStyle(.secondary)
                                 }
@@ -115,7 +115,7 @@ struct PreferencesView: View {
                         preferenceRow(titleKey: "preferences.cache.clear", subtitleKey: "preferences.cache.clearDescription") {
                             HStack {
                                 Spacer()
-                                Button(String(localized: LocalizedStringKey("preferences.cache.clear"))) {
+                                Button(String(localized: "preferences.cache.clear")) {
                                 }
                                 .buttonStyle(.bordered)
                                 .controlSize(.regular)
@@ -169,7 +169,7 @@ struct PreferencesView: View {
     private func changeExportDirectory() {
         #if os(macOS)
         let panel = NSOpenPanel()
-        panel.title = String(localized: LocalizedStringKey("preferences.exportLocation.selectTitle"))
+        panel.title = String(localized: "preferences.exportLocation.selectTitle")
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false

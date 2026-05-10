@@ -42,32 +42,7 @@ enum ExportKind: String, Codable, CaseIterable {
     case projectPackage
 }
 
-enum AppLanguage: String, CaseIterable, Identifiable, Codable {
-    case system
-    case zhHans
-    case en
-
-    var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .system: return "跟随系统"
-        case .zhHans: return "中文"
-        case .en: return "English"
-        }
-    }
-}
-
-enum CacheLimit: String, CaseIterable, Identifiable {
-    case gb5 = "5GB"
-    case gb10 = "10GB"
-    case gb20 = "20GB"
-    case unlimited = "不限制"
-
-    var id: String { rawValue }
-
-    var displayName: String { rawValue }
-}
+// AppLanguage and CacheLimit are defined in SharedComponents.swift
 
 @Model
 final class Script {
