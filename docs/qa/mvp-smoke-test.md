@@ -233,7 +233,7 @@ All 15 smoke-test items verified by code inspection. No blocking issues found. N
 ### Build Verification
 
 ```bash
-cd /Users/apple/Desktop/SoftDev/aiaudiovideo && \
+cd <repo-root> && \
 xcodebuild build \
   -project MLXVoiceNotes/MLXVoiceNotes.xcodeproj \
   -scheme "MLX Voice Notes" \

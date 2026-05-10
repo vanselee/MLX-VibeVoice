@@ -8,7 +8,7 @@
 
 低保真原型参考：
 
-`/Users/apple/Desktop/SoftDev/aiaudiovideo/docs/prototypes/mlx-voice-notes-low-fi.html`
+`<repo-root>/docs/prototypes/mlx-voice-notes-low-fi.html`
 
 ## 2. 视觉方向
 

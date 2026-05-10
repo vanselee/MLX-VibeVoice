@@ -15,7 +15,7 @@ MVP 核心原则：
 
 ## 当前 Git 状态
 
-- 仓库路径：`/Users/apple/Desktop/SoftDev/aiaudiovideo`
+- 仓库路径：`<repo-root>`
 - 当前功能代码提交：`0ceb52b feat: use inline script editing workflow`
 - 已有标签：`phase0-start`
 - 本项目目前采用本地 Git 管理。每次完成明确修改必须提交一次本地 Git 记录。
@@ -33,13 +33,13 @@ swiftc -module-cache-path /private/tmp/mlx-voice-notes-swift-module-cache MLXVoi
 
 ## 重要文档
 
-- 主 PRD：`/Users/apple/Desktop/SoftDev/aiaudiovideo/mlxvoicenote说明书_更新版.md`
-- PRD 副本：`/Users/apple/Desktop/SoftDev/aiaudiovideo/docs/PRD.md`
-- 开发规则：`/Users/apple/Desktop/SoftDev/aiaudiovideo/docs/development-rules.md`
-- Phase 0 验证结果：`/Users/apple/Desktop/SoftDev/aiaudiovideo/docs/phase0/phase0-results.md`
-- 模型矩阵：`/Users/apple/Desktop/SoftDev/aiaudiovideo/docs/phase0/model-matrix.md`
-- 高保真原型：`/Users/apple/Desktop/SoftDev/aiaudiovideo/docs/prototypes/mlx-voice-notes-hifi-pages.html`
-- 低保真原型：`/Users/apple/Desktop/SoftDev/aiaudiovideo/docs/prototypes/mlx-voice-notes-low-fi.html`
+- 主 PRD：`<repo-root>/mlxvoicenote说明书_更新版.md`
+- PRD 副本：`<repo-root>/docs/PRD.md`
+- 开发规则：`<repo-root>/docs/development-rules.md`
+- Phase 0 验证结果：`<repo-root>/docs/phase0/phase0-results.md`
+- 模型矩阵：`<repo-root>/docs/phase0/model-matrix.md`
+- 高保真原型：`<repo-root>/docs/prototypes/mlx-voice-notes-hifi-pages.html`
+- 低保真原型：`<repo-root>/docs/prototypes/mlx-voice-notes-low-fi.html`
 
 ## 当前 App 代码结构
 
@@ -198,13 +198,13 @@ swiftc -module-cache-path /private/tmp/mlx-voice-notes-swift-module-cache MLXVoi
 
 我正在开发一个 macOS 本地多角色配音工具，项目路径是：
 
-`/Users/apple/Desktop/SoftDev/aiaudiovideo`
+`<repo-root>`
 
 请先阅读：
 
-- `/Users/apple/Desktop/SoftDev/aiaudiovideo/docs/handoff/AI_HANDOFF_2026-04-30.md`
-- `/Users/apple/Desktop/SoftDev/aiaudiovideo/mlxvoicenote说明书_更新版.md`
-- `/Users/apple/Desktop/SoftDev/aiaudiovideo/docs/development-rules.md`
+- `<repo-root>/docs/handoff/AI_HANDOFF_2026-04-30.md`
+- `<repo-root>/mlxvoicenote说明书_更新版.md`
+- `<repo-root>/docs/development-rules.md`
 
 当前功能代码提交是：
 

@@ -1,28 +1,90 @@
-# MLX Voice Notes
+# MLX VibeVoice
 
-MLX Voice Notes is a macOS Apple Silicon audio creation app for turning scripts into speech with local-first MLX inference.
+MLX VibeVoice is a local-first macOS app for turning scripts into speech with
+Apple Silicon and MLX-based Qwen TTS models. It is designed for multi-role
+scripts, reusable reference voices, local model management, and complete WAV
+export.
 
-## Project Identity
+> Status: active development. The app is usable for local experiments, but model
+> quality, generation speed, and voice stability are still being tuned.
 
-- App name: MLX Voice Notes
-- Bundle identifier: `com.vanselee.MLXVoiceNotes`
-- Author: vanselee
-- Email: liyifc@gmail.com
-- Copyright: Copyright © 2026 vanselee. All rights reserved.
+## Features
 
-## Current Status
+- Script library with multi-role parsing.
+- Role-to-voice binding for dialogue-style scripts.
+- Local Qwen TTS model selection and download management.
+- Reference voice creation from user-provided audio and text.
+- Local generation with per-model generation parameters.
+- Complete WAV export with strict segment-completion checks.
+- Local-first storage for scripts, generated audio, reference audio, and cache.
 
-The project is in Phase 0 preparation. Phase 0 validates the core technical risks before UI prototyping:
+## Requirements
 
-- `mlx-audio-swift` local TTS viability
-- Chinese TTS model support
-- Multi-role script splitting and WAV stitching
-- 24kHz / 16-bit PCM / mono export path
-- Python/CLI local cloning feasibility as a non-blocking key validation item
+- macOS 14 or later.
+- Apple Silicon Mac.
+- Xcode 26.4.1 or compatible recent Xcode.
+- Network access only when downloading Swift packages or model files.
 
-## Local Development Rules
+## Development
 
-- This repository is local-first for now. Do not upload to GitHub until the license and public release policy are decided.
-- Do not commit models, generated audio, reference audio, caches, exports, credentials, or packaged app artifacts.
-- Product and file attribution should use `vanselee`; do not add AI tool names as authors or co-authors.
+Open the Xcode project:
+
+```bash
+open MLXVoiceNotes/MLXVoiceNotes.xcodeproj
+```
+
+Command-line build:
+
+```bash
+xcodebuild build \
+  -project MLXVoiceNotes/MLXVoiceNotes.xcodeproj \
+  -scheme "MLX Voice Notes" \
+  -configuration Debug \
+  -derivedDataPath /private/tmp/MLXVoiceNotesDerivedData \
+  ONLY_ACTIVE_ARCH=YES \
+  CODE_SIGNING_ALLOWED=NO
+```
+
+## Models
+
+The app currently targets Qwen3 TTS MLX models from `mlx-community`, including:
+
+- `mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-bf16`
+- `mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit`
+- `mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-4bit`
+- `mlx-community/Qwen3-TTS-12Hz-0.6B-CustomVoice-8bit`
+- `mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16`
+
+Model weights are not included in this repository. Users download models through
+the app or provide their own local Hugging Face cache. Model files are governed
+by their upstream licenses and terms.
+
+## Privacy
+
+MLX VibeVoice is designed to run locally. Scripts, generated audio, reference
+audio, and voice assets are stored on the user's Mac by default. The app should
+not upload user content unless a future cloud feature is explicitly added and
+clearly disclosed.
+
+Do not commit or publish:
+
+- model weights,
+- generated audio,
+- reference voice audio,
+- SwiftData stores,
+- export files,
+- local caches,
+- credentials or tokens.
+
+## Responsible Use
+
+Use reference voices only when you own the audio or have permission from the
+speaker. Do not use this software to impersonate, defraud, harass, or mislead
+others. Users are responsible for the content they generate and publish.
+
+## License
+
+Copyright 2026 vanselee.
+
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
 

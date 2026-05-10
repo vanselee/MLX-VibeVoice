@@ -6,7 +6,7 @@
 
 ### 步骤 1: 添加所有视图文件
 
-打开 `/Users/apple/Desktop/SoftDev/aiaudiovideo/MLXVoiceNotes/MLXVoiceNotes.xcodeproj
+打开 `<repo-root>/MLXVoiceNotes/MLXVoiceNotes.xcodeproj
 
 添加以下文件：
 

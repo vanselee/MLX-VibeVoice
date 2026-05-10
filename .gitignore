@@ -1,5 +1,6 @@
 # macOS
 .DS_Store
+**/.DS_Store
 
 # Xcode / Swift
 DerivedData/
@@ -7,9 +8,7 @@ DerivedData/
 *.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
 *.xcodeproj/project.xcworkspace/xcuserdata/
-*.xcodeproj/project.xcworkspace/
 **/*.xcodeproj/xcuserdata/
-**/*.xcodeproj/project.xcworkspace/
 .build/
 
 # Python / local tooling
@@ -19,6 +18,9 @@ __pycache__/
 *.pyc
 .env
 External/
+对话.txt
+*.local.md
+*.private.md
 
 # App build artifacts
 *.app
@@ -53,3 +55,9 @@ backups/
 *.onnx
 *.mlmodel
 *.mlpackage
+
+# Local app data / user data
+*.store
+*.store-shm
+*.store-wal
+Application Support/

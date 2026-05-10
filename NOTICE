@@ -1,0 +1,15 @@
+MLX VibeVoice
+Copyright 2026 vanselee
+
+This product includes software developed by vanselee and is licensed under the
+Apache License, Version 2.0.
+
+This product depends on third-party open source software from Apple, MLX,
+Hugging Face, Blaizzy/mlx-audio-swift, and other Swift Package Manager
+dependencies listed in Package.resolved. Third-party components remain governed
+by their own licenses.
+
+This repository does not include Qwen TTS model weights. Model files downloaded
+or used by the app remain governed by the licenses and terms published by their
+respective model authors and hosting providers.
+

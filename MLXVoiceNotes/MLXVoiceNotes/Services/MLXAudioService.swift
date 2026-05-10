@@ -35,8 +35,8 @@ private struct CachedRefAudio {
 }
 
 // MARK: - Phase 2B: refAudio/refText Stability Test
-let phase2RefAudioPath = "/Users/apple/Desktop/李不二聊电商/4月12日音频母带/4月22日声音母带.mp3"
-let phase2RefText = "你永远都搞不清楚这些平台它到底要什么，不要什么，有时候一条视频吧，花几个小时你把它做出来了，发到了a平台呢，正常通过，发到b平台呢，直接限流，有的还给你封号呢"
+private let phase2RefAudioPathUserDefaultsKey = "phase2RefAudioPath"
+let phase2RefText = "这是一段用于本地参考音色稳定性验证的示例文本。请使用你拥有合法授权的参考音频进行测试。"
 let phase2TargetText = "你好，这是 MLX VibeVoice 的参考音色稳定性测试。如果三次声音接近一致，说明参考音色可以用于角色绑定。"
 
 class MLXAudioService: ObservableObject {
@@ -493,9 +493,10 @@ class MLXAudioService: ObservableObject {
     func runRefAudioStabilityTests() async throws -> [(run: Int, diag: AudioDiagInfo)] {
         var results: [(Int, AudioDiagInfo)] = []
 
-        guard let refAudioURL = URL(string: phase2RefAudioPath) else {
+        guard let refAudioPath = UserDefaults.standard.string(forKey: phase2RefAudioPathUserDefaultsKey), !refAudioPath.isEmpty else {
             throw TTSError.invalidRefAudioPath
         }
+        let refAudioURL = URL(fileURLWithPath: refAudioPath)
 
         // 验证参考音频文件存在
         guard FileManager.default.fileExists(atPath: refAudioURL.path) else {

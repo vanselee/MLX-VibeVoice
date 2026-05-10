@@ -4,7 +4,7 @@
 > 项目所有者：vanselee  
 > 联系邮箱：liyifc@gmail.com  
 > 当前日期：2026-05-06  
-> 项目路径：`/Users/apple/Desktop/SoftDev/aiaudiovideo`
+> 项目路径：`<repo-root>`
 
 ## 1. 项目定位
 
@@ -213,10 +213,10 @@ MLX Voice Notes 是一个 macOS 本地多角色配音工具，核心目标是：
 ```text
 你现在接手 MLX Voice Notes 项目的产品策划与任务拆分工作。请先阅读：
 
-1. /Users/apple/Desktop/SoftDev/aiaudiovideo/docs/project-handoff-planning.md
-2. /Users/apple/Desktop/SoftDev/aiaudiovideo/docs/phase2c-voice-profile-design.md
-3. /Users/apple/Desktop/SoftDev/aiaudiovideo/docs/phase0/phase0-results.md
-4. /Users/apple/Desktop/SoftDev/aiaudiovideo/docs/qa/mvp-smoke-test.md
+1. <repo-root>/docs/project-handoff-planning.md
+2. <repo-root>/docs/phase2c-voice-profile-design.md
+3. <repo-root>/docs/phase0/phase0-results.md
+4. <repo-root>/docs/qa/mvp-smoke-test.md
 
 项目定位：macOS 本地多角色配音工具，用户输入文案，解析角色，绑定参考音色，用 Qwen3 bf16 本地生成，最终导出一条完整 WAV。
 
@@ -224,7 +224,7 @@ MLX Voice Notes 是一个 macOS 本地多角色配音工具，核心目标是：
 - UI 中“新建文案”无反应。
 - 文案列表看不到旧测试文案。
 - 创建音色保存体验像无效。
-- 但本机 /Users/apple/Library/Application Support/default.store 里实际有 ZSCRIPT=9、ZVOICEPROFILE=4。
+- 但本机 <user-application-support>/default.store 里实际有 ZSCRIPT=9、ZVOICEPROFILE=4。
 
 请先给出产品/工程任务拆分，不要直接大改代码。
 优先规划：
@@ -259,7 +259,7 @@ P2：音色创建保存后的反馈和刷新。
    - VoiceProfile 数量
 5. ScriptLibraryView.createScript() 保存失败时显示用户可见错误。
 6. CreateVoiceProfileView.saveVoice() 保存失败时显示用户可见错误，不要只 print。
-7. 不要删除 /Users/apple/Library/Application Support/default.store。
+7. 不要删除 <user-application-support>/default.store。
 8. Build 成功后提交，提交信息用中文。
 
 注意：当前 default.store 里已有测试数据，切换 store 后旧数据不会自动出现。本次只做 store 路径收敛和诊断，不做数据迁移。

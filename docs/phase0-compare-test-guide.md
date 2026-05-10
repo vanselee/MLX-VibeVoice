@@ -85,7 +85,7 @@ open /tmp/MLXVoiceNotesDerivedDataCompareTest2/Build/Products/Debug/MLX\ Voice\ 
 
 ## bf16 本地模型路径
 ```
-/Users/apple/Desktop/SoftDev/aiaudiovideo/MLXVoiceNotesAssets/Models/mlx-community_Qwen3-TTS-12Hz-0.6B-Base-bf16
+<repo-root>/MLXVoiceNotesAssets/Models/mlx-community_Qwen3-TTS-12Hz-0.6B-Base-bf16
 ```
 
 ## 约束检查
