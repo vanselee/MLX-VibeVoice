@@ -40,13 +40,8 @@ struct ContentView: View {
         // 不再调用 GenerationService.advanceOneTick
     }
 
-    @ViewBuilder
     private var allPages: [AppPage] {
-        var pages = AppPage.allCases
-        #if DEBUG
-        pages.append(.mlxTest)
-        #endif
-        return pages
+        AppPage.allCases
     }
 
     @ViewBuilder
@@ -62,10 +57,6 @@ struct ContentView: View {
             TaskQueueView(scripts: scripts, selectedScriptID: $selectedScriptID)
         case .exportSettings:
             PreferencesView()
-        #if DEBUG
-        case .mlxTest:
-            MLXTestView()
-        #endif
         }
     }
 
@@ -173,9 +164,6 @@ enum AppPage: String, CaseIterable, Identifiable {
     case resources
     case taskQueue
     case exportSettings
-    #if DEBUG
-    case mlxTest
-    #endif
 
     var id: String { rawValue }
 
@@ -186,9 +174,6 @@ enum AppPage: String, CaseIterable, Identifiable {
         case .resources: return "资源中心"
         case .taskQueue: return "任务总览"
         case .exportSettings: return "偏好设置"
-        #if DEBUG
-        case .mlxTest: return "MLX Test"
-        #endif
         }
     }
 
@@ -199,9 +184,6 @@ enum AppPage: String, CaseIterable, Identifiable {
         case .resources: return "externaldrive"
         case .taskQueue: return "list.bullet.rectangle"
         case .exportSettings: return "gearshape"
-        #if DEBUG
-        case .mlxTest: return "wand.and.stars"
-        #endif
         }
     }
 }
