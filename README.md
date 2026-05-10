@@ -10,7 +10,11 @@ export.
 
 ## Audio Demo
 
-🎙️ [Listen to a multi-role dialogue demo](https://vanselee.github.io/MLX-VibeVoice/demo.html) — generated with Qwen3 TTS and custom reference voices.
+<video controls src="assets/multi-role-dialogue-demo.mp4">
+  Your browser does not support the video element.
+</video>
+
+*Multi-role dialogue demo — generated with Qwen3 TTS and custom reference voices.*
 
 ---
 

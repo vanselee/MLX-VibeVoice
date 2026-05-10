@@ -50,6 +50,7 @@ backups/
 
 # Exception: demo assets for README
 !assets/*.mp3
+!assets/*.mp4
 
 # Model/checkpoint files
 *.safetensors
