@@ -273,7 +273,16 @@ class MLXAudioService: ObservableObject {
             // 分阶段计时：总耗时起点（必须在所有操作之前记录）
             let totalStart = Date()
 
-            let genParams = generationParams ?? model.defaultGenerationParameters
+            let activeModelRepo = loadedModelRepo ?? selectedRepo
+            let genParams = generationParams ?? ModelGenerationProfile.parameters(
+                for: activeModelRepo,
+                fallback: model.defaultGenerationParameters
+            )
+            let maxTokensText = genParams.maxTokens.map { String($0) } ?? "nil"
+            let temperatureText = String(format: "%.2f", Double(genParams.temperature))
+            let topPText = String(format: "%.2f", Double(genParams.topP))
+            let repetitionPenaltyText = genParams.repetitionPenalty.map { String(format: "%.2f", Double($0)) } ?? "nil"
+            print("[MLXTTS] generation profile repo=\(activeModelRepo), maxTokens=\(maxTokensText), temperature=\(temperatureText), topP=\(topPText), repetitionPenalty=\(repetitionPenaltyText)")
 
             // 分阶段计时：模型推理
             let modelGenStart = Date()
