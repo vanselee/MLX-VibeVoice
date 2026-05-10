@@ -3,21 +3,16 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .system
     @Query(sort: \Script.createdAt, order: .reverse) private var scripts: [Script]
     @Query private var voiceProfiles: [VoiceProfile]
     @State private var selectedPage: AppPage = .scriptLibrary
     @State private var selectedScriptID: UUID?
-    
-
-
-    var selectedScript: Script? {
-        scripts.first { $0.id == selectedScriptID } ?? scripts.first
-    }
 
     var body: some View {
         NavigationSplitView {
             List(allPages, selection: $selectedPage) { page in
-                Label(page.title, systemImage: page.systemImage)
+                Label(LocalizedStringKey(page.localizationKey), systemImage: page.systemImage)
                     .tag(page)
             }
             .navigationTitle("MLX VibeVoice")
@@ -26,6 +21,7 @@ struct ContentView: View {
             detailView
                 .frame(minWidth: 860, minHeight: 620)
         }
+        .environment(\.locale, Locale(identifier: appLanguage.effectiveLocaleIdentifier))
         .onAppear {
             seedSampleScriptsIfNeeded()
             seedSampleVoiceProfilesIfNeeded()
@@ -36,8 +32,6 @@ struct ContentView: View {
                 selectedScriptID = scriptIDs.first
             }
         }
-        // Phase 0.5: 移除 Timer 调度，改为 Task 串行生成
-        // 不再调用 GenerationService.advanceOneTick
     }
 
     private var allPages: [AppPage] {
@@ -167,13 +161,13 @@ enum AppPage: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var title: String {
+    var localizationKey: String {
         switch self {
-        case .scriptLibrary: return "文案列表"
-        case .roleReview: return "角色确认"
-        case .resources: return "资源中心"
-        case .taskQueue: return "任务总览"
-        case .exportSettings: return "偏好设置"
+        case .scriptLibrary: return "nav.scriptList"
+        case .roleReview: return "nav.roleReview"
+        case .resources: return "nav.resourceCenter"
+        case .taskQueue: return "nav.taskOverview"
+        case .exportSettings: return "nav.preferences"
         }
     }
 

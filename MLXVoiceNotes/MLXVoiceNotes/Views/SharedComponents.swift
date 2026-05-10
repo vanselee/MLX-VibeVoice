@@ -1,5 +1,55 @@
 import SwiftUI
 
+// MARK: - App Language Settings
+
+enum AppLanguage: String, CaseIterable, Identifiable {
+    case system
+    case zhHans
+    case en
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .system: return "跟随系统"
+        case .zhHans: return "简体中文"
+        case .en: return "English"
+        }
+    }
+
+    var effectiveLocaleIdentifier: String {
+        switch self {
+        case .system:
+            let preferredLanguage = Locale.preferredLanguages.first ?? "en"
+            return preferredLanguage.hasPrefix("zh") ? "zh-Hans" : "en"
+        case .zhHans:
+            return "zh-Hans"
+        case .en:
+            return "en"
+        }
+    }
+}
+
+// MARK: - Cache Limit Settings
+
+enum CacheLimit: String, CaseIterable, Identifiable {
+    case gb5
+    case gb10
+    case gb20
+    case gb50
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .gb5: return "5 GB"
+        case .gb10: return "10 GB"
+        case .gb20: return "20 GB"
+        case .gb50: return "50 GB"
+        }
+    }
+}
+
 struct AppPageScaffold<Content: View, Sidebar: View>: View {
     let title: String
     let subtitle: String

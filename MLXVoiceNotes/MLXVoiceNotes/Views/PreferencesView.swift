@@ -32,7 +32,7 @@ struct PreferencesView: View {
     }
 
     var body: some View {
-        AppPageScaffold(title: "偏好设置", subtitle: "管理语言、导出位置和本地缓存。") {
+        AppPageScaffold(title: String(localized: LocalizedStringKey("preferences.title")), subtitle: String(localized: LocalizedStringKey("preferences.subtitle"))) {
             VStack(alignment: .leading, spacing: 14) {
                 settingsCard {
                     preferenceRow("语言") {
