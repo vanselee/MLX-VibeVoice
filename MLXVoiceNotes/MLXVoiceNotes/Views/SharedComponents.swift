@@ -9,12 +9,16 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var displayName: String {
+    var localizationKey: String {
         switch self {
-        case .system: return "跟随系统"
-        case .zhHans: return "简体中文"
-        case .en: return "English"
+        case .system: return "preferences.language.system"
+        case .zhHans: return "preferences.language.zhHans"
+        case .en: return "preferences.language.en"
         }
+    }
+
+    var displayName: String {
+        String(localized: LocalizedStringKey(localizationKey))
     }
 
     var effectiveLocaleIdentifier: String {
@@ -33,6 +37,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 // MARK: - Cache Limit Settings
 
 enum CacheLimit: String, CaseIterable, Identifiable {
+    case unlimited
     case gb5
     case gb10
     case gb20
@@ -40,13 +45,21 @@ enum CacheLimit: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var displayName: String {
+    var localizationKey: String {
         switch self {
+        case .unlimited: return "preferences.cache.unlimited"
         case .gb5: return "5 GB"
         case .gb10: return "10 GB"
         case .gb20: return "20 GB"
         case .gb50: return "50 GB"
         }
+    }
+
+    var displayName: String {
+        if localizationKey.hasPrefix("preferences") {
+            return String(localized: LocalizedStringKey(localizationKey))
+        }
+        return localizationKey
     }
 }
 

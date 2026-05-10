@@ -4,7 +4,7 @@ struct PreferencesView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .system
     @AppStorage("cacheLimit") private var cacheLimit: CacheLimit = .gb20
     @AppStorage("defaultExportDirectory") private var defaultExportDirectory: String = ""
-    @State private var cacheUsage: String = "待统计"
+    @State private var isCalculatingCache: Bool = true
 
     private static let trailingColumnWidth: CGFloat = 300
     private static let controlWidth: CGFloat = 176
@@ -35,7 +35,7 @@ struct PreferencesView: View {
         AppPageScaffold(title: String(localized: LocalizedStringKey("preferences.title")), subtitle: String(localized: LocalizedStringKey("preferences.subtitle"))) {
             VStack(alignment: .leading, spacing: 14) {
                 settingsCard {
-                    preferenceRow("语言") {
+                    preferenceRow(titleKey: "preferences.language") {
                         HStack {
                             Spacer()
                             Picker("", selection: $appLanguage) {
@@ -52,7 +52,7 @@ struct PreferencesView: View {
                 }
 
                 settingsCard {
-                    preferenceRow("导出位置") {
+                    preferenceRow(titleKey: "preferences.exportLocation") {
                         VStack(alignment: .trailing, spacing: 8) {
                             Text(currentExportDisplayPath)
                                 .font(.body)
@@ -61,13 +61,13 @@ struct PreferencesView: View {
                                 .truncationMode(.middle)
                                 .frame(width: Self.trailingColumnWidth, alignment: .trailing)
                             HStack(spacing: 8) {
-                                Button("恢复默认位置") {
+                                Button(String(localized: LocalizedStringKey("preferences.exportLocation.reset"))) {
                                     defaultExportDirectory = ""
                                 }
                                 .buttonStyle(.bordered)
                                 .controlSize(.regular)
                                 .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
-                                Button("更改位置") {
+                                Button(String(localized: LocalizedStringKey("preferences.exportLocation.change"))) {
                                     changeExportDirectory()
                                 }
                                 .buttonStyle(.bordered)
@@ -81,19 +81,21 @@ struct PreferencesView: View {
 
                 settingsCard {
                     VStack(spacing: 0) {
-                        preferenceRow("当前占用缓存") {
+                        preferenceRow(titleKey: "preferences.cache.usage") {
                             HStack {
                                 Spacer()
-                                Text(cacheUsage)
-                                    .font(.body)
-                                    .foregroundStyle(.secondary)
+                                if isCalculatingCache {
+                                    Text(String(localized: LocalizedStringKey("preferences.cache.calculating")))
+                                        .font(.body)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                             .frame(width: Self.trailingColumnWidth)
                         }
 
                         Divider().padding(.horizontal, 16)
 
-                        preferenceRow("缓存上限", subtitle: "达到上限后提醒用户清理缓存。") {
+                        preferenceRow(titleKey: "preferences.cache.limit", subtitleKey: "preferences.cache.limitDescription") {
                             HStack {
                                 Spacer()
                                 Picker("", selection: $cacheLimit) {
@@ -110,10 +112,10 @@ struct PreferencesView: View {
 
                         Divider().padding(.horizontal, 16)
 
-                        preferenceRow("清理缓存", subtitle: "清除可再生成的临时文件，不删除用户文案和导出音频。") {
+                        preferenceRow(titleKey: "preferences.cache.clear", subtitleKey: "preferences.cache.clearDescription") {
                             HStack {
                                 Spacer()
-                                Button("清理缓存") {
+                                Button(String(localized: LocalizedStringKey("preferences.cache.clear"))) {
                                 }
                                 .buttonStyle(.bordered)
                                 .controlSize(.regular)
@@ -140,15 +142,15 @@ struct PreferencesView: View {
 
     @ViewBuilder
     private func preferenceRow(
-        _ title: String,
-        subtitle: String? = nil,
+        titleKey: String,
+        subtitleKey: String? = nil,
         @ViewBuilder trailing: () -> some View
     ) -> some View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.body)
-                if let subtitle {
-                    Text(subtitle)
+                Text(LocalizedStringKey(titleKey))
+                if let subtitleKey {
+                    Text(LocalizedStringKey(subtitleKey))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -167,7 +169,7 @@ struct PreferencesView: View {
     private func changeExportDirectory() {
         #if os(macOS)
         let panel = NSOpenPanel()
-        panel.title = "选择导出目录"
+        panel.title = String(localized: LocalizedStringKey("preferences.exportLocation.selectTitle"))
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
