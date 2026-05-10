@@ -437,6 +437,17 @@ final class ModelDownloadManager: ObservableObject {
 
     private init() {}
 
+    enum ModelDeletionError: LocalizedError {
+        case selectedModel
+
+        var errorDescription: String? {
+            switch self {
+            case .selectedModel:
+                return "当前正在使用的模型不能删除，请先切换到其他已安装模型。"
+            }
+        }
+    }
+
     /// 获取已有的下载任务（不创建新任务）
     func task(for model: QwenTTSModel) -> ModelDownloadTask? {
         activeTasks[model.repo]
@@ -555,6 +566,13 @@ final class ModelDownloadManager: ObservableObject {
 
     /// 删除已安装的模型（删除整个模型目录 + 清理下载任务）
     func deleteModel(_ model: QwenTTSModel) throws {
+        let selectedRepo = UserDefaults.standard.string(forKey: "selectedTTSModelRepo")
+            ?? "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16"
+        guard selectedRepo != model.repo else {
+            throw ModelDeletionError.selectedModel
+        }
+
+        activeTasks[model.repo]?.cancel()
         let dir = model.localPath
         if FileManager.default.fileExists(atPath: dir.path) {
             try FileManager.default.removeItem(at: dir)

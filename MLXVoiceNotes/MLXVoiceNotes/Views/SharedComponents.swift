@@ -119,8 +119,9 @@ struct ModelRow: View {
     var downloadTask: ModelDownloadTask?
 
     @ObservedObject private var downloadManager = ModelDownloadManager.shared
-    // showDeleteConfirmation 暂时移除（删除功能禁用）
-    // @State private var showDeleteConfirmation = false
+    @State private var showDeleteConfirmation = false
+    @State private var deleteError: String?
+    @State private var showDeleteError = false
 
     private var effectiveDownloadTask: ModelDownloadTask? {
         downloadTask ?? downloadManager.task(for: model)
@@ -223,7 +224,19 @@ struct ModelRow: View {
         .padding(12)
         .background(Color(nsColor: .controlBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        // 删除确认弹窗暂时禁用（删除功能待保护逻辑完善后启用）
+        .alert("删除模型", isPresented: $showDeleteConfirmation) {
+            Button("取消", role: .cancel) {}
+            Button("删除", role: .destructive) {
+                deleteModel()
+            }
+        } message: {
+            Text("确定要删除「\(model.displayName)」的本地模型文件吗？\n\n删除后需要重新下载才能使用。")
+        }
+        .alert("删除失败", isPresented: $showDeleteError) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text(deleteError ?? "未知错误")
+        }
     }
 
     // MARK: - 子组件
@@ -298,7 +311,6 @@ struct ModelRow: View {
                         Label("重新校验", systemImage: "checkmark.shield")
                     }
                     .controlSize(.small)
-                    // 删除功能暂时禁用，等待保护逻辑完善
                 }
                 .eraseToAnyView()
             } else if isInstalledAndNotSelected {
@@ -309,7 +321,13 @@ struct ModelRow: View {
                         Label("重新校验", systemImage: "checkmark.shield")
                     }
                     .controlSize(.small)
-                    // 删除功能暂时禁用，等待保护逻辑完善
+                    Button {
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("删除", systemImage: "trash")
+                    }
+                    .controlSize(.small)
+                    .foregroundStyle(.red)
                     Button {
                         Task {
                             await MLXAudioService.shared.switchToModel(repo: model.repo)
@@ -321,12 +339,22 @@ struct ModelRow: View {
                 }
                 .eraseToAnyView()
             } else if case .incomplete = status {
-                return Button {
-                    downloadManager.startDownload(for: model)
-                } label: {
-                    Label("下载模型", systemImage: "arrow.down.circle")
+                return HStack(spacing: 4) {
+                    Button {
+                        downloadManager.startDownload(for: model)
+                    } label: {
+                        Label("下载模型", systemImage: "arrow.down.circle")
+                    }
+                    .controlSize(.small)
+
+                    Button {
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("删除", systemImage: "trash")
+                    }
+                    .controlSize(.small)
+                    .foregroundStyle(.red)
                 }
-                .controlSize(.small)
                 .eraseToAnyView()
             } else if case .notDownloaded = status {
                 return Button {
@@ -345,6 +373,16 @@ struct ModelRow: View {
                 .controlSize(.small)
                 .eraseToAnyView()
             }
+        }
+    }
+
+    private func deleteModel() {
+        do {
+            try downloadManager.deleteModel(model)
+            onRefresh()
+        } catch {
+            deleteError = error.localizedDescription
+            showDeleteError = true
         }
     }
 }
