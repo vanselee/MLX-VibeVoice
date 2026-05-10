@@ -412,13 +412,14 @@ struct ModelDownloadPanel: View {
                     ProgressView("正在获取文件信息...")
                         .controlSize(.small)
 
-                case .downloading(let progress, let downloadedBytes, let totalBytes, let speedBps, let currentFile, let isResuming):
+                case .downloading(let progress, let downloadedBytes, let totalBytes, let speedBps, let currentFile, let currentURL, let isResuming):
                     downloadingContent(
                         progress: progress,
                         downloadedBytes: downloadedBytes,
                         totalBytes: totalBytes,
                         speedBps: speedBps,
                         currentFile: currentFile,
+                        currentURL: currentURL,
                         isResuming: isResuming
                     )
 
@@ -451,7 +452,7 @@ struct ModelDownloadPanel: View {
     // MARK: - 下载中内容
 
     @ViewBuilder
-    private func downloadingContent(progress: Double, downloadedBytes: Int64, totalBytes: Int64, speedBps: Double, currentFile: String, isResuming: Bool) -> some View {
+    private func downloadingContent(progress: Double, downloadedBytes: Int64, totalBytes: Int64, speedBps: Double, currentFile: String, currentURL: String, isResuming: Bool) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             // 总进度条
             GeometryReader { geometry in
@@ -496,6 +497,14 @@ struct ModelDownloadPanel: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
+
+            // 下载地址
+            Text("下载地址: \(currentURL)")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .help(currentURL)
         }
     }
 
@@ -547,10 +556,10 @@ struct ModelDownloadPanel: View {
                 Button {
                     downloadTask.cancel()
                 } label: {
-                    Label("取消", systemImage: "xmark.circle")
+                    Label("暂停", systemImage: "pause.circle")
                 }
                 .controlSize(.small)
-                .foregroundStyle(.red)
+                .foregroundStyle(.orange)
 
             case .paused:
                 Button {
@@ -633,7 +642,7 @@ struct ModelDownloadPanel: View {
     }
 
     private func formatSpeed(_ bps: Double) -> String {
-        if bps <= 0 { return "" }
+        if bps <= 0 { return "等待响应..." }
         let mbps = bps / 1_048_576
         if mbps >= 1.0 { return String(format: "%.1f MB/s", mbps) }
         let kbps = bps / 1_024

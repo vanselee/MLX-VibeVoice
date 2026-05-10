@@ -183,7 +183,7 @@ enum FileDownloadState: Equatable {
 enum ModelDownloadState: Equatable {
     case idle                    // 未开始
     case preparing               // 准备中（获取文件清单）
-    case downloading(progress: Double, downloadedBytes: Int64, totalBytes: Int64, speedBps: Double, currentFile: String, isResuming: Bool)
+    case downloading(progress: Double, downloadedBytes: Int64, totalBytes: Int64, speedBps: Double, currentFile: String, currentURL: String, isResuming: Bool)
     case paused(partialBytes: Int64, totalBytes: Int64)
     case failed(error: String)
     case completed
@@ -352,7 +352,7 @@ final class ModelDownloadTask: ObservableObject, @unchecked Sendable {
                 progress: self.totalBytes > 0 ? Double(self.completedBytes) / Double(self.totalBytes) : 0,
                 downloadedBytes: self.completedBytes,
                 totalBytes: self.totalBytes, speedBps: 0,
-                currentFile: info.path, isResuming: isResuming
+                currentFile: info.path, currentURL: info.remote.absoluteString, isResuming: isResuming
             )
         }
 
@@ -370,7 +370,7 @@ final class ModelDownloadTask: ObservableObject, @unchecked Sendable {
                     downloadedBytes: total,
                     totalBytes: self.totalBytes,
                     speedBps: Double(self.currentDownloader?.currentSpeed ?? 0),
-                    currentFile: info.path, isResuming: isResuming
+                    currentFile: info.path, currentURL: info.remote.absoluteString, isResuming: isResuming
                 )
             }
         }
@@ -383,7 +383,7 @@ final class ModelDownloadTask: ObservableObject, @unchecked Sendable {
                     progress: self.totalBytes > 0 ? Double(total) / Double(self.totalBytes) : 0,
                     downloadedBytes: total,
                     totalBytes: self.totalBytes, speedBps: Double(speed),
-                    currentFile: info.path, isResuming: isResuming
+                    currentFile: info.path, currentURL: info.remote.absoluteString, isResuming: isResuming
                 )
             }
         }
