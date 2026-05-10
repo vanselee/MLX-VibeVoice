@@ -947,14 +947,18 @@ struct StatusBadge: View {
 }
 
 extension ScriptStatus {
-    var displayName: String {
+    var localizationKey: String {
         switch self {
-        case .draft: "草稿"
-        case .ready: "待生成"
-        case .generating: "生成中"
-        case .completed: "已生成"
-        case .failed: "有失败"
+        case .draft: return "status.draft"
+        case .ready: return "status.pending"
+        case .generating: return "status.generating"
+        case .completed: return "status.generated"
+        case .failed: return "status.hasFailed"
         }
+    }
+
+    var displayName: String {
+        String(localized: LocalizedStringKey(localizationKey))
     }
 
     var foregroundColor: Color {
@@ -977,24 +981,29 @@ extension ScriptStatus {
 }
 
 extension SegmentStatus {
-    var displayName: String {
+    var localizationKey: String {
         switch self {
-        case .pending: "等待"
-        case .generating: "生成中"
-        case .completed: "完成"
-        case .failed: "失败"
-        case .skipped: "已跳过"
+        case .pending: return "status.waiting"
+        case .generating: return "status.generating"
+        case .completed: return "status.completed"
+        case .failed: return "status.failed"
+        case .skipped: return "status.skipped"
         }
+    }
+
+    var displayName: String {
+        String(localized: LocalizedStringKey(localizationKey))
     }
 }
 
 extension Date {
     var relativeLabel: String {
+        let time = Self.timeFormatter.string(from: self)
         if Calendar.current.isDateInToday(self) {
-            return "今天 " + Self.timeFormatter.string(from: self)
+            return String(localized: "date.today") + " " + time
         }
         if Calendar.current.isDateInYesterday(self) {
-            return "昨天 " + Self.timeFormatter.string(from: self)
+            return String(localized: "date.yesterday") + " " + time
         }
         return Self.dateFormatter.string(from: self)
     }

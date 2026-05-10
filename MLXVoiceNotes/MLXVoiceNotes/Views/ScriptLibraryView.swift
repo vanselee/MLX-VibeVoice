@@ -1,7 +1,6 @@
 import SwiftUI
 import SwiftData
 
-/// 角色音色绑定快照（用于解析后恢复绑定）
 struct VoiceRoleBinding {
     let defaultVoiceName: String
     let speed: Double
@@ -18,7 +17,7 @@ struct ScriptLibraryView: View {
     @Binding var selectedPage: AppPage
     @State private var expandedScriptID: UUID?
     @State private var deleteCandidate: Script?
-    @State private var parseSummary = "等待解析"
+    @State private var parseSummary: String = ""
     @State private var showDraftReuseTip = false
 
     private var selectedScript: Script? {
@@ -26,13 +25,13 @@ struct ScriptLibraryView: View {
     }
 
     var body: some View {
-        AppPageScaffold(title: "文案工作区", subtitle: "管理文案列表，点击文案即可展开编辑并生成音频。") {
+        AppPageScaffold(title: String(localized: LocalizedStringKey("scriptLibrary.title")), subtitle: String(localized: LocalizedStringKey("scriptLibrary.subtitle"))) {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
-                    Text("按创建时间排序")
+                    Text(LocalizedStringKey("scriptLibrary.sortedByCreated"))
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button("新建文案") {
+                    Button(String(localized: LocalizedStringKey("scriptLibrary.newScript"))) {
                         createScript()
                     }
                     .buttonStyle(.borderedProminent)
@@ -41,7 +40,7 @@ struct ScriptLibraryView: View {
                 if showDraftReuseTip {
                     HStack(spacing: 8) {
                         Image(systemName: "doc.on.doc")
-                        Text("正在复用一个空白草稿")
+                        Text(LocalizedStringKey("scriptLibrary.reusingBlankDraft"))
                         Spacer()
                     }
                     .font(.caption)
@@ -55,9 +54,9 @@ struct ScriptLibraryView: View {
                     if scripts.isEmpty {
                         VStack(spacing: 16) {
                             ContentUnavailableView(
-                                "欢迎使用 MLX VibeVoice",
+                                String(localized: LocalizedStringKey("scriptLibrary.welcomeTitle")),
                                 systemImage: "waveform.badge.mic",
-                                description: Text("点击「新建文案」开始创建你的第一个配音项目。")
+                                description: Text(LocalizedStringKey("scriptLibrary.welcomeHint"))
                             )
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .padding(.vertical, 60)
@@ -73,19 +72,19 @@ struct ScriptLibraryView: View {
                     }
                 }
             }
-            .alert("删除文案？", isPresented: deleteAlertBinding) {
-                Button("取消", role: .cancel) {}
-                Button("删除", role: .destructive) {
+            .alert(String(localized: LocalizedStringKey("scriptLibrary.deleteConfirmTitle")), isPresented: deleteAlertBinding) {
+                Button(String(localized: LocalizedStringKey("button.cancel")), role: .cancel) {}
+                Button(String(localized: LocalizedStringKey("button.delete")), role: .destructive) {
                     deleteSelectedCandidate()
                 }
             } message: {
-                Text("删除后会移除这篇文案及其段落、角色绑定和生成状态。")
+                Text(LocalizedStringKey("scriptLibrary.deleteConfirmMessage"))
             }
         } sidebar: {
             if let selectedScript {
                 scriptDetailPanel(for: selectedScript)
             } else {
-                ContentUnavailableView("暂无文案", systemImage: "doc.text")
+                ContentUnavailableView(String(localized: LocalizedStringKey("scriptLibrary.noScript")), systemImage: "doc.text")
             }
         }
     }
@@ -100,9 +99,13 @@ struct ScriptLibraryView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(script.title)
                             .fontWeight(.semibold)
-                        Text("修改 \(script.updatedAt.relativeLabel) · \(script.roles.count) 角色 / \(script.segments.count) 段")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        Text(String(localized: "scriptLibrary.scriptMeta", defaultValue: "Modified %@ · %d roles / %d segments", table: nil, bundle: nil, comment: nil, interpolations: [
+                            .string(script.updatedAt.relativeLabel),
+                            .int(script.roles.count),
+                            .int(script.segments.count)
+                        ]))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -117,12 +120,12 @@ struct ScriptLibraryView: View {
             }
 
             HStack(spacing: 8) {
-                Button("编辑") {
+                Button(String(localized: LocalizedStringKey("button.edit"))) {
                     openEditor(for: script)
                 }
                 .disabled(script.status == .generating)
 
-                Button("删除", role: .destructive) {
+                Button(String(localized: LocalizedStringKey("button.delete")), role: .destructive) {
                     deleteCandidate = script
                 }
                 .disabled(script.status == .generating)
@@ -159,7 +162,7 @@ struct ScriptLibraryView: View {
     private func currentScriptEditor(for script: Script) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("编辑文案")
+                Text(LocalizedStringKey("label.editScript"))
                     .font(.headline)
                 StatusBadge(status: script.status)
                 if script.status == .generating {
@@ -167,26 +170,26 @@ struct ScriptLibraryView: View {
                         .frame(width: 160)
                 }
                 Spacer()
-                Button("保存") {
+                Button(String(localized: LocalizedStringKey("button.save"))) {
                     saveAndCollapse(script)
                 }
             }
 
-            TextField("标题", text: binding(for: script, keyPath: \.title))
+            TextField(String(localized: LocalizedStringKey("label.title")), text: binding(for: script, keyPath: \.title))
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: .infinity)
 
             HStack {
-                Button("一键粘贴") {
+                Button(String(localized: LocalizedStringKey("button.pasteOneClick"))) {
                     pasteClipboard(into: script)
                 }
-                Button("AI 文案整理提示词") {}
-                Button("解析角色") {
+                Button(String(localized: LocalizedStringKey("button.aiPrompt"))) {}
+                Button(String(localized: LocalizedStringKey("button.parseRoles"))) {
                     parseRolesAndSegments(for: script)
                 }
                 Spacer()
                 if script.status == .generating {
-                    Button("查看任务队列") {
+                    Button(String(localized: LocalizedStringKey("button.viewTaskQueue"))) {
                         selectedPage = .taskQueue
                     }
                 }
@@ -195,7 +198,7 @@ struct ScriptLibraryView: View {
 
             if !script.roles.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("角色音色绑定")
+                    Text(LocalizedStringKey("label.roleVoiceBinding"))
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.secondary)
                     ForEach(script.roles.sorted { $0.normalizedName < $1.normalizedName }) { role in
@@ -204,7 +207,7 @@ struct ScriptLibraryView: View {
                                 Text(role.name)
                                     .fontWeight(.medium)
                                     .frame(width: 70, alignment: .leading)
-                                Picker("音色", selection: Binding(
+                                Picker(String(localized: LocalizedStringKey("label.voice")), selection: Binding(
                                     get: { role.defaultVoiceName },
                                     set: { role.defaultVoiceName = $0; script.updatedAt = .now }
                                 )) {
@@ -218,7 +221,7 @@ struct ScriptLibraryView: View {
                             }
 
                             HStack(spacing: 10) {
-                                Text("语速")
+                                Text(LocalizedStringKey("label.speed"))
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                 Slider(value: Binding(
@@ -228,7 +231,7 @@ struct ScriptLibraryView: View {
                                 Text("\(role.speed.formatted(.number.precision(.fractionLength(2))))x")
                                     .font(.caption)
                                     .frame(width: 36)
-                                Button("试听") {}
+                                Button(String(localized: LocalizedStringKey("button.preview"))) {}
                                     .font(.caption)
                                     .buttonStyle(.bordered)
                                 Spacer(minLength: 0)
@@ -244,7 +247,7 @@ struct ScriptLibraryView: View {
 
             if script.status == .completed {
                 HStack {
-                    Label("生成完成", systemImage: "checkmark.circle.fill")
+                    Label(String(localized: LocalizedStringKey("message.generationCompleted")), systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                     Text(progressLabel(for: script))
                         .foregroundStyle(.secondary)
@@ -252,12 +255,12 @@ struct ScriptLibraryView: View {
                 }
             } else if script.status == .generating {
                 HStack {
-                    Label("生成中", systemImage: "waveform")
+                    Label(String(localized: LocalizedStringKey("status.generating")), systemImage: "waveform")
                         .foregroundStyle(.blue)
                     Text(progressLabel(for: script))
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button("查看任务队列") {
+                    Button(String(localized: LocalizedStringKey("button.viewTaskQueue"))) {
                         selectedPage = .taskQueue
                     }
                 }
@@ -278,8 +281,8 @@ struct ScriptLibraryView: View {
 
             HStack(spacing: 12) {
                 Label(parseSummary, systemImage: "text.badge.checkmark")
-                Text("\(script.roles.count) 角色")
-                Text("\(script.segments.count) 段")
+                Text(String(localized: "message.roles", defaultValue: "%d roles", table: nil, bundle: nil, comment: nil, interpolations: [.int(script.roles.count)]))
+                Text(String(localized: "message.segments", defaultValue: "%d segments", table: nil, bundle: nil, comment: nil, interpolations: [.int(script.segments.count)]))
                 Spacer()
             }
             .font(.caption)
@@ -293,7 +296,7 @@ struct ScriptLibraryView: View {
         if let reusableDraft = scripts.first(where: isReusableBlankDraft) {
             print("[createScript] 复用空白草稿 id=\(reusableDraft.id)")
             openEditor(for: reusableDraft)
-            parseSummary = "继续编辑空白草稿"
+            parseSummary = String(localized: LocalizedStringKey("message.continueBlankDraft"))
             showDraftReuseTip = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                 showDraftReuseTip = false
@@ -335,11 +338,11 @@ struct ScriptLibraryView: View {
         do {
             try modelContext.save()
             print("[createScript] save 成功 id=\(scriptID)")
-            parseSummary = "等待解析"
+            parseSummary = String(localized: LocalizedStringKey("message.waitingParse"))
             openEditor(for: script)
         } catch {
             print("[createScript] save 失败: \(error.localizedDescription)")
-            parseSummary = "新建失败：\(error.localizedDescription)"
+            parseSummary = String(localized: "message.createFailed", defaultValue: "Create failed: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(error.localizedDescription)])
         }
     }
 
@@ -366,7 +369,6 @@ struct ScriptLibraryView: View {
 
     private func deleteSelectedCandidate() {
         guard let script = deleteCandidate else { return }
-        // 如果正在生成，先取消
         if script.status == .generating {
             GenerationService.cancel(script: script)
         }
@@ -376,7 +378,6 @@ struct ScriptLibraryView: View {
         if expandedScriptID == script.id {
             expandedScriptID = nil
         }
-        // 清理关联的音频文件（失败不阻止删除）
         try? AudioStorageService.deleteAudioFiles(for: script.id)
         modelContext.delete(script)
         saveContext()
@@ -401,13 +402,10 @@ struct ScriptLibraryView: View {
         }
     }
 
-    /// 获取角色默认音色名称（优先使用可用参考音色，其次内置音色）
     private func defaultVoiceName(for roleName: String) -> String {
-        // 优先查找可用参考音色
         if let refVoice = findAvailableReferenceVoice() {
             return refVoice
         }
-        // 无可用参考音色时使用内置音色
         if roleName == "旁白" {
             return "默认清晰女声"
         }
@@ -427,14 +425,13 @@ struct ScriptLibraryView: View {
         script.bodyText = clipboardText
         script.updatedAt = .now
         script.status = .draft
-        parseSummary = "已粘贴，等待解析"
+        parseSummary = String(localized: LocalizedStringKey("message.pastedWaitingParse"))
         #endif
     }
 
     private func parseRolesAndSegments(for script: Script) {
         let parsedScript = ScriptParser.parse(script.bodyText)
 
-        // Step 1: 保存旧角色的音色绑定（按 normalizedName 索引）
         var oldVoiceBindings: [String: VoiceRoleBinding] = [:]
         for oldRole in script.roles {
             oldVoiceBindings[oldRole.normalizedName] = VoiceRoleBinding(
@@ -452,9 +449,7 @@ struct ScriptLibraryView: View {
         oldSegments.forEach(modelContext.delete)
         oldRoles.forEach(modelContext.delete)
 
-        // Step 2: 重新创建角色，尝试恢复旧绑定
         for parsedRole in parsedScript.roles {
-            // 尝试匹配旧绑定
             let binding = oldVoiceBindings[parsedRole.normalizedName]
             let voiceName = binding?.defaultVoiceName ?? defaultVoiceName(for: parsedRole.normalizedName)
             
@@ -484,37 +479,39 @@ struct ScriptLibraryView: View {
 
         script.status = .ready
         script.updatedAt = .now
-        parseSummary = "\(parsedScript.roles.count) 角色 / \(parsedScript.segments.count) 段"
+        
+        var resultParts: [String] = []
+        resultParts.append(String(localized: "message.parseResult", defaultValue: "%d roles / %d segments", table: nil, bundle: nil, comment: nil, interpolations: [
+            .int(parsedScript.roles.count),
+            .int(parsedScript.segments.count)
+        ]))
         if parsedScript.unmarkedSegmentCount > 0 {
-            parseSummary += "，\(parsedScript.unmarkedSegmentCount) 段旁白兜底"
+            resultParts.append(String(localized: "message.unmarkedFallback", defaultValue: ", %d narrator segments fallback", table: nil, bundle: nil, comment: nil, interpolations: [.int(parsedScript.unmarkedSegmentCount)]))
         }
+        parseSummary = resultParts.joined()
         saveContext()
     }
 
     private func startPlaceholderGeneration(for script: Script) {
-        // 必须先基于当前 bodyText 重新解析角色和段落，避免使用旧 segments 生成错误音频
         parseRolesAndSegments(for: script)
         guard !script.segments.isEmpty else { return }
 
-        // 校验角色绑定的音色是否可用于生成
         if let errorMessage = validateRolesForGeneration(for: script) {
             parseSummary = errorMessage
             return
         }
 
-        // 全量重新生成前清理旧音频文件，避免旧 generatedAudioPath 继续参与导出
         try? AudioStorageService.deleteAudioFiles(for: script.id)
 
-        // Phase 0.5: 调用真实生成
         GenerationService.start(script: script, voiceProfiles: voiceProfiles, voiceInstruct: nil) { result in
             switch result {
             case .success:
-                parseSummary = "生成完成"
+                parseSummary = String(localized: LocalizedStringKey("message.generationCompleted"))
             case .failure(let error):
-                parseSummary = "生成失败：\(error.localizedDescription)"
+                parseSummary = String(localized: "message.generationFailed", defaultValue: "Generation failed: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(error.localizedDescription)])
             }
         }
-        parseSummary = "已开始生成"
+        parseSummary = String(localized: LocalizedStringKey("message.generationStarted"))
 
         let job = GenerationJob(
             scriptTitle: script.title,
@@ -530,11 +527,10 @@ struct ScriptLibraryView: View {
         do {
             try modelContext.save()
         } catch {
-            parseSummary = "保存失败：\(error.localizedDescription)"
+            parseSummary = String(localized: "message.saveFailed", defaultValue: "Save failed: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(error.localizedDescription)])
         }
     }
 
-    /// 查找可用的参考音色作为默认（优先 status==available 且有 referenceAudioPath）
     private func findAvailableReferenceVoice() -> String? {
         let available = voiceProfiles.first {
             $0.status == .available &&
@@ -546,27 +542,30 @@ struct ScriptLibraryView: View {
         return available?.name
     }
 
-    /// 校验角色绑定的音色是否可用于生成
-    /// - Returns: nil if all roles valid, otherwise error message
     private func validateRolesForGeneration(for script: Script) -> String? {
         for role in script.roles {
             guard let profile = voiceProfiles.first(where: { $0.name == role.defaultVoiceName }) else {
-                return "角色「\(role.name)」未绑定音色，请在角色音色绑定中选择可用参考音色。"
+                return String(localized: "message.roleNotBound", defaultValue: "Role \"%@\" has no voice bound. Please select a reference voice in Role-Voice Binding.", table: nil, bundle: nil, comment: nil, interpolations: [.string(role.name)])
             }
-            // 检查是否可用（status==available 且有完整的 referenceAudioPath 和 referenceText）
             let hasValidReference = profile.status == .available || profile.status == .builtIn
             let hasAudio = profile.referenceAudioPath != nil && !profile.referenceAudioPath!.isEmpty
             let hasText = profile.referenceText != nil && !profile.referenceText!.isEmpty
             
             if profile.status == .builtIn {
-                // 内置音色可以生成（使用模型内置音色）
                 continue
             }
             if profile.status != .available {
-                return "角色「\(role.name)」绑定的音色「\(profile.name)」状态为「\(profile.statusLabel)」，请选择其他可用音色。"
+                return String(localized: "message.voiceStatusInvalid", defaultValue: "Voice \"%@\" bound to role \"%@\" has status \"%@\". Please select another available voice.", table: nil, bundle: nil, comment: nil, interpolations: [
+                    .string(role.name),
+                    .string(profile.name),
+                    .string(profile.statusLabel)
+                ])
             }
             if !hasAudio || !hasText {
-                return "角色「\(role.name)」绑定的音色「\(profile.name)」缺少参考音频或参考文案，请在角色音色绑定中选择其他可用参考音色。"
+                return String(localized: "message.voiceMissing", defaultValue: "Voice \"%@\" bound to role \"%@\" is missing reference audio or text. Please select another reference voice.", table: nil, bundle: nil, comment: nil, interpolations: [
+                    .string(role.name),
+                    .string(profile.name)
+                ])
             }
         }
         return nil
@@ -591,9 +590,9 @@ struct ScriptLibraryView: View {
         do {
             _ = try AudioExportService.exportRealWAV(for: script, fileName: fileName)
             script.lastExportedAt = .now
-            parseSummary = "已导出 WAV"
+            parseSummary = String(localized: LocalizedStringKey("message.exported"))
         } catch {
-            parseSummary = "导出失败：\(error.localizedDescription)"
+            parseSummary = String(localized: "message.exportFailed", defaultValue: "Export failed: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(error.localizedDescription)])
         }
     }
 
@@ -603,7 +602,10 @@ struct ScriptLibraryView: View {
     }
 
     private func progressLabel(for script: Script) -> String {
-        "\(completedCount(for: script)) / \(script.segments.count) 段"
+        return String(localized: "message.progress", defaultValue: "%d / %d segments", table: nil, bundle: nil, comment: nil, interpolations: [
+            .int(completedCount(for: script)),
+            .int(script.segments.count)
+        ])
     }
 
     private func completedCount(for script: Script) -> Int {
@@ -625,18 +627,17 @@ struct ScriptLibraryView: View {
 
         return VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("生成状态").font(.headline)
+                Text(LocalizedStringKey("sidebar.generationStatus")).font(.headline)
 
-                // 当前模型
-                Text("当前模型 \(mlxService.currentModelName)")
+                Text(String(localized: "message.currentModel", defaultValue: "Current model: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(mlxService.currentModelName)]))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                 if let diag = mlxService.lastDiag, diag.elapsedSec > 0 {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("生成耗时 \(String(format: "%.1f", diag.elapsedSec)) 秒").font(.caption)
-                        Text("音频时长 \(String(format: "%.1f", diag.durationSec)) 秒").font(.caption)
-                        Text("生成速度 \(String(format: "%.2f", diag.realtimeFactor)) 倍").font(.caption)
+                        Text(String(localized: "message.generationTime", defaultValue: "Generation time: %.1f seconds", table: nil, bundle: nil, comment: nil, interpolations: [.double(diag.elapsedSec)])).font(.caption)
+                        Text(String(localized: "message.audioDuration", defaultValue: "Audio duration: %.1f seconds", table: nil, bundle: nil, comment: nil, interpolations: [.double(diag.durationSec)])).font(.caption)
+                        Text(String(localized: "message.generationSpeed", defaultValue: "Generation speed: %.2fx", table: nil, bundle: nil, comment: nil, interpolations: [.double(diag.realtimeFactor)])).font(.caption)
                     }
                     .foregroundStyle(.secondary)
                     Divider()
@@ -650,79 +651,86 @@ struct ScriptLibraryView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    Text("生成中 · \(pending) 段待生成")
+                    Text(String(localized: "message.pendingSegments", defaultValue: "Generating · %d pending", table: nil, bundle: nil, comment: nil, interpolations: [.int(pending)]))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else if completed == total && total > 0 {
                     HStack(spacing: 6) {
                         Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                        Text("已完成 · \(total) 段").foregroundStyle(.secondary)
+                        Text(String(localized: "message.completedSegments", defaultValue: "Completed · %d segments", table: nil, bundle: nil, comment: nil, interpolations: [.int(total)])).foregroundStyle(.secondary)
                     }
                     .font(.caption)
                 } else if failed > 0 {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 6) {
                             Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-                            Text("\(failed) 段生成失败").foregroundStyle(.orange)
+                            Text(String(localized: "message.failedSegments", defaultValue: "%d segments failed", table: nil, bundle: nil, comment: nil, interpolations: [.int(failed)])).foregroundStyle(.orange)
                         }
                         .font(.caption)
-                        Text("\(completed)/\(total) 已完成 · \(pending) 段待生成")
+                        Text(String(localized: "message.completedFailedPending", defaultValue: "%d/%d completed · %d pending", table: nil, bundle: nil, comment: nil, interpolations: [
+                            .int(completed),
+                            .int(total),
+                            .int(pending)
+                        ]))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 } else if completed > 0 {
                     HStack(spacing: 6) {
                         Image(systemName: "circle.lefthalf.filled").foregroundStyle(.blue)
-                        Text("部分完成 · \(completed)/\(total) 段").foregroundStyle(.secondary)
+                        Text(String(localized: "message.partiallyCompleted", defaultValue: "Partially completed · %d/%d segments", table: nil, bundle: nil, comment: nil, interpolations: [
+                            .int(completed),
+                            .int(total)
+                        ])).foregroundStyle(.secondary)
                     }
                     .font(.caption)
                 } else {
                     HStack(spacing: 6) {
                         Image(systemName: "circle").foregroundStyle(.secondary)
-                        Text("未生成 · \(total) 段待处理").foregroundStyle(.secondary)
+                        Text(String(localized: "message.notGenerated", defaultValue: "Not generated · %d segments pending", table: nil, bundle: nil, comment: nil, interpolations: [.int(total)])).foregroundStyle(.secondary)
                     }
                     .font(.caption)
                 }
 
                 if isAnyGenerating && !isCurrentGenerating {
-                    Text("其他文案正在生成中，请等待完成")
+                    Text(LocalizedStringKey("message.otherGenerating"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
                 HStack(spacing: 8) {
                     if isCurrentGenerating {
-                        Button("暂停") { GenerationService.pause(script: script) }
+                        Button(String(localized: LocalizedStringKey("button.pause"))) { GenerationService.pause(script: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
-                        Button("取消") { GenerationService.cancel(script: script) }
+                        Button(String(localized: LocalizedStringKey("button.cancel"))) { GenerationService.cancel(script: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
                     } else if completed == total && total > 0 {
-                        Button("重新生成") { startPlaceholderGeneration(for: script) }
+                        Button(String(localized: LocalizedStringKey("button.regenerate"))) { startPlaceholderGeneration(for: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.regular)
                             .disabled(!canStartGeneration)
                     } else if failed > 0 {
-                        Button("重试失败") {
+                        Button(String(localized: LocalizedStringKey("button.retryFailed"))) {
                             GenerationService.retryFailedSegments(script: script, voiceProfiles: voiceProfiles) { result in
                                 if case .failure(let error) = result {
-                                    parseSummary = "重试失败：\(error.localizedDescription)"
+                                    parseSummary = String(localized: "message.retryFailed", defaultValue: "Retry failed: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(error.localizedDescription)])
                                 }
                             }
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.regular)
                         .disabled(!canStartGeneration)
-                        Button("全部重新生成") { startPlaceholderGeneration(for: script) }
+                        Button(String(localized: LocalizedStringKey("button.regenerateAll"))) { startPlaceholderGeneration(for: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
                             .disabled(!canStartGeneration)
                     } else if completed > 0 {
-                        Button("继续生成") {
+                        Button(String(localized: LocalizedStringKey("button.continueGenerate"))) {
                             GenerationService.resume(script: script, voiceProfiles: voiceProfiles) { result in
                                 if case .failure(let error) = result {
-                                    parseSummary = "继续生成失败：\(error.localizedDescription)"
+                                    parseSummary = String(localized: "message.continueFailed", defaultValue: "Continue generation failed: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(error.localizedDescription)])
                                 }
                             }
                         }
@@ -730,7 +738,7 @@ struct ScriptLibraryView: View {
                             .controlSize(.small)
                             .disabled(!canStartGeneration)
                     } else {
-                        Button("生成音频") { startPlaceholderGeneration(for: script) }
+                        Button(String(localized: LocalizedStringKey("button.generateAudio"))) { startPlaceholderGeneration(for: script) }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.regular)
                             .disabled(!canStartGeneration)
@@ -742,7 +750,7 @@ struct ScriptLibraryView: View {
                 Divider()
                     .padding(.top, 4)
 
-                Text("导出音频").font(.headline)
+                Text(LocalizedStringKey("sidebar.exportAudio")).font(.headline)
 
                 HStack(spacing: 16) {
                     Label("WAV", systemImage: "waveform")
@@ -762,20 +770,20 @@ struct ScriptLibraryView: View {
                 .foregroundStyle(.secondary)
 
                 if script.lastExportedAt != nil {
-                    Text("最近导出：\(script.lastExportedAt!.relativeLabel)")
+                    Text(String(localized: "message.recentExport", defaultValue: "Recent export: %@", table: nil, bundle: nil, comment: nil, interpolations: [.string(script.lastExportedAt!.relativeLabel)]))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
                 let isCompleted = completed == total && total > 0
                 HStack(spacing: 8) {
-                    Button("导出 WAV") {
+                    Button(String(localized: LocalizedStringKey("button.exportWav"))) {
                         exportWAV(for: script)
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(!isCompleted || isCurrentGenerating)
 
-                    Button("打开文件夹") {
+                    Button(String(localized: LocalizedStringKey("button.openFolder"))) {
                         #if os(macOS)
                         NSWorkspace.shared.open(AudioExportService.exportDirectory)
                         #endif
@@ -784,15 +792,15 @@ struct ScriptLibraryView: View {
 
                 if !isCompleted && total > 0 {
                     if isCurrentGenerating {
-                        Text("生成完成后可导出")
+                        Text(LocalizedStringKey("message.exportAfterComplete"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     } else if failed > 0 {
-                        Text("有段落生成失败，请重试后再导出")
+                        Text(LocalizedStringKey("message.retryBeforeExport"))
                             .font(.caption)
                             .foregroundStyle(.orange)
                     } else {
-                        Text("生成完成后可导出")
+                        Text(LocalizedStringKey("message.exportAfterComplete"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -804,43 +812,43 @@ struct ScriptLibraryView: View {
                 Divider()
                     .padding(.top, 4)
 
-                Text("文案详情").font(.headline)
+                Text(LocalizedStringKey("sidebar.scriptDetails")).font(.headline)
 
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
-                        Text("标题").foregroundStyle(.secondary)
+                        Text(LocalizedStringKey("sidebar.title")).foregroundStyle(.secondary)
                         Spacer()
                         Text(script.title).lineLimit(1)
                     }
                     HStack {
-                        Text("状态").foregroundStyle(.secondary)
+                        Text(LocalizedStringKey("sidebar.status")).foregroundStyle(.secondary)
                         Spacer()
                         Text(script.status.displayName)
                     }
                     HStack {
-                        Text("创建时间").foregroundStyle(.secondary)
+                        Text(LocalizedStringKey("sidebar.createdAt")).foregroundStyle(.secondary)
                         Spacer()
                         Text(script.createdAt.relativeLabel)
                     }
                     HStack {
-                        Text("修改时间").foregroundStyle(.secondary)
+                        Text(LocalizedStringKey("sidebar.updatedAt")).foregroundStyle(.secondary)
                         Spacer()
                         Text(script.updatedAt.relativeLabel)
                     }
                     HStack {
-                        Text("字数").foregroundStyle(.secondary)
+                        Text(LocalizedStringKey("sidebar.charCount")).foregroundStyle(.secondary)
                         Spacer()
-                        Text("\(script.bodyText.count) 字")
+                        Text(String(localized: "message.chars", defaultValue: "%d chars", table: nil, bundle: nil, comment: nil, interpolations: [.int(script.bodyText.count)]))
                     }
                     HStack {
-                        Text("角色 / 段落").foregroundStyle(.secondary)
+                        Text(LocalizedStringKey("sidebar.rolesSegments")).foregroundStyle(.secondary)
                         Spacer()
                         Text("\(script.roles.count) / \(total)")
                     }
                     HStack {
-                        Text("最近导出").foregroundStyle(.secondary)
+                        Text(LocalizedStringKey("sidebar.lastExport")).foregroundStyle(.secondary)
                         Spacer()
-                        Text(script.lastExportedAt?.relativeLabel ?? "未导出")
+                        Text(script.lastExportedAt?.relativeLabel ?? String(localized: LocalizedStringKey("status.notExported")))
                     }
                 }
                 .font(.caption)
