@@ -14,7 +14,7 @@ struct TaskQueueView: View {
     }
 
     var body: some View {
-        AppPageScaffold(title: "任务总览", subtitle: "查看所有文案生成任务，并展开排查单篇文案的段落状态。") {
+        AppPageScaffold(title: String(localized: LocalizedStringKey("taskQueue.title")), subtitle: String(localized: LocalizedStringKey("taskQueue.subtitle"))) {
             VStack(alignment: .leading, spacing: 14) {
                 Text(queueSummary)
                     .font(.headline)
@@ -26,17 +26,17 @@ struct TaskQueueView: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(primaryActionDisabled)
 
-                    Button("暂停") {
+                    Button(String(localized: LocalizedStringKey("taskQueue.pause"))) {
                         pauseSelectedTask()
                     }
                     .disabled(selectedScript?.status != .generating)
 
-                    Button("取消任务") {
+                    Button(String(localized: LocalizedStringKey("taskQueue.cancelTask"))) {
                         cancelSelectedTask()
                     }
                     .disabled(selectedScript == nil)
 
-                    Button("重试失败") {
+                    Button(String(localized: LocalizedStringKey("taskQueue.retryFailed"))) {
                         retryFailedSegments()
                     }
                     .disabled(failedCount == 0)
@@ -46,18 +46,18 @@ struct TaskQueueView: View {
 
                 VStack(spacing: 8) {
                     HStack {
-                        Text("段落").frame(width: 36, alignment: .leading)
-                        Text("角色").frame(width: 60, alignment: .leading)
-                        Text("音色").frame(minWidth: 80, maxWidth: 140, alignment: .leading)
-                        Text("状态").frame(width: 56, alignment: .leading)
-                        Text("文本").frame(maxWidth: .infinity, alignment: .leading)
-                        Text("操作").frame(width: 56, alignment: .trailing)
+                        Text(String(localized: LocalizedStringKey("taskQueue.segment"))).frame(width: 36, alignment: .leading)
+                        Text(String(localized: LocalizedStringKey("taskQueue.role"))).frame(width: 60, alignment: .leading)
+                        Text(String(localized: LocalizedStringKey("taskQueue.voice"))).frame(minWidth: 80, maxWidth: 140, alignment: .leading)
+                        Text(String(localized: LocalizedStringKey("taskQueue.status"))).frame(width: 56, alignment: .leading)
+                        Text(String(localized: LocalizedStringKey("taskQueue.text"))).frame(maxWidth: .infinity, alignment: .leading)
+                        Text(String(localized: LocalizedStringKey("taskQueue.action"))).frame(width: 56, alignment: .trailing)
                     }
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
 
                     if segmentRows.isEmpty {
-                        ContentUnavailableView("暂无段落任务", systemImage: "list.bullet.rectangle")
+                        ContentUnavailableView(String(localized: LocalizedStringKey("taskQueue.noSegments")), systemImage: "list.bullet.rectangle")
                     } else {
                         ForEach(segmentRows) { row in
                             SegmentQueueRow(row: row) {
@@ -69,9 +69,9 @@ struct TaskQueueView: View {
             }
         } sidebar: {
             VStack(alignment: .leading, spacing: 10) {
-                Text("文案任务").font(.headline)
+                Text(String(localized: LocalizedStringKey("taskQueue.scriptTasks"))).font(.headline)
                 if taskScripts.isEmpty {
-                    Text("暂无任务").foregroundStyle(.secondary)
+                    Text(String(localized: LocalizedStringKey("taskQueue.noTasks"))).foregroundStyle(.secondary)
                 } else {
                     ForEach(taskScripts) { script in
                         Button {
@@ -79,7 +79,7 @@ struct TaskQueueView: View {
                         } label: {
                             QueueCard(
                                 title: script.title,
-                                detail: "\(script.status.displayName) · \(script.segments.count) 段 · 完成 \(completedCount(for: script)) · 失败 \(failedCount(for: script))",
+                                detail: String(localized: LocalizedStringKey("taskQueue.taskCardStatus", defaultValue: "\(script.status.displayName) · \(script.segments.count) 段 · 完成 \(completedCount(for: script)) · 失败 \(failedCount(for: script))", comment: "Task card status with counts")),
                                 active: script.id == selectedScript?.id
                             )
                         }
@@ -110,17 +110,17 @@ struct TaskQueueView: View {
     }
 
     private var queueSummary: String {
-        guard let script = selectedScript else { return "暂无文案任务" }
-        return "\(script.title) · \(script.status.displayName) · \(script.segments.count) 段 · 已完成 \(completedCount) 段 · 失败 \(failedCount) 段；最终只导出整篇完整音频。"
+        guard let script = selectedScript else { return String(localized: LocalizedStringKey("taskQueue.noScriptTasks")) }
+        return String(localized: LocalizedStringKey("taskQueue.queueSummary", defaultValue: "\(script.title) · \(script.status.displayName) · \(script.segments.count) 段 · 已完成 \(completedCount) 段 · 失败 \(failedCount) 段；最终只导出整篇完整音频。", comment: "Queue summary with script info"))
     }
 
     private var primaryActionTitle: String {
-        guard let script = selectedScript else { return "继续生成" }
+        guard let script = selectedScript else { return String(localized: LocalizedStringKey("taskQueue.continueGenerate")) }
         return switch script.status {
-        case .generating: "自动生成中"
-        case .completed: "重新生成"
-        case .failed: "重试失败"
-        case .draft, .ready: "继续生成"
+        case .generating: String(localized: LocalizedStringKey("taskQueue.autoGenerating"))
+        case .completed: String(localized: LocalizedStringKey("taskQueue.regenerate"))
+        case .failed: String(localized: LocalizedStringKey("taskQueue.retryFailed"))
+        case .draft, .ready: String(localized: LocalizedStringKey("taskQueue.continueGenerate"))
         }
     }
 
@@ -135,10 +135,10 @@ struct TaskQueueView: View {
                 segment: segment,
                 index: String(format: "%02d", segment.order),
                 role: segment.roleName,
-                voice: script.roles.first { $0.normalizedName == segment.roleName }?.defaultVoiceName ?? "默认旁白",
+                voice: script.roles.first { $0.normalizedName == segment.roleName }?.defaultVoiceName ?? String(localized: LocalizedStringKey("taskQueue.defaultNarrator")),
                 status: segment.status.displayName,
                 text: segment.text,
-                action: segment.status == .failed ? "重试" : "试听"
+                action: segment.status == .failed ? String(localized: LocalizedStringKey("taskQueue.retry")) : String(localized: LocalizedStringKey("taskQueue.preview"))
             )
         }
     }

@@ -31,7 +31,7 @@ struct CreateVoiceProfileView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("创建音色")
+                Text(String(localized: LocalizedStringKey("createVoice.title")))
                     .font(.headline)
                 Spacer()
                 if let err = saveError {
@@ -39,10 +39,10 @@ struct CreateVoiceProfileView: View {
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
-                Button("取消") { onDismiss() }
+                Button(String(localized: LocalizedStringKey("createVoice.cancel"))) { onDismiss() }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                Button("保存音色") { saveVoice() }
+                Button(String(localized: LocalizedStringKey("createVoice.saveVoice"))) { saveVoice() }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
             }
@@ -55,7 +55,7 @@ struct CreateVoiceProfileView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(alignment: .top) {
-                        Text("导入参考音频，校对参考文本，生成测试音频后保存为可复用音色。")
+                        Text(String(localized: LocalizedStringKey("createVoice.description")))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         Spacer()
@@ -72,16 +72,16 @@ struct CreateVoiceProfileView: View {
                         .popover(isPresented: $showHelp, arrowEdge: .top) {
                             VStack(alignment: .leading, spacing: 8) {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("1. 导入参考音频").font(.caption.bold())
-                                    Text("建议 10-30 秒，单人声，低噪声").font(.caption2).foregroundStyle(.secondary)
+                                    Text(String(localized: LocalizedStringKey("createVoice.step1Import"))).font(.caption.bold())
+                                    Text(String(localized: LocalizedStringKey("createVoice.step1Hint"))).font(.caption2).foregroundStyle(.secondary)
                                 }
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("2. 校对参考文本").font(.caption.bold())
-                                    Text("文字越准确，音色测试越稳定").font(.caption2).foregroundStyle(.secondary)
+                                    Text(String(localized: LocalizedStringKey("createVoice.step2Verify"))).font(.caption.bold())
+                                    Text(String(localized: LocalizedStringKey("createVoice.step2Hint"))).font(.caption2).foregroundStyle(.secondary)
                                 }
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("3. 生成测试音频").font(.caption.bold())
-                                    Text("确认效果后保存为可复用音色").font(.caption2).foregroundStyle(.secondary)
+                                    Text(String(localized: LocalizedStringKey("createVoice.step3Test"))).font(.caption.bold())
+                                    Text(String(localized: LocalizedStringKey("createVoice.step3Hint"))).font(.caption2).foregroundStyle(.secondary)
                                 }
                             }
                             .padding(12)
@@ -92,26 +92,26 @@ struct CreateVoiceProfileView: View {
                     HStack(alignment: .top, spacing: 16) {
                         VStack(alignment: .leading, spacing: 14) {
                             formCard {
-                                Text("音色名称").font(.subheadline.bold())
-                                TextField("输入音色名称", text: $voiceName)
+                                Text(String(localized: LocalizedStringKey("createVoice.voiceName"))).font(.subheadline.bold())
+                                TextField(String(localized: LocalizedStringKey("createVoice.enterVoiceName")), text: $voiceName)
                                     .textFieldStyle(.roundedBorder)
                                     .border(nameError ? Color.red : Color.clear)
                                     .onChange(of: voiceName) { nameError = false }
                                 if nameError {
-                                    Text("请输入音色名称")
+                                    Text(String(localized: LocalizedStringKey("createVoice.pleaseEnterName")))
                                         .font(.caption)
                                         .foregroundStyle(.red)
                                 }
                             }
 
                             formCard {
-                                Text("参考音频").font(.subheadline.bold())
+                                Text(String(localized: LocalizedStringKey("createVoice.referenceAudio"))).font(.subheadline.bold())
                                 if referenceAudioPath.isEmpty {
                                     HStack {
-                                        TextField("未选择音频文件", text: .constant(""))
+                                        TextField(String(localized: LocalizedStringKey("createVoice.noAudioSelected")), text: .constant(""))
                                             .textFieldStyle(.roundedBorder)
                                             .disabled(true)
-                                        Button("选择文件...") { showFileImporter = true }
+                                        Button(String(localized: LocalizedStringKey("createVoice.selectFile"))) { showFileImporter = true }
                                             .buttonStyle(.bordered)
                                             .controlSize(.small)
                                     }
@@ -120,10 +120,10 @@ struct CreateVoiceProfileView: View {
                                         Text(URL(fileURLWithPath: referenceAudioPath).lastPathComponent)
                                             .font(.subheadline)
                                         HStack(spacing: 8) {
-                                            Button("替换音频") { showFileImporter = true }
+                                            Button(String(localized: LocalizedStringKey("createVoice.replaceAudio"))) { showFileImporter = true }
                                                 .buttonStyle(.bordered)
                                                 .controlSize(.small)
-                                            Button("试听原音频") { }
+                                            Button(String(localized: LocalizedStringKey("createVoice.previewOriginal"))) { }
                                                 .buttonStyle(.bordered)
                                                 .controlSize(.small)
                                         }
@@ -136,9 +136,9 @@ struct CreateVoiceProfileView: View {
 
                             formCard {
                                 HStack {
-                                    Text("参考文本").font(.subheadline.bold())
+                                    Text(String(localized: LocalizedStringKey("createVoice.referenceText"))).font(.subheadline.bold())
                                     Spacer()
-                                    Button("自动转写") { }
+                                    Button(String(localized: LocalizedStringKey("createVoice.autoTranscribe"))) { }
                                         .buttonStyle(.bordered)
                                         .controlSize(.small)
                                         .disabled(true)
@@ -152,7 +152,7 @@ struct CreateVoiceProfileView: View {
                                     )
                                     .overlay(alignment: .topLeading) {
                                         if referenceText.isEmpty {
-                                            Text("输入或粘贴参考文本...")
+                                            Text(String(localized: LocalizedStringKey("createVoice.enterReferenceText")))
                                                 .font(.body)
                                                 .foregroundStyle(.tertiary)
                                                 .padding(.horizontal, 6)
@@ -166,26 +166,26 @@ struct CreateVoiceProfileView: View {
                         VStack(alignment: .leading, spacing: 12) {
                             formCard {
                                 VStack(alignment: .leading, spacing: 10) {
-                                    Text("测试与保存").font(.subheadline.bold())
+                                    Text(String(localized: LocalizedStringKey("createVoice.testAndSave"))).font(.subheadline.bold())
 
                                     HStack {
-                                        Text("克隆模式")
+                                        Text(String(localized: LocalizedStringKey("createVoice.cloneMode")))
                                             .font(.caption).foregroundStyle(.secondary)
                                         Spacer()
-                                        Text("本地优先")
+                                        Text(String(localized: LocalizedStringKey("createVoice.localFirst")))
                                             .font(.caption)
                                     }
                                     Divider()
                                     HStack {
-                                        Text("模型状态")
+                                        Text(String(localized: LocalizedStringKey("createVoice.modelStatus")))
                                             .font(.caption).foregroundStyle(.secondary)
                                         Spacer()
-                                        Text("待验证")
+                                        Text(String(localized: LocalizedStringKey("createVoice.toBeVerified")))
                                             .font(.caption)
                                     }
                                     Divider()
 
-                                    Text("测试句").font(.caption.bold())
+                                    Text(String(localized: LocalizedStringKey("createVoice.testSentence"))).font(.caption.bold())
                                     TextEditor(text: $testSentence)
                                         .font(.caption)
                                         .frame(minHeight: 56, maxHeight: 80)
@@ -195,14 +195,14 @@ struct CreateVoiceProfileView: View {
                                         )
 
                                     HStack(spacing: 8) {
-                                        Button("生成测试音频") {
+                                        Button(String(localized: LocalizedStringKey("createVoice.generateTestAudio"))) {
                                             generateTestAudio()
                                         }
                                         .buttonStyle(.bordered)
                                         .controlSize(.small)
                                         .disabled(isGeneratingTest || referenceAudioPath.isEmpty || referenceText.isEmpty)
 
-                                        Button("试听结果") {
+                                        Button(String(localized: LocalizedStringKey("createVoice.previewResult"))) {
                                             playTestAudio()
                                         }
                                         .buttonStyle(.bordered)
@@ -214,7 +214,7 @@ struct CreateVoiceProfileView: View {
                                         HStack(spacing: 4) {
                                             ProgressView()
                                                 .controlSize(.small)
-                                            Text("生成中...")
+                                            Text(String(localized: LocalizedStringKey("createVoice.generating")))
                                                 .font(.caption2)
                                                 .foregroundStyle(.secondary)
                                         }
@@ -223,7 +223,7 @@ struct CreateVoiceProfileView: View {
                                             .font(.caption)
                                             .foregroundStyle(.red)
                                     } else if hasTestAudio {
-                                        Text("测试音频已生成")
+                                        Text(String(localized: LocalizedStringKey("createVoice.testAudioGenerated")))
                                             .font(.caption)
                                             .foregroundStyle(.green)
                                     }
@@ -232,9 +232,9 @@ struct CreateVoiceProfileView: View {
 
                             formCard {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("保存后")
+                                    Text(String(localized: LocalizedStringKey("createVoice.afterSave")))
                                         .font(.caption.bold())
-                                    Text("新音色会进入资源中心的音色库，并出现在文案列表的角色音色下拉菜单中。")
+                                    Text(String(localized: LocalizedStringKey("createVoice.afterSaveHint")))
                                         .font(.caption2)
                                         .foregroundStyle(.secondary)
                                 }
@@ -274,7 +274,7 @@ struct CreateVoiceProfileView: View {
         refTextError = refTextTrimmed.isEmpty
 
         if nameError || refAudioError || refTextError {
-            saveError = "请填写必填项"
+            saveError = String(localized: LocalizedStringKey("createVoice.pleaseFillRequired"))
             return
         }
         saveError = nil
@@ -296,7 +296,7 @@ struct CreateVoiceProfileView: View {
                     }
                 } catch {
                     await MainActor.run {
-                        self.saveError = "保存失败: \(error.localizedDescription)"
+                        self.saveError = String(localized: LocalizedStringKey("createVoice.saveFailed"), defaultValue: "保存失败: %@", interpolations: [error.localizedDescription])
                     }
                 }
             }
@@ -310,7 +310,7 @@ struct CreateVoiceProfileView: View {
                     }
                 } catch {
                     await MainActor.run {
-                        self.saveError = "保存失败: \(error.localizedDescription)"
+                        self.saveError = String(localized: LocalizedStringKey("createVoice.saveFailed"), defaultValue: "保存失败: %@", interpolations: [error.localizedDescription])
                     }
                 }
             }
@@ -351,7 +351,7 @@ struct CreateVoiceProfileView: View {
                 }
             } catch {
                 await MainActor.run {
-                    testAudioError = "生成失败: \(error.localizedDescription)"
+                    testAudioError = String(localized: LocalizedStringKey("createVoice.generationFailed"), defaultValue: "生成失败: %@", interpolations: [error.localizedDescription])
                     isGeneratingTest = false
                 }
             }
@@ -366,7 +366,7 @@ struct CreateVoiceProfileView: View {
             audioPlayer?.play()
             isPlaying = true
         } catch {
-            testAudioError = "播放失败: \(error.localizedDescription)"
+            testAudioError = String(localized: LocalizedStringKey("createVoice.playbackFailed"), defaultValue: "播放失败: %@", interpolations: [error.localizedDescription])
         }
     }
 

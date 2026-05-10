@@ -8,12 +8,12 @@ struct ResourceCenterView: View {
     @ObservedObject private var downloadManager = ModelDownloadManager.shared
 
     enum ResourceTab: String, CaseIterable {
-        case model = "模型"
-        case voice = "音色"
+        case model = "resourceCenter.model"
+        case voice = "resourceCenter.voice"
     }
 
     var body: some View {
-        AppPageScaffold(title: "资源中心", subtitle: "管理模型与音色资源。") {
+        AppPageScaffold(title: String(localized: LocalizedStringKey("resourceCenter.title")), subtitle: String(localized: LocalizedStringKey("resourceCenter.subtitle"))) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 8) {
                     ForEach(ResourceTab.allCases, id: \.self) { tab in
@@ -33,7 +33,7 @@ struct ResourceCenterView: View {
                         Button {
                             showCreateVoice = true
                         } label: {
-                            Label("创建音色", systemImage: "plus")
+                            Label(String(localized: LocalizedStringKey("resourceCenter.createVoice")), systemImage: "plus")
                                 .font(.subheadline.weight(.medium))
                         }
                         .buttonStyle(.borderedProminent)
@@ -60,7 +60,7 @@ struct ResourceCenterView: View {
     @ViewBuilder
     private var modelContent: some View {
         if modelStatuses.isEmpty {
-            ProgressView("检测模型...")
+            ProgressView(String(localized: LocalizedStringKey("resourceCenter.detectingModels")))
                 .frame(maxWidth: .infinity)
         } else {
             ScrollView {
@@ -144,20 +144,20 @@ struct VoiceLibraryView: View {
                     .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
             )
             .padding(.horizontal, 4)
-            .alert("确认删除", isPresented: $showDeleteConfirmation) {
-                Button("取消", role: .cancel) {
+            .alert(String(localized: LocalizedStringKey("resourceCenter.confirmDelete")), isPresented: $showDeleteConfirmation) {
+                Button(String(localized: LocalizedStringKey("resourceCenter.cancel")), role: .cancel) {
                     profileToDelete = nil
                 }
-                Button("删除", role: .destructive) {
+                Button(String(localized: LocalizedStringKey("resourceCenter.delete")), role: .destructive) {
                     deleteSelectedProfile()
                 }
             } message: {
                 if let profile = profileToDelete {
-                    Text("确定要删除音色「\(profile.name)」吗？\n\n此操作将同时删除关联的参考音频文件，且无法恢复。")
+                    Text(String(localized: LocalizedStringKey("resourceCenter.deleteVoiceConfirm", defaultValue: "确定要删除音色「\(profile.name)」吗？\n\n此操作将同时删除关联的参考音频文件，且无法恢复。", interpolations: [.string(profile.name)]))
                 }
             }
-            .alert("删除结果", isPresented: $showError) {
-                Button("确定", role: .cancel) { }
+            .alert(String(localized: LocalizedStringKey("resourceCenter.deleteResult")), isPresented: $showError) {
+                Button(String(localized: LocalizedStringKey("resourceCenter.ok")), role: .cancel) { }
             } message: {
                 if let err = deleteError {
                     Text(err)
@@ -174,9 +174,9 @@ struct VoiceLibraryView: View {
             Image(systemName: "person.wave.2")
                 .font(.system(size: 40))
                 .foregroundStyle(.secondary)
-            Text("暂无音色")
+            Text(String(localized: LocalizedStringKey("resourceCenter.noVoices")))
                 .font(.headline)
-            Text("点击上方「创建音色」创建可复用音色")
+            Text(String(localized: LocalizedStringKey("resourceCenter.noVoicesHint")))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -185,13 +185,13 @@ struct VoiceLibraryView: View {
 
     private var voiceListHeader: some View {
         HStack(spacing: 0) {
-            Text("音色名称").frame(maxWidth: .infinity, alignment: .leading)
-            Text("类型").frame(width: 80, alignment: .center)
-            Text("来源").frame(width: 80, alignment: .center)
-            Text("时长").frame(width: 56, alignment: .trailing)
-            Text("状态").frame(width: 72, alignment: .center)
-            Text("最近使用").frame(width: 88, alignment: .center)
-            Text("操作").frame(width: 100, alignment: .center)
+            Text(String(localized: LocalizedStringKey("resourceCenter.voiceName"))).frame(maxWidth: .infinity, alignment: .leading)
+            Text(String(localized: LocalizedStringKey("resourceCenter.voiceType"))).frame(width: 80, alignment: .center)
+            Text(String(localized: LocalizedStringKey("resourceCenter.voiceSource"))).frame(width: 80, alignment: .center)
+            Text(String(localized: LocalizedStringKey("resourceCenter.voiceDuration"))).frame(width: 56, alignment: .trailing)
+            Text(String(localized: LocalizedStringKey("resourceCenter.voiceStatus"))).frame(width: 72, alignment: .center)
+            Text(String(localized: LocalizedStringKey("resourceCenter.voiceLastUsed"))).frame(width: 88, alignment: .center)
+            Text(String(localized: LocalizedStringKey("resourceCenter.voiceActions"))).frame(width: 100, alignment: .center)
         }
         .font(.caption2)
         .foregroundStyle(.secondary)
@@ -279,7 +279,7 @@ struct VoiceRow: View {
             voiceStatusBadge
                 .frame(width: 72, alignment: .center)
 
-            Text(profile.lastUsedAt?.relativeLabel ?? "未使用")
+            Text(profile.lastUsedAt?.relativeLabel ?? String(localized: LocalizedStringKey("resourceCenter.notUsed")))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -318,7 +318,7 @@ struct VoiceRow: View {
                     .font(.body)
             }
             .buttonStyle(.plain)
-            .help("试听")
+            .help(String(localized: LocalizedStringKey("resourceCenter.preview")))
 
             if profile.kind != .preset {
                 Button {
@@ -328,7 +328,7 @@ struct VoiceRow: View {
                         .font(.body)
                 }
                 .buttonStyle(.plain)
-                .help("重命名")
+                .help(String(localized: LocalizedStringKey("resourceCenter.rename")))
 
                 Button {
                     onDelete?()
@@ -338,7 +338,7 @@ struct VoiceRow: View {
                         .foregroundStyle(.red.opacity(0.7))
                 }
                 .buttonStyle(.plain)
-                .help("删除")
+                .help(String(localized: LocalizedStringKey("resourceCenter.delete")))
             }
         }
     }
@@ -370,9 +370,8 @@ struct RenameVoiceProfileSheet: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header
             HStack {
-                Text("重命名音色")
+                Text(String(localized: LocalizedStringKey("resourceCenter.renameVoice")))
                     .font(.headline)
                 Spacer()
                 Button {
@@ -389,10 +388,9 @@ struct RenameVoiceProfileSheet: View {
             
             Divider()
             
-            // Content
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("当前名称")
+                    Text(String(localized: LocalizedStringKey("resourceCenter.currentName")))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Text(profile.name)
@@ -401,10 +399,10 @@ struct RenameVoiceProfileSheet: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("新名称")
+                    Text(String(localized: LocalizedStringKey("resourceCenter.newName")))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    TextField("输入新名称", text: $newName)
+                    TextField(String(localized: LocalizedStringKey("resourceCenter.enterNewName")), text: $newName)
                         .textFieldStyle(.roundedBorder)
                         .onChange(of: newName) { _, _ in
                             errorMessage = nil
@@ -421,15 +419,14 @@ struct RenameVoiceProfileSheet: View {
             
             Spacer()
             
-            // Footer buttons
             HStack {
                 Spacer()
-                Button("取消") {
+                Button(String(localized: LocalizedStringKey("resourceCenter.cancel"))) {
                     dismiss()
                 }
                 .keyboardShortcut(.cancelAction)
                 
-                Button("保存") {
+                Button(String(localized: LocalizedStringKey("resourceCenter.save"))) {
                     saveRename()
                 }
                 .keyboardShortcut(.defaultAction)
@@ -447,7 +444,7 @@ struct RenameVoiceProfileSheet: View {
     private func saveRename() {
         let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            errorMessage = "名称不能为空"
+            errorMessage = String(localized: LocalizedStringKey("resourceCenter.nameCannotBeEmpty"))
             return
         }
         
@@ -465,8 +462,8 @@ struct RenameVoiceProfileSheet: View {
             print("[RenameVoiceProfile] 保存成功: \(trimmed)")
             dismiss()
         } catch {
-            errorMessage = "保存失败: \(error.localizedDescription)"
-            profile.name = profile.name // 还原
+            errorMessage = String(localized: LocalizedStringKey("resourceCenter.saveFailed", defaultValue: "保存失败: \(error.localizedDescription)", interpolations: [.string(error.localizedDescription)]))
+            profile.name = profile.name
             isSaving = false
         }
     }

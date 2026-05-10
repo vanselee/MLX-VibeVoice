@@ -1921,7 +1921,749 @@
           }
         }
       }
-    }
+    },
+"resourceCenter.title" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Resources" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "资源中心" } }
+  }
+},
+"resourceCenter.subtitle" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Manage models and voice resources." } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "管理模型与音色资源。" } }
+  }
+},
+"resourceCenter.model" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Models" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "模型" } }
+  }
+},
+"resourceCenter.voice" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Voices" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "音色" } }
+  }
+},
+"resourceCenter.createVoice" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Create Voice" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "创建音色" } }
+  }
+},
+"resourceCenter.detectingModels" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Detecting models..." } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "检测模型..." } }
+  }
+},
+"resourceCenter.noVoices" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "No Voices" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无音色" } }
+  }
+},
+"resourceCenter.noVoicesHint" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Click \"Create Voice\" above to create reusable voices" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "点击上方「创建音色」创建可复用音色" } }
+  }
+},
+"resourceCenter.voiceName" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Voice Name" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "音色名称" } }
+  }
+},
+"resourceCenter.voiceType" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Type" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "类型" } }
+  }
+},
+"resourceCenter.voiceSource" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Source" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "来源" } }
+  }
+},
+"resourceCenter.voiceDuration" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Duration" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "时长" } }
+  }
+},
+"resourceCenter.voiceStatus" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Status" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "状态" } }
+  }
+},
+"resourceCenter.voiceLastUsed" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Last Used" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近使用" } }
+  }
+},
+"resourceCenter.voiceActions" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Actions" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "操作" } }
+  }
+},
+"resourceCenter.confirmDelete" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Confirm Delete" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "确认删除" } }
+  }
+},
+"resourceCenter.deleteVoiceConfirm" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Are you sure you want to delete voice \"%@\"?\\n\\nThis will also delete associated reference audio files and cannot be recovered." } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "确定要删除音色「%@」吗？\\n\\n此操作将同时删除关联的参考音频文件，且无法恢复。" } }
+  }
+},
+"resourceCenter.cancel" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消" } }
+  }
+},
+"resourceCenter.delete" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除" } }
+  }
+},
+"resourceCenter.deleteResult" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete Result" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除结果" } }
+  }
+},
+"resourceCenter.ok" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "OK" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "确定" } }
+  }
+},
+"resourceCenter.voiceDeletedPartial" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Voice deleted, but audio file cleanup failed: %@" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "音色已删除，但音频文件清理失败: %@" } }
+  }
+},
+"resourceCenter.notUsed" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Not Used" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未使用" } }
+  }
+},
+"resourceCenter.preview" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Preview" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "试听" } }
+  }
+},
+"resourceCenter.rename" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Rename" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重命名" } }
+  }
+},
+"resourceCenter.renameVoice" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Rename Voice" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重命名音色" } }
+  }
+},
+"resourceCenter.currentName" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Current Name" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前名称" } }
+  }
+},
+"resourceCenter.newName" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "New Name" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新名称" } }
+  }
+},
+"resourceCenter.enterNewName" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter new name" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "输入新名称" } }
+  }
+},
+"resourceCenter.nameCannotBeEmpty" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Name cannot be empty" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "名称不能为空" } }
+  }
+},
+"resourceCenter.save" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Save" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存" } }
+  }
+},
+"resourceCenter.saveFailed" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Save failed: %@" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存失败: %@" } }
+  }
+},
+"taskQueue.title" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Task Overview" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "任务总览" } }
+  }
+},
+"taskQueue.subtitle" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "View all script generation tasks and inspect segment status for individual scripts." } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "查看所有文案生成任务，并展开排查单篇文案的段落状态。" } }
+  }
+},
+"taskQueue.scriptTasks" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Script Tasks" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文案任务" } }
+  }
+},
+"taskQueue.noTasks" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "No Tasks" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无任务" } }
+  }
+},
+"taskQueue.noSegments" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "No Segments" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无段落任务" } }
+  }
+},
+"taskQueue.segment" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Segment" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "段落" } }
+  }
+},
+"taskQueue.role" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Role" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "角色" } }
+  }
+},
+"taskQueue.voice" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Voice" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "音色" } }
+  }
+},
+"taskQueue.status" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Status" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "状态" } }
+  }
+},
+"taskQueue.text" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Text" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文本" } }
+  }
+},
+"taskQueue.action" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Action" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "操作" } }
+  }
+},
+"taskQueue.pause" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Pause" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂停" } }
+  }
+},
+"taskQueue.cancelTask" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel Task" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消任务" } }
+  }
+},
+"taskQueue.retryFailed" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry Failed" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重试失败" } }
+  }
+},
+"taskQueue.regenerate" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Regenerate" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重新生成" } }
+  }
+},
+"taskQueue.continueGenerate" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Continue Generation" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "继续生成" } }
+  }
+},
+"taskQueue.autoGenerating" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Auto Generating" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "自动生成中" } }
+  }
+},
+"taskQueue.retry" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重试" } }
+  }
+},
+"taskQueue.preview" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Preview" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "试听" } }
+  }
+},
+"taskQueue.noScriptTasks" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "No script tasks" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无文案任务" } }
+  }
+},
+"taskQueue.exportOnlyComplete" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Final export only includes complete audio." } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最终只导出整篇完整音频。" } }
+  }
+},
+"taskQueue.segmentX" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Segment %d" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "第 %d 段" } }
+  }
+},
+"taskQueue.defaultNarrator" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Default Narrator" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "默认旁白" } }
+  }
+},
+"taskQueue.taskCardStatus" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ · %d segments · Completed %d · Failed %d" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ · %d 段 · 完成 %d · 失败 %d" } }
+  }
+},
+"taskQueue.queueSummary" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ · %@ · %d segments · Completed %d · Failed %d; final export only includes complete audio." } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ · %@ · %d 段 · 已完成 %d 段 · 失败 %d 段；最终只导出整篇完整音频。" } }
+  }
+},
+"roleReview.title" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Role Review" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "角色确认" } }
+  }
+},
+"roleReview.subtitle" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Confirm roles, bind voices, and review parsed segments." } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "确认角色、绑定音色，并检查解析出的段落。" } }
+  }
+},
+"roleReview.noSegments" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "No Segments" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无段落" } }
+  }
+},
+"roleReview.roleVoiceBinding" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Role-Voice Binding" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "角色音色绑定" } }
+  }
+},
+"roleReview.segmentPreview" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Segment Preview" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "段落预览" } }
+  }
+},
+"roleReview.confirmResult" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Confirm Result" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "确认结果" } }
+  }
+},
+"roleReview.candidateRoles" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Candidate Roles" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "候选角色" } }
+  }
+},
+"roleReview.voicesBound" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Voices Bound" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已绑定音色" } }
+  }
+},
+"roleReview.similarNames" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Similar Names" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "相似名" } }
+  }
+},
+"roleReview.unmarked" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Unmarked" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未标记" } }
+  }
+},
+"roleReview.speed" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Speed" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "语速" } }
+  }
+},
+"roleReview.regenerate" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Regenerate" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重生成" } }
+  }
+},
+"createVoice.title" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Create Voice" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "创建音色" } }
+  }
+},
+"createVoice.cancel" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消" } }
+  }
+},
+"createVoice.saveVoice" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Save Voice" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存音色" } }
+  }
+},
+"createVoice.description" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Import reference audio, verify reference text, generate test audio, then save as reusable voice." } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导入参考音频，校对参考文本，生成测试音频后保存为可复用音色。" } }
+  }
+},
+"createVoice.voiceName" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Voice Name" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "音色名称" } }
+  }
+},
+"createVoice.enterVoiceName" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter voice name" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "输入音色名称" } }
+  }
+},
+"createVoice.pleaseEnterName" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Please enter voice name" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请输入音色名称" } }
+  }
+},
+"createVoice.referenceAudio" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Reference Audio" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "参考音频" } }
+  }
+},
+"createVoice.noAudioSelected" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "No audio file selected" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未选择音频文件" } }
+  }
+},
+"createVoice.selectFile" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Select File..." } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择文件..." } }
+  }
+},
+"createVoice.replaceAudio" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Replace Audio" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "替换音频" } }
+  }
+},
+"createVoice.previewOriginal" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Preview Original" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "试听原音频" } }
+  }
+},
+"createVoice.referenceText" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Reference Text" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "参考文本" } }
+  }
+},
+"createVoice.autoTranscribe" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Auto Transcribe" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "自动转写" } }
+  }
+},
+"createVoice.enterReferenceText" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter or paste reference text..." } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "输入或粘贴参考文本..." } }
+  }
+},
+"createVoice.testAndSave" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Test & Save" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "测试与保存" } }
+  }
+},
+"createVoice.cloneMode" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Clone Mode" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "克隆模式" } }
+  }
+},
+"createVoice.localFirst" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Local First" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "本地优先" } }
+  }
+},
+"createVoice.modelStatus" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Model Status" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "模型状态" } }
+  }
+},
+"createVoice.toBeVerified" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "To Be Verified" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "待验证" } }
+  }
+},
+"createVoice.testSentence" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Test Sentence" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "测试句" } }
+  }
+},
+"createVoice.generateTestAudio" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Generate Test Audio" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "生成测试音频" } }
+  }
+},
+"createVoice.previewResult" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Preview Result" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "试听结果" } }
+  }
+},
+"createVoice.generating" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Generating..." } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "生成中..." } }
+  }
+},
+"createVoice.testAudioGenerated" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Test audio generated" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "测试音频已生成" } }
+  }
+},
+"createVoice.afterSave" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "After Saving" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存后" } }
+  }
+},
+"createVoice.afterSaveHint" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "The new voice will appear in the voice library under Resources, and in the voice dropdown for scripts." } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新音色会进入资源中心的音色库，并出现在文案列表的角色音色下拉菜单中。" } }
+  }
+},
+"createVoice.pleaseFillRequired" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Please fill in required fields" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请填写必填项" } }
+  }
+},
+"createVoice.generationFailed" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Generation failed: %@" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "生成失败: %@" } }
+  }
+},
+"createVoice.playbackFailed" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Playback failed: %@" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "播放失败: %@" } }
+  }
+},
+"createVoice.saveFailed" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Save failed: %@" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存失败: %@" } }
+  }
+},
+"createVoice.step1Import" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "1. Import reference audio" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "1. 导入参考音频" } }
+  }
+},
+"createVoice.step1Hint" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Recommended: 10-30 seconds, single voice, low noise" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "建议 10-30 秒，单人声，低噪声" } }
+  }
+},
+"createVoice.step2Verify" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "2. Verify reference text" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "2. 校对参考文本" } }
+  }
+},
+"createVoice.step2Hint" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "More accurate text means more stable voice cloning" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文字越准确，音色测试越稳定" } }
+  }
+},
+"createVoice.step3Test" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "3. Generate test audio" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "3. 生成测试音频" } }
+  }
+},
+"createVoice.step3Hint" : {
+  "extractionState" : "manual",
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Save as reusable voice after confirming the effect" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "确认效果后保存为可复用音色" } }
+  }
+}
   },
   "version" : "1.0"
 }

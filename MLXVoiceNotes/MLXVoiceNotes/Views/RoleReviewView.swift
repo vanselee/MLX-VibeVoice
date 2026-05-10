@@ -13,12 +13,12 @@ struct RoleReviewView: View {
     }
 
     var body: some View {
-        AppPageScaffold(title: "角色确认", subtitle: "确认角色、绑定音色，并检查解析出的段落。") {
+        AppPageScaffold(title: String(localized: LocalizedStringKey("roleReview.title")), subtitle: String(localized: LocalizedStringKey("roleReview.subtitle"))) {
             if let script {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("角色音色绑定")
+                            Text(String(localized: LocalizedStringKey("roleReview.roleVoiceBinding")))
                                 .font(.headline)
                             ForEach(script.roles.sorted { $0.normalizedName < $1.normalizedName }) { role in
                                 RoleVoiceBindingRow(role: role, availableVoices: availableVoices) {
@@ -30,13 +30,13 @@ struct RoleReviewView: View {
                         Divider()
 
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("段落预览")
+                            Text(String(localized: LocalizedStringKey("roleReview.segmentPreview")))
                                 .font(.headline)
                             if script.segments.isEmpty {
-                                ContentUnavailableView("暂无段落", systemImage: "text.badge.checkmark")
+                                ContentUnavailableView(String(localized: LocalizedStringKey("roleReview.noSegments")), systemImage: "text.badge.checkmark")
                             } else {
                                 ForEach(script.segments.sorted { $0.order < $1.order }) { segment in
-                                    ReviewRow(role: segment.roleName, text: segment.text, action: segment.status == .failed ? "重生成" : "试听")
+                                    ReviewRow(role: segment.roleName, text: segment.text, action: segment.status == .failed ? String(localized: LocalizedStringKey("roleReview.regenerate")) : String(localized: LocalizedStringKey("taskQueue.preview")))
                                 }
                             }
                         }
@@ -44,14 +44,14 @@ struct RoleReviewView: View {
                     .frame(maxWidth: .infinity, alignment: .topLeading)
                 }
             } else {
-                ContentUnavailableView("暂无段落", systemImage: "text.badge.checkmark")
+                ContentUnavailableView(String(localized: LocalizedStringKey("roleReview.noSegments")), systemImage: "text.badge.checkmark")
             }
         } sidebar: {
-            ActionCard(title: "确认结果", rows: [
-                ("候选角色", "\(script?.roles.count ?? 0)"),
-                ("已绑定音色", "\(script?.roles.filter { !$0.defaultVoiceName.isEmpty }.count ?? 0)"),
-                ("相似名", "0 组"),
-                ("未标记", "0 段")
+            ActionCard(title: String(localized: LocalizedStringKey("roleReview.confirmResult")), rows: [
+                (String(localized: LocalizedStringKey("roleReview.candidateRoles")), "\(script?.roles.count ?? 0)"),
+                (String(localized: LocalizedStringKey("roleReview.voicesBound")), "\(script?.roles.filter { !$0.defaultVoiceName.isEmpty }.count ?? 0)"),
+                (String(localized: LocalizedStringKey("roleReview.similarNames")), "0 组"),
+                (String(localized: LocalizedStringKey("roleReview.unmarked")), "0 段")
             ])
         }
     }
@@ -74,7 +74,7 @@ struct RoleVoiceBindingRow: View {
                 }
                 .frame(minWidth: 80, alignment: .leading)
 
-                Picker("音色", selection: voiceBinding) {
+                Picker(String(localized: LocalizedStringKey("taskQueue.voice")), selection: voiceBinding) {
                     ForEach(availableVoices, id: \.self) { voice in
                         Text(voice).tag(voice)
                     }
@@ -86,11 +86,11 @@ struct RoleVoiceBindingRow: View {
             }
             HStack(spacing: 12) {
                 Slider(value: speedBinding, in: 0.75...1.5) {
-                    Text("语速")
+                    Text(String(localized: LocalizedStringKey("roleReview.speed")))
                 }
                 .frame(maxWidth: 160)
 
-                Button("试听") {}
+                Button(String(localized: LocalizedStringKey("taskQueue.preview"))) {}
                 Spacer()
             }
         }
