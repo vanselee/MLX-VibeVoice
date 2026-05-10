@@ -1,129 +1,139 @@
 import SwiftUI
+import SwiftData
 
-// MARK: - App Language Settings
+// MARK: - 应用语言设置
 
-enum AppLanguage: String, CaseIterable, Identifiable, Codable {
-    case system
-    case zhHans
-    case en
+enum AppLanguage: String, CaseIterable, Codable, Identifiable {
+    case system = "system"
+    case zhHans = "zh-Hans"
+    case en = "en"
 
     var id: String { rawValue }
 
-    var localizationKey: String {
+    var displayName: String {
         switch self {
-        case .system: return "preferences.language.system"
-        case .zhHans: return "preferences.language.zhHans"
-        case .en: return "preferences.language.en"
+        case .system: return String(localized: "preferences.language.system")
+        case .zhHans: return "中文"
+        case .en: return "English"
         }
     }
 
-    var displayName: String {
-        NSLocalizedString(localizationKey, comment: "")
+    var locale: Locale? {
+        switch self {
+        case .system: return nil
+        case .zhHans: return Locale(identifier: "zh-Hans")
+        case .en: return Locale(identifier: "en")
+        }
     }
 
     var effectiveLocaleIdentifier: String {
-        switch self {
-        case .system:
-            let preferredLanguage = Locale.preferredLanguages.first ?? "en"
-            return preferredLanguage.hasPrefix("zh") ? "zh-Hans" : "en"
-        case .zhHans:
-            return "zh-Hans"
-        case .en:
-            return "en"
-        }
+        locale?.identifier ?? Locale.current.language.languageCode?.identifier ?? "en"
     }
 }
 
-// MARK: - Cache Limit Settings
+// MARK: - 缓存限制
 
-enum CacheLimit: String, CaseIterable, Identifiable {
-    case unlimited
-    case gb5
-    case gb10
-    case gb20
-    case gb50
+enum CacheLimit: String, CaseIterable, Codable, Identifiable {
+    case gb1 = "1GB"
+    case gb2 = "2GB"
+    case gb5 = "5GB"
+    case gb10 = "10GB"
+    case gb50 = "50GB"
+    case unlimited = "unlimited"
 
     var id: String { rawValue }
 
-    var localizationKey: String {
+    var displayName: String {
         switch self {
-        case .unlimited: return "preferences.cache.unlimited"
-        case .gb5: return "5 GB"
-        case .gb10: return "10 GB"
-        case .gb20: return "20 GB"
-        case .gb50: return "50 GB"
+        case .unlimited: return String(localized: "preferences.cacheLimit.unlimited")
+        default: return rawValue
         }
     }
 
-    var displayName: String {
-        if localizationKey.hasPrefix("preferences") {
-            return NSLocalizedString(localizationKey, comment: "")
+    var bytes: Int64? {
+        switch self {
+        case .gb1: return 1_073_741_824
+        case .gb2: return 2_147_483_648
+        case .gb5: return 5_368_709_120
+        case .gb10: return 10_737_418_240
+        case .gb50: return 53_687_091_200
+        case .unlimited: return nil
         }
-        return localizationKey
     }
 }
 
-struct AppPageScaffold<Content: View, Sidebar: View>: View {
-    let title: String
-    let subtitle: String
-    @ViewBuilder var content: Content
-    @ViewBuilder var sidebar: Sidebar
-    var hideSidebar: Bool = false
+// MARK: - 页面骨架
+
+struct AppPageScaffold<Content, Sidebar>: View where Content: View, Sidebar: View {
+    let titleKey: LocalizedStringKey
+    let subtitleKey: LocalizedStringKey
+    let content: Content
+    let sidebar: Sidebar
+    let hideSidebar: Bool
+
+    init(titleKey: LocalizedStringKey, subtitleKey: LocalizedStringKey, @ViewBuilder content: () -> Content, @ViewBuilder sidebar: () -> Sidebar) {
+        self.titleKey = titleKey
+        self.subtitleKey = subtitleKey
+        self.content = content()
+        self.sidebar = sidebar()
+        self.hideSidebar = false
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.largeTitle.bold())
-                Text(subtitle).foregroundStyle(.secondary)
+        HStack(spacing: 0) {
+            if !hideSidebar {
+                sidebar
+                    .frame(width: 260)
+                    .background(Color(nsColor: .controlBackgroundColor))
             }
-            HStack(alignment: .top, spacing: 16) {
-                ScrollView {
-                    content
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .topLeading)
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text(titleKey).font(.title2.bold())
+                    Text(subtitleKey).font(.subheadline).foregroundStyle(.secondary)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .background(.regularMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-
-                if !hideSidebar {
-                    ScrollView {
-                        sidebar
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .topLeading)
-                    }
-                    .frame(minWidth: 220, idealWidth: 280, maxWidth: 300, alignment: .topLeading)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                }
+                Divider()
+                content
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(24)
         }
-        .padding(20)
     }
 }
 
 extension AppPageScaffold where Sidebar == EmptyView {
-    init(title: String, subtitle: String, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.subtitle = subtitle
+    init(titleKey: LocalizedStringKey, subtitleKey: LocalizedStringKey, @ViewBuilder content: () -> Content) {
+        self.titleKey = titleKey
+        self.subtitleKey = subtitleKey
         self.content = content()
         self.sidebar = EmptyView()
         self.hideSidebar = true
     }
 }
 
+struct ActionCardRow: Identifiable {
+    let id: String
+    let labelKey: LocalizedStringKey
+    let value: String
+
+    init(key: String, value: String) {
+        self.id = key
+        self.labelKey = LocalizedStringKey(key)
+        self.value = value
+    }
+}
+
 struct ActionCard: View {
-    let title: String
-    let rows: [(String, String)]
+    let titleKey: LocalizedStringKey
+    let rows: [ActionCardRow]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title).font(.headline)
-            ForEach(rows, id: \.0) { row in
+            Text(titleKey).font(.headline)
+            ForEach(rows) { row in
                 HStack {
-                    Text(row.0).foregroundStyle(.secondary)
+                    Text(row.labelKey).foregroundStyle(.secondary)
                     Spacer()
-                    Text(row.1).fontWeight(.semibold)
+                    Text(row.value).fontWeight(.semibold)
                 }
                 Divider()
             }
@@ -143,15 +153,28 @@ struct ReviewRow: View {
                 .frame(width: 72)
             Text(text)
             Spacer()
-            Button(action) {}
+            Button(action) { }
+                .font(.caption)
         }
-        .padding()
-        .background(.background)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .font(.callout)
+        .padding(.vertical, 4)
     }
 }
 
-struct ResourceRow: View {
+// MARK: - 资源标签
+
+enum ResourceTab: String, CaseIterable {
+    case model = "resourceCenter.model"
+    case voice = "resourceCenter.voice"
+
+    var label: some View {
+        Text(LocalizedStringKey(rawValue))
+    }
+}
+
+// MARK: - 模型/音色预览行
+
+struct VoiceProfileRow: View {
     let name: String
     let status: String
 
@@ -162,7 +185,7 @@ struct ResourceRow: View {
                 Text(status).foregroundStyle(.secondary)
             }
             Spacer()
-            Button(status.contains("失败") ? "重试" : "管理") {}
+            Button(status.contains(String(localized: "status.failed")) ? LocalizedStringKey("button.retry") : LocalizedStringKey("model.action.manage")) {}
         }
         .padding()
         .background(.background)
@@ -217,7 +240,7 @@ struct ModelRow: View {
 
                     // 推荐标签
                     if model.isRecommended {
-                        Text("推荐")
+                        Text(LocalizedStringKey("model.badge.recommended"))
                             .font(.caption2)
                             .padding(.horizontal, 4)
                             .padding(.vertical, 2)
@@ -228,7 +251,7 @@ struct ModelRow: View {
 
                     // 实验标签
                     if model.isExperimental {
-                        Text("实验")
+                        Text(LocalizedStringKey("model.badge.experimental"))
                             .font(.caption2)
                             .padding(.horizontal, 4)
                             .padding(.vertical, 2)
@@ -253,7 +276,7 @@ struct ModelRow: View {
                     statusBadge
 
                     if isCurrentlySelected {
-                        Text("当前使用中")
+                        Text(LocalizedStringKey("model.status.current"))
                             .font(.caption)
                             .foregroundStyle(.green)
                     }
@@ -272,8 +295,8 @@ struct ModelRow: View {
                 // 第四行：缺失文件（仅 incomplete 时显示）
                 if case .incomplete = status {
                     let names = missingFiles.prefix(3).joined(separator: ", ")
-                    let extra = missingFiles.count > 3 ? " 等" : ""
-                    Text("缺失文件: \(names)\(extra)")
+                    let extra = missingFiles.count > 3 ? String(localized: "label.etc") : ""
+                    Text("model.status.missingFiles \(names)\(extra)")
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }
@@ -287,18 +310,18 @@ struct ModelRow: View {
         .padding(12)
         .background(Color(nsColor: .controlBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .alert("删除模型", isPresented: $showDeleteConfirmation) {
-            Button("取消", role: .cancel) {}
-            Button("删除", role: .destructive) {
+        .alert(LocalizedStringKey("model.action.delete"), isPresented: $showDeleteConfirmation) {
+            Button(LocalizedStringKey("button.cancel"), role: .cancel) {}
+            Button(LocalizedStringKey("button.delete"), role: .destructive) {
                 deleteModel()
             }
         } message: {
-            Text("确定要删除「\(model.displayName)」的本地模型文件吗？\n\n删除后需要重新下载才能使用。")
+            Text("model.delete.confirmMessage \(model.displayName)")
         }
-        .alert("删除失败", isPresented: $showDeleteError) {
-            Button("确定", role: .cancel) {}
+        .alert(LocalizedStringKey("model.delete.failed"), isPresented: $showDeleteError) {
+            Button(LocalizedStringKey("button.ok"), role: .cancel) {}
         } message: {
-            Text(deleteError ?? "未知错误")
+            Text(deleteError ?? String(localized: "status.unknownError"))
         }
     }
 
@@ -334,16 +357,16 @@ struct ModelRow: View {
     }
 
     private var statusBadge: some View {
-        let (text, color): (String, Color) = {
+        let (key, color): (LocalizedStringKey, Color) = {
             switch status {
-            case .installed: return ("已安装", .green)
-            case .notDownloaded: return ("未下载", .secondary)
-            case .incomplete: return ("文件不完整", .orange)
-            case .installing: return ("下载中", .blue)
-            case .failed: return ("失败", .red)
+            case .installed: return (LocalizedStringKey("model.status.installed"), .green)
+            case .notDownloaded: return (LocalizedStringKey("model.status.notDownloaded"), .secondary)
+            case .incomplete: return (LocalizedStringKey("model.status.incomplete"), .orange)
+            case .installing: return (LocalizedStringKey("model.status.downloading"), .blue)
+            case .failed: return (LocalizedStringKey("status.failed"), .red)
             }
         }()
-        return Text(text)
+        return Text(key)
             .font(.caption)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
@@ -365,13 +388,13 @@ struct ModelRow: View {
             // 已安装模型
             if isCurrentlySelected {
                 return HStack(spacing: 4) {
-                    Text("当前使用中")
+                    Text(LocalizedStringKey("model.status.current"))
                         .font(.caption)
                         .foregroundStyle(.green)
                     Button {
                         onRefresh()
                     } label: {
-                        Label("重新校验", systemImage: "checkmark.shield")
+                        Label(LocalizedStringKey("model.action.recheck"), systemImage: "checkmark.shield")
                     }
                     .controlSize(.small)
                 }
@@ -381,13 +404,13 @@ struct ModelRow: View {
                     Button {
                         onRefresh()
                     } label: {
-                        Label("重新校验", systemImage: "checkmark.shield")
+                        Label(LocalizedStringKey("model.action.recheck"), systemImage: "checkmark.shield")
                     }
                     .controlSize(.small)
                     Button {
                         showDeleteConfirmation = true
                     } label: {
-                        Label("删除", systemImage: "trash")
+                        Label(LocalizedStringKey("button.delete"), systemImage: "trash")
                     }
                     .controlSize(.small)
                     .foregroundStyle(.red)
@@ -396,11 +419,11 @@ struct ModelRow: View {
                             await MLXAudioService.shared.switchToModel(repo: model.repo)
                         }
                     } label: {
-                        Label("设为当前", systemImage: "checkmark.circle")
+                        Label(LocalizedStringKey("model.action.setCurrent"), systemImage: "checkmark.circle")
                     }
                     .controlSize(.small)
                     .disabled(GenerationService.currentlyGeneratingScriptID != nil)
-                    .help(GenerationService.currentlyGeneratingScriptID != nil ? "生成中不可切换模型" : "")
+                    .help(GenerationService.currentlyGeneratingScriptID != nil ? String(localized: "model.action.switchDisabled") : "")
                 }
                 .eraseToAnyView()
             } else if case .incomplete = status {
@@ -408,14 +431,14 @@ struct ModelRow: View {
                     Button {
                         downloadManager.startDownload(for: model)
                     } label: {
-                        Label("下载模型", systemImage: "arrow.down.circle")
+                        Label(LocalizedStringKey("model.action.download"), systemImage: "arrow.down.circle")
                     }
                     .controlSize(.small)
 
                     Button {
                         showDeleteConfirmation = true
                     } label: {
-                        Label("删除", systemImage: "trash")
+                        Label(LocalizedStringKey("button.delete"), systemImage: "trash")
                     }
                     .controlSize(.small)
                     .foregroundStyle(.red)
@@ -425,7 +448,7 @@ struct ModelRow: View {
                 return Button {
                     downloadManager.startDownload(for: model)
                 } label: {
-                    Label("下载模型", systemImage: "arrow.down.circle")
+                    Label(LocalizedStringKey("model.action.download"), systemImage: "arrow.down.circle")
                 }
                 .controlSize(.small)
                 .eraseToAnyView()
@@ -433,7 +456,7 @@ struct ModelRow: View {
                 return Button {
                     onRefresh()
                 } label: {
-                    Label("检测", systemImage: "arrow.clockwise")
+                    Label(LocalizedStringKey("model.action.detect"), systemImage: "arrow.clockwise")
                 }
                 .controlSize(.small)
                 .eraseToAnyView()
@@ -466,7 +489,7 @@ struct ModelDownloadPanel: View {
             VStack(alignment: .leading, spacing: 10) {
                 // 标题行 + 状态标签
                 HStack {
-                    Text("下载进度")
+                    Text(LocalizedStringKey("download.progress.title"))
                         .font(.caption.bold())
                     Spacer()
                     stateLabel
@@ -474,7 +497,7 @@ struct ModelDownloadPanel: View {
 
                 switch downloadTask.state {
                 case .preparing:
-                    ProgressView("正在获取文件信息...")
+                    ProgressView(LocalizedStringKey("download.status.fetchingFileInfo"))
                         .controlSize(.small)
 
                 case .connecting(let currentFile, let currentURL):
@@ -517,8 +540,6 @@ struct ModelDownloadPanel: View {
         }
     }
 
-    // MARK: - 下载中内容
-
     // MARK: - 连接中内容
 
     @ViewBuilder
@@ -527,7 +548,7 @@ struct ModelDownloadPanel: View {
             ProgressView()
                 .controlSize(.small)
 
-            Text("正在连接...")
+            Text(LocalizedStringKey("download.status.connecting"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -538,7 +559,7 @@ struct ModelDownloadPanel: View {
                     .lineLimit(1)
             }
 
-            Text("下载地址: \(currentURL)")
+            Text("download.status.url \(currentURL)")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -582,7 +603,7 @@ struct ModelDownloadPanel: View {
             // 当前文件 + 续传标签
             HStack(spacing: 6) {
                 if isResuming {
-                    Text("续传")
+                    Text(LocalizedStringKey("download.status.resuming"))
                         .font(.caption2)
                         .padding(.horizontal, 4)
                         .padding(.vertical, 1)
@@ -597,7 +618,7 @@ struct ModelDownloadPanel: View {
             }
 
             // 下载地址
-            Text("下载地址: \(currentURL)")
+            Text("download.status.url \(currentURL)")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -611,10 +632,10 @@ struct ModelDownloadPanel: View {
     @ViewBuilder
     private func pausedContent(partialBytes: Int64, totalBytes: Int64) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("已暂停，可继续下载")
+            Text(LocalizedStringKey("download.status.paused"))
                 .font(.caption)
                 .foregroundStyle(.orange)
-            Text("已下载: " + formatBytes(partialBytes) + " / " + formatBytes(totalBytes))
+            Text("download.status.downloadedProgress \(formatBytes(partialBytes)) \(formatBytes(totalBytes))")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -625,7 +646,7 @@ struct ModelDownloadPanel: View {
     @ViewBuilder
     private func failedContent(error: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("下载失败")
+            Text(LocalizedStringKey("download.status.failed"))
                 .font(.caption)
                 .foregroundStyle(.red)
             Text(error)
@@ -639,7 +660,7 @@ struct ModelDownloadPanel: View {
 
     @ViewBuilder
     private var completedContent: some View {
-        Text("下载完成")
+        Text(LocalizedStringKey("download.status.completed"))
             .font(.caption)
             .foregroundStyle(.green)
     }
@@ -654,7 +675,7 @@ struct ModelDownloadPanel: View {
                 Button {
                     downloadTask.cancel()
                 } label: {
-                    Label("暂停", systemImage: "pause.circle")
+                    Label(LocalizedStringKey("button.pause"), systemImage: "pause.circle")
                 }
                 .controlSize(.small)
                 .foregroundStyle(.orange)
@@ -663,7 +684,7 @@ struct ModelDownloadPanel: View {
                 Button {
                     downloadTask.cancel()
                 } label: {
-                    Label("暂停", systemImage: "pause.circle")
+                    Label(LocalizedStringKey("button.pause"), systemImage: "pause.circle")
                 }
                 .controlSize(.small)
                 .foregroundStyle(.orange)
@@ -672,14 +693,14 @@ struct ModelDownloadPanel: View {
                 Button {
                     downloadTask.start()
                 } label: {
-                    Label("继续下载", systemImage: "arrow.clockwise")
+                    Label(LocalizedStringKey("download.action.resume"), systemImage: "arrow.clockwise")
                 }
                 .controlSize(.small)
 
                 Button {
                     downloadTask.cleanupPartials()
                 } label: {
-                    Label("清理临时文件", systemImage: "trash")
+                    Label(LocalizedStringKey("download.action.cleanupTemp"), systemImage: "trash")
                 }
                 .controlSize(.small)
                 .foregroundStyle(.orange)
@@ -688,14 +709,14 @@ struct ModelDownloadPanel: View {
                 Button {
                     downloadTask.start()
                 } label: {
-                    Label("重试", systemImage: "arrow.clockwise")
+                    Label(LocalizedStringKey("button.retry"), systemImage: "arrow.clockwise")
                 }
                 .controlSize(.small)
 
                 Button {
                     downloadTask.cleanupPartials()
                 } label: {
-                    Label("清理", systemImage: "trash")
+                    Label(LocalizedStringKey("download.action.cleanup"), systemImage: "trash")
                 }
                 .controlSize(.small)
                 .foregroundStyle(.orange)
@@ -704,7 +725,7 @@ struct ModelDownloadPanel: View {
                 Button {
                     onRefresh()
                 } label: {
-                    Label("刷新", systemImage: "arrow.clockwise")
+                    Label(LocalizedStringKey("button.refresh"), systemImage: "arrow.clockwise")
                 }
                 .controlSize(.small)
 
@@ -718,18 +739,18 @@ struct ModelDownloadPanel: View {
 
     @ViewBuilder
     private var stateLabel: some View {
-        let (text, color): (String, Color) = {
+        let (key, color): (LocalizedStringKey, Color) = {
             switch downloadTask.state {
-            case .idle: return ("空闲", .secondary)
-            case .preparing: return ("准备中", .blue)
-            case .connecting: return ("连接中", .blue)
-            case .downloading: return ("下载中", .blue)
-            case .paused: return ("已暂停", .orange)
-            case .failed: return ("失败", .red)
-            case .completed: return ("完成", .green)
+            case .idle: return (LocalizedStringKey("download.state.idle"), .secondary)
+            case .preparing: return (LocalizedStringKey("download.state.preparing"), .blue)
+            case .connecting: return (LocalizedStringKey("download.state.connecting"), .blue)
+            case .downloading: return (LocalizedStringKey("download.state.downloading"), .blue)
+            case .paused: return (LocalizedStringKey("download.state.paused"), .orange)
+            case .failed: return (LocalizedStringKey("status.failed"), .red)
+            case .completed: return (LocalizedStringKey("download.state.completed"), .green)
             }
         }()
-        Text(text)
+        Text(key)
             .font(.caption2)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
@@ -750,7 +771,7 @@ struct ModelDownloadPanel: View {
     }
 
     private func formatSpeed(_ bps: Double) -> String {
-        if bps <= 0 { return "等待响应..." }
+        if bps <= 0 { return String(localized: "download.status.waitingResponse") }
         let mbps = bps / 1_048_576
         if mbps >= 1.0 { return String(format: "%.1f MB/s", mbps) }
         let kbps = bps / 1_024
@@ -784,13 +805,13 @@ enum LegacyModelStatus: Equatable {
     var statusSummary: String {
         switch self {
         case .available:
-            return "已安装"
+            return String(localized: "model.status.installed")
         case .missing:
-            return "模型文件下载目录不存在"
+            return String(localized: "model.status.missingDirectory")
         case .error:
-            return "未知错误"
+            return String(localized: "status.unknownError")
         case .incomplete:
-            return "不完整 / 缺少文件"
+            return String(localized: "model.status.incompleteMissing")
         }
     }
 }
@@ -814,8 +835,8 @@ struct ModelStatusRow: View {
 
                 if case .incomplete = status {
                     let names = missingFiles.prefix(3).joined(separator: ", ")
-                    let extra = missingFiles.count > 3 ? " 等" : ""
-                    Text("缺失文件: \(names)\(extra)")
+                    let extra = missingFiles.count > 3 ? String(localized: "label.etc") : ""
+                    Text("model.status.missingFiles \(names)\(extra)")
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }
@@ -824,7 +845,7 @@ struct ModelStatusRow: View {
             Spacer()
 
             if case .incomplete = status {
-                Button("重新检测") {
+                Button(LocalizedStringKey("model.action.redetect")) {
                     onRefresh()
                 }
                 .controlSize(.small)
@@ -919,13 +940,13 @@ struct ScriptListRow: View {
             GridRow {
                 VStack(alignment: .leading) {
                     Text(script.title).fontWeight(.semibold)
-                    Text("修改 \(script.updatedAt.relativeLabel)")
+                    Text("label.modified \(script.updatedAt.relativeLabel)")
                         .foregroundStyle(.secondary)
                 }
                 Text(script.status.displayName)
                 Text("\(script.roles.count) / \(script.segments.count)")
                 Text(script.updatedAt.relativeLabel)
-                Text(script.lastExportedAt?.relativeLabel ?? "未导出")
+                Text(script.lastExportedAt?.relativeLabel ?? String(localized: "status.notExported"))
             }
         }
         .padding(.vertical, 6)

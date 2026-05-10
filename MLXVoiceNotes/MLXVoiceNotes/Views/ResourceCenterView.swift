@@ -13,14 +13,14 @@ struct ResourceCenterView: View {
     }
 
     var body: some View {
-        AppPageScaffold(title: String(localized: "resourceCenter.title"), subtitle: String(localized: "resourceCenter.subtitle")) {
+        AppPageScaffold(titleKey: "resourceCenter.title", subtitleKey: "resourceCenter.subtitle") {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 8) {
                     ForEach(ResourceTab.allCases, id: \.self) { tab in
                         Button {
                             selectedTab = tab
                         } label: {
-                            Text(tab.rawValue)
+                            Text(LocalizedStringKey(tab.rawValue))
                                 .font(.subheadline.weight(.medium))
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
@@ -33,7 +33,7 @@ struct ResourceCenterView: View {
                         Button {
                             showCreateVoice = true
                         } label: {
-                            Label(String(localized: "resourceCenter.createVoice"), systemImage: "plus")
+                            Label(LocalizedStringKey("resourceCenter.createVoice"), systemImage: "plus")
                                 .font(.subheadline.weight(.medium))
                         }
                         .buttonStyle(.borderedProminent)
@@ -60,7 +60,7 @@ struct ResourceCenterView: View {
     @ViewBuilder
     private var modelContent: some View {
         if modelStatuses.isEmpty {
-            ProgressView(String(localized: "resourceCenter.detectingModels"))
+            ProgressView(LocalizedStringKey("resourceCenter.detectingModels"))
                 .frame(maxWidth: .infinity)
         } else {
             ScrollView {
@@ -144,11 +144,11 @@ struct VoiceLibraryView: View {
                     .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
             )
             .padding(.horizontal, 4)
-            .alert(String(localized: "resourceCenter.confirmDelete"), isPresented: $showDeleteConfirmation) {
-                Button(String(localized: "resourceCenter.cancel"), role: .cancel) {
+            .alert(LocalizedStringKey("resourceCenter.confirmDelete"), isPresented: $showDeleteConfirmation) {
+                Button(LocalizedStringKey("resourceCenter.cancel"), role: .cancel) {
                     profileToDelete = nil
                 }
-                Button(String(localized: "resourceCenter.delete"), role: .destructive) {
+                Button(LocalizedStringKey("resourceCenter.delete"), role: .destructive) {
                     deleteSelectedProfile()
                 }
             } message: {
@@ -156,8 +156,8 @@ struct VoiceLibraryView: View {
                     Text(String(format: String(localized: "resourceCenter.deleteVoiceConfirm"), profile.name))
                 }
             }
-            .alert(String(localized: "resourceCenter.deleteResult"), isPresented: $showError) {
-                Button(String(localized: "resourceCenter.ok"), role: .cancel) { }
+            .alert(LocalizedStringKey("resourceCenter.deleteResult"), isPresented: $showError) {
+                Button(LocalizedStringKey("resourceCenter.ok"), role: .cancel) { }
             } message: {
                 if let err = deleteError {
                     Text(err)
@@ -174,9 +174,9 @@ struct VoiceLibraryView: View {
             Image(systemName: "person.wave.2")
                 .font(.system(size: 40))
                 .foregroundStyle(.secondary)
-            Text(String(localized: "resourceCenter.noVoices"))
+            Text(LocalizedStringKey("resourceCenter.noVoices"))
                 .font(.headline)
-            Text(String(localized: "resourceCenter.noVoicesHint"))
+            Text(LocalizedStringKey("resourceCenter.noVoicesHint"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -185,13 +185,13 @@ struct VoiceLibraryView: View {
 
     private var voiceListHeader: some View {
         HStack(spacing: 0) {
-            Text(String(localized: "resourceCenter.voiceName")).frame(maxWidth: .infinity, alignment: .leading)
-            Text(String(localized: "resourceCenter.voiceType")).frame(width: 80, alignment: .center)
-            Text(String(localized: "resourceCenter.voiceSource")).frame(width: 80, alignment: .center)
-            Text(String(localized: "resourceCenter.voiceDuration")).frame(width: 56, alignment: .trailing)
-            Text(String(localized: "resourceCenter.voiceStatus")).frame(width: 72, alignment: .center)
-            Text(String(localized: "resourceCenter.voiceLastUsed")).frame(width: 88, alignment: .center)
-            Text(String(localized: "resourceCenter.voiceActions")).frame(width: 100, alignment: .center)
+            Text(LocalizedStringKey("resourceCenter.voiceName")).frame(maxWidth: .infinity, alignment: .leading)
+            Text(LocalizedStringKey("resourceCenter.voiceType")).frame(width: 80, alignment: .center)
+            Text(LocalizedStringKey("resourceCenter.voiceSource")).frame(width: 80, alignment: .center)
+            Text(LocalizedStringKey("resourceCenter.voiceDuration")).frame(width: 56, alignment: .trailing)
+            Text(LocalizedStringKey("resourceCenter.voiceStatus")).frame(width: 72, alignment: .center)
+            Text(LocalizedStringKey("resourceCenter.voiceLastUsed")).frame(width: 88, alignment: .center)
+            Text(LocalizedStringKey("resourceCenter.voiceActions")).frame(width: 100, alignment: .center)
         }
         .font(.caption2)
         .foregroundStyle(.secondary)
@@ -225,7 +225,7 @@ struct VoiceLibraryView: View {
             try modelContext.save()
             print("[deleteVoiceProfile] 已删除 VoiceProfile: \(profileName) id=\(profileID)")
         } catch {
-            let errMsg = "删除音色失败: \(error.localizedDescription)"
+            let errMsg = String(format: String(localized: "voice.delete.failed"), error.localizedDescription)
             print("[deleteVoiceProfile] \(errMsg)")
             deleteError = errMsg
             showError = true
@@ -234,7 +234,7 @@ struct VoiceLibraryView: View {
         
         // 4. 如果音频删除失败，提示用户（但音色已删除）
         if let audioErr = audioDeleteError {
-            deleteError = "音色已删除，但音频文件清理失败: \(audioErr)"
+            deleteError = String(format: String(localized: "voice.delete.audioCleanupFailed"), audioErr)
             showError = true
         }
         
@@ -371,7 +371,7 @@ struct RenameVoiceProfileSheet: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text(String(localized: "resourceCenter.renameVoice"))
+                Text(LocalizedStringKey("resourceCenter.renameVoice"))
                     .font(.headline)
                 Spacer()
                 Button {
@@ -390,7 +390,7 @@ struct RenameVoiceProfileSheet: View {
             
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(String(localized: "resourceCenter.currentName"))
+                    Text(LocalizedStringKey("resourceCenter.currentName"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Text(profile.name)
@@ -399,7 +399,7 @@ struct RenameVoiceProfileSheet: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(String(localized: "resourceCenter.newName"))
+                    Text(LocalizedStringKey("resourceCenter.newName"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     TextField(String(localized: "resourceCenter.enterNewName"), text: $newName)
@@ -421,12 +421,12 @@ struct RenameVoiceProfileSheet: View {
             
             HStack {
                 Spacer()
-                Button(String(localized: "resourceCenter.cancel")) {
+                Button(LocalizedStringKey("resourceCenter.cancel")) {
                     dismiss()
                 }
                 .keyboardShortcut(.cancelAction)
                 
-                Button(String(localized: "resourceCenter.save")) {
+                Button(LocalizedStringKey("resourceCenter.save")) {
                     saveRename()
                 }
                 .keyboardShortcut(.defaultAction)

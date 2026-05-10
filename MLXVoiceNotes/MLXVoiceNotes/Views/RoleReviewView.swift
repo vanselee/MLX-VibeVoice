@@ -13,12 +13,12 @@ struct RoleReviewView: View {
     }
 
     var body: some View {
-        AppPageScaffold(title: String(localized: "roleReview.title"), subtitle: String(localized: "roleReview.subtitle")) {
+        AppPageScaffold(titleKey: "roleReview.title", subtitleKey: "roleReview.subtitle") {
             if let script {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text(String(localized: "roleReview.roleVoiceBinding"))
+                            Text(LocalizedStringKey("roleReview.roleVoiceBinding"))
                                 .font(.headline)
                             ForEach(script.roles.sorted { $0.normalizedName < $1.normalizedName }) { role in
                                 RoleVoiceBindingRow(role: role, availableVoices: availableVoices) {
@@ -30,10 +30,10 @@ struct RoleReviewView: View {
                         Divider()
 
                         VStack(alignment: .leading, spacing: 10) {
-                            Text(String(localized: "roleReview.segmentPreview"))
+                            Text(LocalizedStringKey("roleReview.segmentPreview"))
                                 .font(.headline)
                             if script.segments.isEmpty {
-                                ContentUnavailableView(String(localized: "roleReview.noSegments"), systemImage: "text.badge.checkmark")
+                                ContentUnavailableView(LocalizedStringKey("roleReview.noSegments"), systemImage: "text.badge.checkmark")
                             } else {
                                 ForEach(script.segments.sorted { $0.order < $1.order }) { segment in
                                     ReviewRow(role: segment.roleName, text: segment.text, action: segment.status == .failed ? String(localized: "roleReview.regenerate") : String(localized: "taskQueue.preview"))
@@ -44,14 +44,14 @@ struct RoleReviewView: View {
                     .frame(maxWidth: .infinity, alignment: .topLeading)
                 }
             } else {
-                ContentUnavailableView(String(localized: "roleReview.noSegments"), systemImage: "text.badge.checkmark")
+                ContentUnavailableView(LocalizedStringKey("roleReview.noSegments"), systemImage: "text.badge.checkmark")
             }
         } sidebar: {
-            ActionCard(title: String(localized: "roleReview.confirmResult"), rows: [
-                (String(localized: "roleReview.candidateRoles"), "\(script?.roles.count ?? 0)"),
-                (String(localized: "roleReview.voicesBound"), "\(script?.roles.filter { !$0.defaultVoiceName.isEmpty }.count ?? 0)"),
-                (String(localized: "roleReview.similarNames"), "0 组"),
-                (String(localized: "roleReview.unmarked"), "0 段")
+            ActionCard(titleKey: "roleReview.confirmResult", rows: [
+                ActionCardRow(key: "roleReview.candidateRoles", value: "\(script?.roles.count ?? 0)"),
+                ActionCardRow(key: "roleReview.voicesBound", value: "\(script?.roles.filter { !$0.defaultVoiceName.isEmpty }.count ?? 0)"),
+                ActionCardRow(key: "roleReview.similarNames", value: String(format: String(localized: "roleReview.similarNamesValue"), 0)),
+                ActionCardRow(key: "roleReview.unmarked", value: String(format: String(localized: "roleReview.unmarkedValue"), 0))
             ])
         }
     }
@@ -86,11 +86,11 @@ struct RoleVoiceBindingRow: View {
             }
             HStack(spacing: 12) {
                 Slider(value: speedBinding, in: 0.75...1.5) {
-                    Text(String(localized: "roleReview.speed"))
+                    Text(LocalizedStringKey("roleReview.speed"))
                 }
                 .frame(maxWidth: 160)
 
-                Button(String(localized: "taskQueue.preview")) {}
+                Button(LocalizedStringKey("taskQueue.preview")) {}
                 Spacer()
             }
         }

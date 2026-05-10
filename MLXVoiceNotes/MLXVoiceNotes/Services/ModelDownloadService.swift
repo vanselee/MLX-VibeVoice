@@ -18,11 +18,11 @@ struct QwenTTSModel: Identifiable, Equatable, Hashable {
 
     var category: String {
         if repo.contains("Base") {
-            return "基础模型"
+            return String(localized: "model.category.base")
         } else if repo.contains("CustomVoice") {
-            return "音色定制"
+            return String(localized: "model.category.customVoice")
         }
-        return "通用"
+        return String(localized: "model.category.general")
     }
 
     var modelSizeLevel: String {
@@ -204,9 +204,9 @@ enum ModelDownloadTaskError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .remoteFileUnavailable(let path, let statusCode):
-            return "远程文件不存在或无法访问：\(path) (HTTP \(statusCode))"
+            return String(format: String(localized: "download.error.fileUnavailable"), path, statusCode)
         case .remoteFileSizeFailed(let path, let message):
-            return "无法获取远程文件信息：\(path)（\(message)）"
+            return String(format: String(localized: "download.error.fileSizeFailed"), path, message)
         }
     }
 }
@@ -468,7 +468,7 @@ final class ModelDownloadTask: ObservableObject, @unchecked Sendable {
                 guard let httpResponse = response as? HTTPURLResponse else {
                     lock.lock()
                     if failure == nil {
-                        failure = ModelDownloadTaskError.remoteFileSizeFailed(path: file, message: "无效响应")
+                        failure = ModelDownloadTaskError.remoteFileSizeFailed(path: file, message: String(localized: "download.error.invalidResponse"))
                     }
                     lock.unlock()
                     group.leave()
@@ -527,7 +527,7 @@ final class ModelDownloadManager: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .selectedModel:
-                return "当前正在使用的模型不能删除，请先切换到其他已安装模型。"
+                return String(localized: "model.delete.selectedModelError")
             }
         }
     }

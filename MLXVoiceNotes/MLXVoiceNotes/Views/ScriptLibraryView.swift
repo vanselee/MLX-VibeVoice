@@ -25,13 +25,13 @@ struct ScriptLibraryView: View {
     }
 
     var body: some View {
-        AppPageScaffold(title: String(localized: "scriptLibrary.title"), subtitle: String(localized: "scriptLibrary.subtitle")) {
+        AppPageScaffold(titleKey: "scriptLibrary.title", subtitleKey: "scriptLibrary.subtitle") {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     Text(LocalizedStringKey("scriptLibrary.sortedByCreated"))
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button(String(localized: "scriptLibrary.newScript")) {
+                    Button(LocalizedStringKey("scriptLibrary.newScript")) {
                         createScript()
                     }
                     .buttonStyle(.borderedProminent)
@@ -54,7 +54,7 @@ struct ScriptLibraryView: View {
                     if scripts.isEmpty {
                         VStack(spacing: 16) {
                             ContentUnavailableView(
-                                String(localized: "scriptLibrary.welcomeTitle"),
+                                LocalizedStringKey("scriptLibrary.welcomeTitle"),
                                 systemImage: "waveform.badge.mic",
                                 description: Text(LocalizedStringKey("scriptLibrary.welcomeHint"))
                             )
@@ -72,9 +72,9 @@ struct ScriptLibraryView: View {
                     }
                 }
             }
-            .alert(String(localized: "scriptLibrary.deleteConfirmTitle"), isPresented: deleteAlertBinding) {
-                Button(String(localized: "button.cancel"), role: .cancel) {}
-                Button(String(localized: "button.delete"), role: .destructive) {
+            .alert(LocalizedStringKey("scriptLibrary.deleteConfirmTitle"), isPresented: deleteAlertBinding) {
+                Button(LocalizedStringKey("button.cancel"), role: .cancel) {}
+                Button(LocalizedStringKey("button.delete"), role: .destructive) {
                     deleteSelectedCandidate()
                 }
             } message: {
@@ -84,7 +84,7 @@ struct ScriptLibraryView: View {
             if let selectedScript {
                 scriptDetailPanel(for: selectedScript)
             } else {
-                ContentUnavailableView(String(localized: "scriptLibrary.noScript"), systemImage: "doc.text")
+                ContentUnavailableView(LocalizedStringKey("scriptLibrary.noScript"), systemImage: "doc.text")
             }
         }
     }
@@ -116,12 +116,12 @@ struct ScriptLibraryView: View {
             }
 
             HStack(spacing: 8) {
-                Button(String(localized: "button.edit")) {
+                Button(LocalizedStringKey("button.edit")) {
                     openEditor(for: script)
                 }
                 .disabled(script.status == .generating)
 
-                Button(String(localized: "button.delete"), role: .destructive) {
+                Button(LocalizedStringKey("button.delete"), role: .destructive) {
                     deleteCandidate = script
                 }
                 .disabled(script.status == .generating)
@@ -166,7 +166,7 @@ struct ScriptLibraryView: View {
                         .frame(width: 160)
                 }
                 Spacer()
-                Button(String(localized: "button.save")) {
+                Button(LocalizedStringKey("button.save")) {
                     saveAndCollapse(script)
                 }
             }
@@ -176,16 +176,16 @@ struct ScriptLibraryView: View {
                 .frame(maxWidth: .infinity)
 
             HStack {
-                Button(String(localized: "button.pasteOneClick")) {
+                Button(LocalizedStringKey("button.pasteOneClick")) {
                     pasteClipboard(into: script)
                 }
-                Button(String(localized: "button.aiPrompt")) {}
-                Button(String(localized: "button.parseRoles")) {
+                Button(LocalizedStringKey("button.aiPrompt")) {}
+                Button(LocalizedStringKey("button.parseRoles")) {
                     parseRolesAndSegments(for: script)
                 }
                 Spacer()
                 if script.status == .generating {
-                    Button(String(localized: "button.viewTaskQueue")) {
+                    Button(LocalizedStringKey("button.viewTaskQueue")) {
                         selectedPage = .taskQueue
                     }
                 }
@@ -227,7 +227,7 @@ struct ScriptLibraryView: View {
                                 Text("\(role.speed.formatted(.number.precision(.fractionLength(2))))x")
                                     .font(.caption)
                                     .frame(width: 36)
-                                Button(String(localized: "button.preview")) {}
+                                Button(LocalizedStringKey("button.preview")) {}
                                     .font(.caption)
                                     .buttonStyle(.bordered)
                                 Spacer(minLength: 0)
@@ -243,7 +243,7 @@ struct ScriptLibraryView: View {
 
             if script.status == .completed {
                 HStack {
-                    Label(String(localized: "message.generationCompleted"), systemImage: "checkmark.circle.fill")
+                    Label(LocalizedStringKey("message.generationCompleted"), systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                     Text(progressLabel(for: script))
                         .foregroundStyle(.secondary)
@@ -251,12 +251,12 @@ struct ScriptLibraryView: View {
                 }
             } else if script.status == .generating {
                 HStack {
-                    Label(String(localized: "status.generating"), systemImage: "waveform")
+                    Label(LocalizedStringKey("status.generating"), systemImage: "waveform")
                         .foregroundStyle(.blue)
                     Text(progressLabel(for: script))
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button(String(localized: "button.viewTaskQueue")) {
+                    Button(LocalizedStringKey("button.viewTaskQueue")) {
                         selectedPage = .taskQueue
                     }
                 }
@@ -571,7 +571,7 @@ struct ScriptLibraryView: View {
 
     private func exportWAV(for script: Script) {
         let safeName = (script.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? "未命名文案" : script.title)
+            ? String(localized: "script.untitled") : script.title)
         let fileName = "\(safeName)_\(Date().fileStamp)"
         do {
             _ = try AudioExportService.exportRealWAV(for: script, fileName: fileName)
@@ -676,19 +676,19 @@ struct ScriptLibraryView: View {
 
                 HStack(spacing: 8) {
                     if isCurrentGenerating {
-                        Button(String(localized: "button.pause")) { GenerationService.pause(script: script) }
+                        Button(LocalizedStringKey("button.pause")) { GenerationService.pause(script: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
-                        Button(String(localized: "button.cancel")) { GenerationService.cancel(script: script) }
+                        Button(LocalizedStringKey("button.cancel")) { GenerationService.cancel(script: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
                     } else if completed == total && total > 0 {
-                        Button(String(localized: "button.regenerate")) { startPlaceholderGeneration(for: script) }
+                        Button(LocalizedStringKey("button.regenerate")) { startPlaceholderGeneration(for: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.regular)
                             .disabled(!canStartGeneration)
                     } else if failed > 0 {
-                        Button(String(localized: "button.retryFailed")) {
+                        Button(LocalizedStringKey("button.retryFailed")) {
                             GenerationService.retryFailedSegments(script: script, voiceProfiles: voiceProfiles) { result in
                                 if case .failure(let error) = result {
                                     parseSummary = String(format: String(localized: "message.retryFailed"), error.localizedDescription)
@@ -698,12 +698,12 @@ struct ScriptLibraryView: View {
                         .buttonStyle(.borderedProminent)
                         .controlSize(.regular)
                         .disabled(!canStartGeneration)
-                        Button(String(localized: "button.regenerateAll")) { startPlaceholderGeneration(for: script) }
+                        Button(LocalizedStringKey("button.regenerateAll")) { startPlaceholderGeneration(for: script) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
                             .disabled(!canStartGeneration)
                     } else if completed > 0 {
-                        Button(String(localized: "button.continueGenerate")) {
+                        Button(LocalizedStringKey("button.continueGenerate")) {
                             GenerationService.resume(script: script, voiceProfiles: voiceProfiles) { result in
                                 if case .failure(let error) = result {
                                     parseSummary = String(format: String(localized: "message.continueFailed"), error.localizedDescription)
@@ -714,7 +714,7 @@ struct ScriptLibraryView: View {
                             .controlSize(.small)
                             .disabled(!canStartGeneration)
                     } else {
-                        Button(String(localized: "button.generateAudio")) { startPlaceholderGeneration(for: script) }
+                        Button(LocalizedStringKey("button.generateAudio")) { startPlaceholderGeneration(for: script) }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.regular)
                             .disabled(!canStartGeneration)
@@ -753,13 +753,13 @@ struct ScriptLibraryView: View {
 
                 let isCompleted = completed == total && total > 0
                 HStack(spacing: 8) {
-                    Button(String(localized: "button.exportWav")) {
+                    Button(LocalizedStringKey("button.exportWav")) {
                         exportWAV(for: script)
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(!isCompleted || isCurrentGenerating)
 
-                    Button(String(localized: "button.openFolder")) {
+                    Button(LocalizedStringKey("button.openFolder")) {
                         #if os(macOS)
                         NSWorkspace.shared.open(AudioExportService.exportDirectory)
                         #endif

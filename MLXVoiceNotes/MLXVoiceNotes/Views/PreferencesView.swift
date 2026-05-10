@@ -2,7 +2,7 @@ import SwiftUI
 
 struct PreferencesView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .system
-    @AppStorage("cacheLimit") private var cacheLimit: CacheLimit = .gb20
+    @AppStorage("cacheLimit") private var cacheLimit: CacheLimit = .gb5
     @AppStorage("defaultExportDirectory") private var defaultExportDirectory: String = ""
     @State private var isCalculatingCache: Bool = true
 
@@ -32,7 +32,7 @@ struct PreferencesView: View {
     }
 
     var body: some View {
-        AppPageScaffold(title: String(localized: "preferences.title"), subtitle: String(localized: "preferences.subtitle")) {
+        AppPageScaffold(titleKey: "preferences.title", subtitleKey: "preferences.subtitle") {
             VStack(alignment: .leading, spacing: 14) {
                 settingsCard {
                     preferenceRow(titleKey: "preferences.language") {
@@ -61,13 +61,13 @@ struct PreferencesView: View {
                                 .truncationMode(.middle)
                                 .frame(width: Self.trailingColumnWidth, alignment: .trailing)
                             HStack(spacing: 8) {
-                                Button(String(localized: "preferences.exportLocation.reset")) {
+                                Button(LocalizedStringKey("preferences.exportLocation.reset")) {
                                     defaultExportDirectory = ""
                                 }
                                 .buttonStyle(.bordered)
                                 .controlSize(.regular)
                                 .frame(width: Self.pairButtonWidth, height: Self.controlHeight)
-                                Button(String(localized: "preferences.exportLocation.change")) {
+                                Button(LocalizedStringKey("preferences.exportLocation.change")) {
                                     changeExportDirectory()
                                 }
                                 .buttonStyle(.bordered)
@@ -85,7 +85,7 @@ struct PreferencesView: View {
                             HStack {
                                 Spacer()
                                 if isCalculatingCache {
-                                    Text(String(localized: "preferences.cache.calculating"))
+                                    Text(LocalizedStringKey("preferences.cache.calculating"))
                                         .font(.body)
                                         .foregroundStyle(.secondary)
                                 }
@@ -115,7 +115,7 @@ struct PreferencesView: View {
                         preferenceRow(titleKey: "preferences.cache.clear", subtitleKey: "preferences.cache.clearDescription") {
                             HStack {
                                 Spacer()
-                                Button(String(localized: "preferences.cache.clear")) {
+                                Button(LocalizedStringKey("preferences.cache.clear")) {
                                 }
                                 .buttonStyle(.bordered)
                                 .controlSize(.regular)

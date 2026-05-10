@@ -204,32 +204,32 @@ final class VoiceProfile {
 
     var kindLabel: String {
         switch kind {
-        case .preset:    return "内置"
-        case .reference: return "参考音色"
-        case .cloned:    return "克隆音色"
+        case .preset:    return String(localized: "voice.type.builtIn")
+        case .reference: return String(localized: "voice.type.reference")
+        case .cloned:    return String(localized: "voice.type.cloned")
         }
     }
 
     var sourceLabel: String {
         switch source {
-        case .system:         return "系统"
-        case .localAudio:    return "本地音频"
-        case .localGenerated: return "本地生成"
+        case .system:         return String(localized: "voice.source.system")
+        case .localAudio:    return String(localized: "voice.source.localAudio")
+        case .localGenerated: return String(localized: "voice.source.localGenerated")
         }
     }
 
     var statusLabel: String {
         switch status {
-        case .builtIn:       return "内置"
-        case .available:     return "可用"
-        case .pendingReview: return "创建中"
-        case .failed:        return "失败"
+        case .builtIn:       return String(localized: "voice.type.builtIn")
+        case .available:     return String(localized: "voice.status.available")
+        case .pendingReview: return String(localized: "voice.status.creating")
+        case .failed:        return String(localized: "status.failed")
         }
     }
 
     var durationLabel: String {
         guard let s = durationSeconds else { return "-" }
-        return String(format: "%.0f 秒", s)
+        return String(format: String(localized: "voice.durationSeconds"), s)
     }
 }
 
