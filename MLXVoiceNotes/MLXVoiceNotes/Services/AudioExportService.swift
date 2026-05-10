@@ -34,10 +34,30 @@ enum AudioExportService {
         // 确保导出目录存在
         try FileManager.default.createDirectory(at: exportDirectory, withIntermediateDirectories: true)
 
-        // 收集所有 completed 段落（按顺序）
-        let completedSegments = script.segments
-            .filter { $0.status == .completed }
-            .sorted { $0.order < $1.order }
+        // 导出前必须确保整篇文案所有段落都已成功生成，避免漏导成不完整 WAV。
+        let orderedSegments = script.segments.sorted { $0.order < $1.order }
+
+        guard !orderedSegments.isEmpty else {
+            throw AudioExportError.noCompletedSegments
+        }
+
+        let failedOrders = orderedSegments
+            .filter { $0.status == .failed }
+            .map(\.order)
+
+        if !failedOrders.isEmpty {
+            throw AudioExportError.failedSegments(failedOrders)
+        }
+
+        let incompleteOrders = orderedSegments
+            .filter { $0.status != .completed }
+            .map(\.order)
+
+        if !incompleteOrders.isEmpty {
+            throw AudioExportError.incompleteSegments(incompleteOrders)
+        }
+
+        let completedSegments = orderedSegments
 
         guard !completedSegments.isEmpty else {
             throw AudioExportError.noCompletedSegments
@@ -178,6 +198,8 @@ enum AudioExportService {
 
 enum AudioExportError: Error, LocalizedError {
     case noCompletedSegments
+    case incompleteSegments([Int])
+    case failedSegments([Int])
     case missingGeneratedAudio(segmentIndex: Int)
     case missingAudioFile(segmentIndex: Int)
     case emptyAudioData
@@ -190,6 +212,10 @@ enum AudioExportError: Error, LocalizedError {
         switch self {
         case .noCompletedSegments:
             return "没有可导出的已生成音频"
+        case .incompleteSegments(let orders):
+            return "第 \(Self.formatSegmentOrders(orders)) 段尚未生成完成，请生成完成后再导出"
+        case .failedSegments(let orders):
+            return "第 \(Self.formatSegmentOrders(orders)) 段生成失败，请重新生成后再导出"
         case .missingGeneratedAudio(let idx):
             return "第 \(idx) 段缺少生成音频，请重新生成"
         case .missingAudioFile(let idx):
@@ -205,6 +231,10 @@ enum AudioExportError: Error, LocalizedError {
         case .failedToWriteAudioFile:
             return "无法写入音频文件"
         }
+    }
+
+    private static func formatSegmentOrders(_ orders: [Int]) -> String {
+        orders.map(String.init).joined(separator: ", ")
     }
 }
 
