@@ -44,7 +44,7 @@
 		1A0000010000000000000012 /* Views/ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ContentView.swift; sourceTree = "<group>"; };
 		1A0000010000000000000013 /* Models/AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AppModels.swift; sourceTree = "<group>"; };
 		1A0000010000000000000014 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		FA0000A0000000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		FA0000A0000000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		1A0000010000000000000015 /* Services/ScriptParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ScriptParser.swift; sourceTree = "<group>"; };
 		1A0000010000000000000016 /* Services/GenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/GenerationService.swift; sourceTree = "<group>"; };
 		1A0000010000000000000017 /* Services/AudioExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AudioExportService.swift; sourceTree = "<group>"; };
