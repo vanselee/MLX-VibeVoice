@@ -6,10 +6,8 @@
 
 <a id="english"></a>
 
-MLX VibeVoice is a local-first macOS app for turning scripts into speech with
-Apple Silicon and MLX-based Qwen TTS models. It is designed for multi-role
-scripts, reusable reference voices, local model management, and complete WAV
-export.
+A macOS app for local multi-voice TTS with Qwen3-TTS and MLX — script parsing, role-based voices, reference voice profiles, model management, and WAV export.
+基于 Qwen3-TTS 与 MLX 的 macOS 本地多音色语音合成应用——剧本解析、角色音色绑定、参考音色配置、模型管理与 WAV 导出。
 
 > Status: active development. The app is usable for local experiments, but model
 > quality, generation speed, and voice stability are still being tuned.
@@ -108,7 +106,7 @@ Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
 
 # MLX VibeVoice
 
-MLX VibeVoice 是一款本地优先的 macOS 应用，基于 Apple Silicon 和 MLX 版 Qwen TTS 模型，将剧本转化为语音。支持多角色剧本、可复用的参考音色、本地模型管理和完整 WAV 导出。
+基于 Qwen3-TTS 与 MLX 的 macOS 本地多音色语音合成应用——剧本解析、角色音色绑定、参考音色配置、模型管理与 WAV 导出。
 
 > 当前状态：活跃开发中。应用可用于本地实验，但模型质量、生成速度和音色稳定性仍在调优。
 
