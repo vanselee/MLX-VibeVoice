@@ -10,9 +10,7 @@ export.
 
 ## Audio Demo
 
-<video controls src="assets/multi-role-dialogue-demo.mp4">
-  Your browser does not support the video element.
-</video>
+https://github.com/user-attachments/assets/d17bfef2-7e08-446a-890f-21166bd6f5c2
 
 *Multi-role dialogue demo — generated with Qwen3 TTS and custom reference voices.*
 
