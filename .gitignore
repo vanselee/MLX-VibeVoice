@@ -48,6 +48,9 @@ backups/
 *.mp4
 *.mov
 
+# Exception: demo assets for README
+!assets/*.mp3
+
 # Model/checkpoint files
 *.safetensors
 *.gguf
