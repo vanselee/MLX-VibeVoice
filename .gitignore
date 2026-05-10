@@ -18,6 +18,7 @@ __pycache__/
 *.pyc
 .env
 External/
+LOCAL_ARCHIVE_DO_NOT_UPLOAD/
 对话.txt
 *.local.md
 *.private.md
