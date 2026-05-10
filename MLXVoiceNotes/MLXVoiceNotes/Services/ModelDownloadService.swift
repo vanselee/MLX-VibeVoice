@@ -38,8 +38,8 @@ struct QwenTTSModel: Identifiable, Equatable, Hashable {
         sizeLabel
     }
 
-    /// 标准必需文件清单（所有 Qwen TTS 模型通用）
-    static let standardRequiredFiles: [String] = [
+    /// Base 模型必需文件清单。
+    static let baseRequiredFiles: [String] = [
         "config.json",
         "generation_config.json",
         "merges.txt",
@@ -55,7 +55,25 @@ struct QwenTTSModel: Identifiable, Equatable, Hashable {
         "speech_tokenizer/preprocessor_config.json",
     ]
 
-    var requiredFiles: [String] { Self.standardRequiredFiles }
+    /// CustomVoice 模型仓库当前不包含 tokenizer.json，不能复用 Base 清单。
+    static let customVoiceRequiredFiles: [String] = [
+        "config.json",
+        "generation_config.json",
+        "merges.txt",
+        "model.safetensors",
+        "model.safetensors.index.json",
+        "preprocessor_config.json",
+        "tokenizer_config.json",
+        "vocab.json",
+        "speech_tokenizer/config.json",
+        "speech_tokenizer/configuration.json",
+        "speech_tokenizer/model.safetensors",
+        "speech_tokenizer/preprocessor_config.json",
+    ]
+
+    var requiredFiles: [String] {
+        repo.contains("CustomVoice") ? Self.customVoiceRequiredFiles : Self.baseRequiredFiles
+    }
 
     var localPath: URL {
         let home = FileManager.default.homeDirectoryForCurrentUser
@@ -178,6 +196,20 @@ enum ModelDownloadState: Equatable {
     }
 }
 
+enum ModelDownloadTaskError: LocalizedError {
+    case remoteFileUnavailable(path: String, statusCode: Int)
+    case remoteFileSizeFailed(path: String, message: String)
+
+    var errorDescription: String? {
+        switch self {
+        case .remoteFileUnavailable(let path, let statusCode):
+            return "远程文件不存在或无法访问：\(path) (HTTP \(statusCode))"
+        case .remoteFileSizeFailed(let path, let message):
+            return "无法获取远程文件信息：\(path)（\(message)）"
+        }
+    }
+}
+
 // MARK: - 模型下载任务
 
 /// 按 requiredFiles 顺序逐个下载模型文件，使用 HTTPRangeFileDownloader 实现断点续传。
@@ -208,8 +240,18 @@ final class ModelDownloadTask: ObservableObject, @unchecked Sendable {
         completedBytes = 0
         state = .preparing
 
-        fetchAllFileSizes { [weak self] fileInfos in
+        fetchAllFileSizes { [weak self] result in
             guard let self = self, !self.isCancelled else { return }
+            let fileInfos: [(path: String, remote: URL, totalSize: Int64)]
+            switch result {
+            case .success(let infos):
+                fileInfos = infos
+            case .failure(let error):
+                DispatchQueue.main.async {
+                    self.state = .failed(error: error.localizedDescription)
+                }
+                return
+            }
             let ordered = self.model.requiredFiles.compactMap { file in
                 fileInfos.first(where: { $0.path == file })
             }
@@ -387,9 +429,10 @@ final class ModelDownloadTask: ObservableObject, @unchecked Sendable {
     }
 
     /// 并发 HEAD 请求获取所有文件大小
-    private func fetchAllFileSizes(completion: @escaping ([(path: String, remote: URL, totalSize: Int64)]) -> Void) {
+    private func fetchAllFileSizes(completion: @escaping (Result<[(path: String, remote: URL, totalSize: Int64)], Error>) -> Void) {
         let group = DispatchGroup()
         var results: [(path: String, remote: URL, totalSize: Int64)] = []
+        var failure: Error?
         let lock = NSLock()
 
         for file in model.requiredFiles {
@@ -399,14 +442,39 @@ final class ModelDownloadTask: ObservableObject, @unchecked Sendable {
             request.httpMethod = "HEAD"
             request.timeoutInterval = 30
 
-            URLSession.shared.dataTask(with: request) { _, response, _ in
-                let size: Int64
-                if let httpResponse = response as? HTTPURLResponse,
-                   httpResponse.statusCode == 200 {
-                    size = Int64(httpResponse.expectedContentLength)
-                } else {
-                    size = 0
+            URLSession.shared.dataTask(with: request) { _, response, error in
+                if let error = error {
+                    lock.lock()
+                    if failure == nil {
+                        failure = ModelDownloadTaskError.remoteFileSizeFailed(path: file, message: error.localizedDescription)
+                    }
+                    lock.unlock()
+                    group.leave()
+                    return
                 }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    lock.lock()
+                    if failure == nil {
+                        failure = ModelDownloadTaskError.remoteFileSizeFailed(path: file, message: "无效响应")
+                    }
+                    lock.unlock()
+                    group.leave()
+                    return
+                }
+
+                guard httpResponse.statusCode == 200 else {
+                    lock.lock()
+                    if failure == nil {
+                        failure = ModelDownloadTaskError.remoteFileUnavailable(path: file, statusCode: httpResponse.statusCode)
+                    }
+                    lock.unlock()
+                    group.leave()
+                    return
+                }
+
+                let contentLength = Int64(httpResponse.expectedContentLength)
+                let size = contentLength > 0 ? contentLength : 0
                 lock.lock()
                 results.append((path: file, remote: remote, totalSize: size))
                 lock.unlock()
@@ -415,7 +483,11 @@ final class ModelDownloadTask: ObservableObject, @unchecked Sendable {
         }
 
         group.notify(queue: .main) {
-            completion(results)
+            if let failure {
+                completion(.failure(failure))
+            } else {
+                completion(.success(results))
+            }
         }
     }
 }

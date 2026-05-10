@@ -44,6 +44,7 @@ final class HTTPRangeFileDownloader: NSObject {
     enum DownloadError: LocalizedError {
         case invalidURL
         case httpError(statusCode: Int)
+        case remoteFileUnavailable(String)
         case fileWriteFailed
         case fileMoveFailed(String)
         case cancelled
@@ -55,6 +56,8 @@ final class HTTPRangeFileDownloader: NSObject {
                 return "无效的 URL"
             case .httpError(let code):
                 return "HTTP 错误 \(code)"
+            case .remoteFileUnavailable(let message):
+                return message
             case .fileWriteFailed:
                 return "文件写入失败"
             case .fileMoveFailed(let path):
@@ -105,6 +108,7 @@ final class HTTPRangeFileDownloader: NSObject {
     private var task: URLSessionDataTask?
     private var fileHandle: FileHandle?
     private var resumeOffset: Int64 = 0
+    private var pendingError: Error?
 
     private var speedTimer: Timer?
     private var lastSpeedCheckBytes: Int64 = 0
@@ -163,16 +167,21 @@ final class HTTPRangeFileDownloader: NSObject {
 
             if let error = error {
                 self.state = .failed(error.localizedDescription)
+                self.onComplete?(error)
                 return
             }
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                self.state = .failed("HEAD 请求失败: 无效响应")
+                let error = DownloadError.remoteFileUnavailable("HEAD 请求失败: 无效响应")
+                self.state = .failed(error.localizedDescription)
+                self.onComplete?(error)
                 return
             }
 
             guard httpResponse.statusCode == 200 else {
-                self.state = .failed("HEAD 请求失败: HTTP \(httpResponse.statusCode)")
+                let error = DownloadError.remoteFileUnavailable("远程文件不存在或无法访问：HTTP \(httpResponse.statusCode)")
+                self.state = .failed(error.localizedDescription)
+                self.onComplete?(error)
                 return
             }
 
@@ -201,7 +210,9 @@ final class HTTPRangeFileDownloader: NSObject {
 
         // Open FileHandle for append writes
         guard let fh = FileHandle(forWritingAtPath: partialURL.path) else {
-            state = .failed(DownloadError.fileWriteFailed.errorDescription ?? "无法打开 .partial")
+            let error = DownloadError.fileWriteFailed
+            state = .failed(error.localizedDescription)
+            onComplete?(error)
             return
         }
 
@@ -316,7 +327,9 @@ extension HTTPRangeFileDownloader: URLSessionDataDelegate {
                     completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
 
         guard let httpResponse = response as? HTTPURLResponse else {
-            state = .failed("无效的 HTTP 响应")
+            let error = DownloadError.remoteFileUnavailable("无效的 HTTP 响应")
+            pendingError = error
+            state = .failed(error.localizedDescription)
             completionHandler(.cancel)
             return
         }
@@ -342,7 +355,9 @@ extension HTTPRangeFileDownloader: URLSessionDataDelegate {
             completionHandler(.allow)
 
         default:
-            state = .failed("HTTP \(httpResponse.statusCode)")
+            let error = DownloadError.httpError(statusCode: httpResponse.statusCode)
+            pendingError = error
+            state = .failed(error.localizedDescription)
             completionHandler(.cancel)
         }
     }
@@ -352,6 +367,8 @@ extension HTTPRangeFileDownloader: URLSessionDataDelegate {
                     didReceive data: Data) {
 
         guard let fh = fileHandle else {
+            let error = DownloadError.fileWriteFailed
+            pendingError = error
             state = .failed("文件句柄丢失")
             task?.cancel()
             return
@@ -370,6 +387,7 @@ extension HTTPRangeFileDownloader: URLSessionDataDelegate {
             }
             onProgress?(progress)
         } catch {
+            pendingError = error
             state = .failed("写入 .partial 失败: \(error.localizedDescription)")
             task?.cancel()
         }
@@ -382,8 +400,12 @@ extension HTTPRangeFileDownloader: URLSessionDataDelegate {
         if let error = error {
             let nsError = error as NSError
             if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled {
-                // Already handled by cancel()
+                let failure = pendingError
                 tearDown()
+                if let failure {
+                    pendingError = nil
+                    onComplete?(failure)
+                }
                 return
             }
             state = .failed(error.localizedDescription)
