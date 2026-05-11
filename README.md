@@ -18,6 +18,10 @@ https://github.com/user-attachments/assets/d17bfef2-7e08-446a-890f-21166bd6f5c2
 
 *Multi-role dialogue demo — generated with Qwen3 TTS and custom reference voices.*
 
+## Screenshot
+
+![MLX VibeVoice Screenshot](https://github.com/user-attachments/assets/073a5bde-9acb-46cc-83c3-25c31ee8b6bf)
+
 ---
 
 ## Features
@@ -115,6 +119,10 @@ Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
 https://github.com/user-attachments/assets/d17bfef2-7e08-446a-890f-21166bd6f5c2
 
 *多角色对话演示 — 使用 Qwen3 TTS 和自定义参考音色生成。*
+
+## 应用截图
+
+![MLX VibeVoice 截图](https://github.com/user-attachments/assets/073a5bde-9acb-46cc-83c3-25c31ee8b6bf)
 
 ---
 
