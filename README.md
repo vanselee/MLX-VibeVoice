@@ -122,7 +122,7 @@ https://github.com/user-attachments/assets/d17bfef2-7e08-446a-890f-21166bd6f5c2
 
 ## 应用截图
 
-![MLX VibeVoice 截图](https://github.com/user-attachments/assets/073a5bde-9acb-46cc-83c3-25c31ee8b6bf)
+![MLX VibeVoice 截图](https://github.com/user-attachments/assets/ecb4f6e8-96fa-4817-b773-1a710901288b)
 
 ---
 
